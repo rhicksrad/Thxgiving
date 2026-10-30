@@ -1,0 +1,33 @@
+name: Deploy file service to Cloudflare
+
+# Deploys worker/ (photos and videos in R2). Needs these repo secrets (Settings → Secrets and variables → Actions):
+#   CLOUDFLARE_API_TOKEN   a token from the "Edit Cloudflare Workers" template (with Workers R2 Storage: Edit)
+#   CLOUDFLARE_ACCOUNT_ID  from the Cloudflare dashboard sidebar
+#   FILES_SIGNING_SECRET   any long random string; it signs the photo links
+on:
+  push:
+    branches: [main]
+    paths: ['worker/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: worker
+          preCommands: npx wrangler r2 bucket create thxgiving-files || true
+          secrets: |
+            SIGNING_SECRET
+        env:
+          SIGNING_SECRET: ${{ secrets.FILES_SIGNING_SECRET }}

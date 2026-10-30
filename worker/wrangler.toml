@@ -1,0 +1,18 @@
+# Cloudflare Worker that stores the site's photos and videos in R2. See worker/README.md.
+name = "thxgiving-files"
+main = "index.js"
+compatibility_date = "2026-09-01"
+
+# Ping Supabase every other day so the free project never pauses for inactivity.
+[triggers]
+crons = ["41 13 */2 * *"]
+
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "thxgiving-files"
+
+# Same public values as public/config.js. The signing secret (SIGNING_SECRET) is set with
+# `wrangler secret put` or the deploy workflow, never here.
+[vars]
+SUPABASE_URL = "https://YOUR-PROJECT-REF.supabase.co"
+SUPABASE_KEY = "sb_publishable_YOUR-KEY"

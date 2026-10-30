@@ -1,0 +1,17 @@
+{
+  "id": "./",
+  "name": "Thanksgiving 2026",
+  "short_name": "Thanksgiving",
+  "description": "Our family Thanksgiving: who's coming, who's bringing what, and all the pictures.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a120c",
+  "theme_color": "#1a120c",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
