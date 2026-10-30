@@ -1,8 +1,5 @@
-// Supabase → Project Settings → API. Both values are safe to publish:
-// the publishable key only gets what row-level security allows.
+// Where the site's server lives: the Cloudflare Worker in worker/ (see worker/README.md).
+// Safe to publish: the Worker only lets in people who sign in with a number on the family list.
 window.TG_CONFIG = {
-  supabaseUrl: '',
-  supabaseKey: '',
-  // Photo and video storage in Cloudflare R2 (worker/README.md). Leave it out to use Supabase storage instead.
-  filesUrl: '',
+  apiUrl: 'https://thxgiving.hicksrch.workers.dev',
 }

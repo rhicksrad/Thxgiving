@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { supabase } from './supabase'
+import { API, getToken } from './api'
 
 type Row = { id: string } & Record<string, unknown>
 type Handlers<T extends Row> = {
@@ -8,10 +8,95 @@ type Handlers<T extends Row> = {
   onDelete?: (id: string) => void
   onResync?: () => void // the connection dropped and came back (phone slept, signal blipped): changes may have been missed
 }
+type Change = { table: string; op: 'insert' | 'update' | 'delete'; row: Row }
+type Sub = { table: string; match: (row: Row) => boolean; handlers: { current: Handlers<Row> } }
+
+// One WebSocket to the Worker's live room (worker/live.js) carries every table's changes; each hook below
+// picks out its own. It pings to stay up, and reconnects on its own after a drop.
+const subs = new Set<Sub>()
+let ws: WebSocket | null = null
+let joinedBefore = false
+let lastHeard = 0
+let attempts = 0
+let retryTimer: ReturnType<typeof setTimeout> | undefined
+let pingTimer: ReturnType<typeof setInterval> | undefined
+
+const PING_MS = 25_000
+const DEAD_MS = 60_000 // nothing heard for this long (not even a pong): the connection is gone
+
+function connect() {
+  clearTimeout(retryTimer)
+  const token = getToken()
+  if (ws || !token || !subs.size || !API) return
+  const sock = new WebSocket(`${API.replace(/^http/, 'ws')}/live?token=${encodeURIComponent(token)}`)
+  ws = sock
+  sock.onopen = () => {
+    attempts = 0
+    lastHeard = Date.now()
+    if (joinedBefore) subs.forEach((s) => s.handlers.current.onResync?.())
+    joinedBefore = true
+  }
+  sock.onmessage = (e) => {
+    lastHeard = Date.now()
+    if (e.data === 'pong') return
+    let c: Change
+    try { c = JSON.parse(e.data) } catch { return }
+    for (const s of subs) {
+      if (s.table !== c.table) continue
+      const h = s.handlers.current
+      if (c.op === 'delete') h.onDelete?.(c.row.id) // like before: deletes aren't filtered; ids you don't have are ignored
+      else if (s.match(c.row)) (c.op === 'insert' ? h.onInsert ?? h.onUpsert : h.onUpsert)?.(c.row)
+    }
+  }
+  sock.onclose = (e) => {
+    if (ws === sock) ws = null
+    if (e.code === 4003) return // taken off the family list: don't keep knocking
+    attempts++
+    retryTimer = setTimeout(connect, Math.min(30_000, 1000 * 2 ** Math.min(attempts, 5)))
+  }
+}
+
+function ensurePinging() {
+  if (pingTimer) return
+  pingTimer = setInterval(() => {
+    if (!ws) return
+    if (ws.readyState === WebSocket.OPEN) {
+      if (Date.now() - lastHeard > DEAD_MS) { ws.close(); return }
+      ws.send('ping')
+    }
+  }, PING_MS)
+  // Back from the background or back online: check right away instead of waiting for the next ping.
+  const wake = () => {
+    if (document.visibilityState === 'hidden') return
+    if (!ws) { attempts = 0; connect() } else if (ws.readyState === WebSocket.OPEN) ws.send('ping')
+  }
+  document.addEventListener('visibilitychange', wake)
+  window.addEventListener('online', wake)
+}
+
+/** Drop the connection (signing out) or start over with a new token (signing in). */
+export function resetLive() {
+  joinedBefore = false
+  const old = ws
+  ws = null
+  old?.close()
+  connect()
+}
+
+/** "gathering_id=eq.123" or "photo_id=in.(a,b)" → a test for a row. No filter: every row. */
+function matcher(filter?: string) {
+  if (!filter) return () => true
+  const m = filter.match(/^(\w+)=(eq|in)\.(.*)$/)
+  if (!m) return () => true
+  const [, col, op, val] = m
+  if (op === 'eq') return (r: Row) => String(r[col] ?? '') === val
+  const set = new Set(val.replace(/^\(|\)$/g, '').split(','))
+  return (r: Row) => set.has(String(r[col] ?? ''))
+}
 
 /**
  * Live inserts/updates (optionally filtered, e.g. "gathering_id=eq.123") and deletes for one table.
- * Deletes can't be filtered server-side, so callers just ignore ids they don't have.
+ * Deletes can't be filtered, so callers just ignore ids they don't have.
  * Nothing is replayed after a reconnect, so `onResync` is the cue to reload.
  */
 export function useLiveTable<T extends Row>(table: string, filter: string | undefined, h: Handlers<T>, enabled = true) {
@@ -19,21 +104,11 @@ export function useLiveTable<T extends Row>(table: string, filter: string | unde
   handlers.current = h
   useEffect(() => {
     if (!enabled) return
-    const ch = supabase.channel(`${table}:${filter ?? 'all'}:${Math.random().toString(36).slice(2)}`)
-    let joined = false
-    const base = { schema: 'public', table, ...(filter ? { filter } : {}) }
-    ch.on('postgres_changes', { event: 'INSERT', ...base }, (p) => (handlers.current.onInsert ?? handlers.current.onUpsert)?.(p.new as T))
-      .on('postgres_changes', { event: 'UPDATE', ...base }, (p) => handlers.current.onUpsert?.(p.new as T))
-      .on('postgres_changes', { event: 'DELETE', schema: 'public', table }, (p) => {
-        const id = (p.old as Row)?.id
-        if (id) handlers.current.onDelete?.(id)
-      })
-      .subscribe((status) => {
-        if (status !== 'SUBSCRIBED') return
-        if (joined) handlers.current.onResync?.()
-        joined = true
-      })
-    return () => { supabase.removeChannel(ch) }
+    const sub: Sub = { table, match: matcher(filter), handlers: handlers as unknown as Sub['handlers'] }
+    subs.add(sub)
+    ensurePinging()
+    connect()
+    return () => { subs.delete(sub) }
   }, [table, filter, enabled])
 }
 

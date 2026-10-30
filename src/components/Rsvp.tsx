@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Minus, Plus, Users } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { api, seg } from '../lib/api'
 import { useLiveTable, upsertById } from '../lib/realtime'
 import { isPast, plural } from '../lib/format'
 import type { Gathering, Profile, Rsvp, RsvpStatus } from '../lib/types'
@@ -17,8 +17,8 @@ export function useRsvps(gatheringId: string | undefined) {
   const [rows, setRows] = useState<Rsvp[] | null>(null)
   const load = useCallback(() => {
     if (!gatheringId) return
-    supabase.from('rsvps').select('*').eq('gathering_id', gatheringId).then(({ data, error }) => {
-      if (!error) setRows((data ?? []) as Rsvp[])
+    api.get<Rsvp[]>(`/gatherings/${seg(gatheringId)}/rsvps`).then(({ data }) => {
+      if (data) setRows(data)
       else setRows((cur) => cur ?? [])
     })
   }, [gatheringId])
@@ -55,10 +55,7 @@ export function RsvpPicker({ gathering, rows, setRows }: {
       guests: status === 'no' ? 0 : Math.max(0, Math.min(MAX_GUESTS, guests)), updated_at: new Date().toISOString(),
     }
     setRows((cur) => [...(cur ?? []).filter((r) => r.user_id !== me.id), row])
-    const { data, error } = await supabase.from('rsvps')
-      .upsert({ gathering_id: gathering.id, user_id: me.id, status: row.status, guests: row.guests, updated_at: row.updated_at },
-        { onConflict: 'gathering_id,user_id' })
-      .select().single()
+    const { data, error } = await api.put<Rsvp>(`/gatherings/${seg(gathering.id)}/rsvp`, { status: row.status, guests: row.guests })
     setErr(error?.message ?? null)
     if (data) setRows((cur) => [...(cur ?? []).filter((r) => r.user_id !== me.id), data as Rsvp])
   }

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { AtSign, Bell, Camera, HandHelping, Image, MessageCircle, MessageSquare, SmilePlus, UserPlus, UtensilsCrossed, type LucideIcon } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { api, seg } from '../lib/api'
 import { useLiveTable } from '../lib/realtime'
 import { mentionsMe, plainMentions } from '../lib/mentions'
 import { plural, when } from '../lib/format'
@@ -68,21 +68,13 @@ export default function ActivityBell() {
   useEffect(() => {
     if (!myId) return
     setSeen(readSeen(myId))
-    const recent = <T,>(q: PromiseLike<{ data: unknown }>, set: (rows: T[]) => void) => q.then(({ data }) => set((data ?? []) as T[]))
-    recent(supabase.from('messages').select('id, gathering_id, author_id, body, created_at')
-      .neq('author_id', myId).order('created_at', { ascending: false }).limit(KEEP), setPosts)
-    // Rows with no creator are the starter list every new gathering gets, not something a person added.
-    recent(supabase.from('list_items').select('id, gathering_id, kind, label, created_by, created_at')
-      .not('created_by', 'is', null).neq('created_by', myId).order('created_at', { ascending: false }).limit(KEEP), setAdded)
-    recent(supabase.from('photos').select('id, gathering_id, uploader_id, created_at')
-      .neq('uploader_id', myId).order('created_at', { ascending: false }).limit(KEEP), setPics)
-    // Reactions to your things (owner_id is filled in by the database) and comments on anyone's pics.
-    recent(supabase.from('reactions').select('id, target_type, target_id, user_id, emoji, created_at')
-      .eq('owner_id', myId).neq('user_id', myId).order('created_at', { ascending: false }).limit(KEEP), setReacts)
-    recent(supabase.from('photo_comments').select('id, photo_id, author_id, body, created_at')
-      .neq('author_id', myId).order('created_at', { ascending: false }).limit(KEEP), setComments)
-    supabase.from('gatherings').select('id, title')
-      .then(({ data }) => setGatherings(Object.fromEntries((data ?? []).map((g) => [g.id, g.title as string]))))
+    // The latest from everyone else: posts, list adds, pics, reactions to your things, comments on anyone's pics.
+    api.get<{ posts: Post[]; added: Added[]; pics: Pic[]; reacts: Reacted[]; comments: Comment[] }>('/activity').then(({ data }) => {
+      if (!data) return
+      setPosts(data.posts); setAdded(data.added); setPics(data.pics); setReacts(data.reacts); setComments(data.comments)
+    })
+    api.get<{ id: string; title: string }[]>('/gatherings')
+      .then(({ data }) => { if (data) setGatherings(Object.fromEntries(data.map((g) => [g.id, g.title]))) })
   }, [myId])
 
   const live = Boolean(myId)
@@ -177,12 +169,12 @@ export default function ActivityBell() {
       // Open the pic itself, or the chat the message is in.
       let { type, id } = a.target
       if (type === 'comment') {
-        const { data } = await supabase.from('photo_comments').select('photo_id').eq('id', id).maybeSingle()
+        const { data } = await api.get<PhotoComment | null>(`/comments/${seg(id)}`)
         if (!data) return
-        ;[type, id] = ['photo', data.photo_id as string]
+        ;[type, id] = ['photo', data.photo_id]
       }
       if (type === 'photo') return navigate(`/gallery?photo=${id}`)
-      const { data } = await supabase.from('messages').select('gathering_id').eq('id', id).maybeSingle()
+      const { data } = await api.get<Message | null>(`/messages/${seg(id)}`)
       if (!data) return
       return navigate(data.gathering_id ? `/g/${data.gathering_id}?tab=chat` : '/chat')
     }

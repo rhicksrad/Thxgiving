@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import { Camera, ChevronRight, MessageCircle, Plus, Users } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { api } from '../lib/api'
 import { fromInputs, gatheringDay, gatheringTime, isPast } from '../lib/format'
 import { useLiveTable, upsertById } from '../lib/realtime'
 import type { Gathering, GatheringStats } from '../lib/types'
@@ -16,12 +16,9 @@ export default function Home() {
   const [stats, setStats] = useState<Record<string, GatheringStats>>({})
 
   const load = useCallback(async () => {
-    const [g, s] = await Promise.all([
-      supabase.from('gatherings').select('*').order('starts_at'),
-      supabase.from('gathering_stats').select('*'),
-    ])
-    setGatherings((cur) => (g.error && cur ? cur : (g.data ?? []) as Gathering[])) // a failed refresh keeps the board on screen
-    if (!s.error) setStats(Object.fromEntries(((s.data ?? []) as GatheringStats[]).map((x) => [x.gathering_id, x])))
+    const [g, s] = await Promise.all([api.get<Gathering[]>('/gatherings'), api.get<GatheringStats[]>('/stats')])
+    setGatherings((cur) => (!g.data && cur ? cur : g.data ?? [])) // a failed refresh keeps the board on screen
+    if (s.data) setStats(Object.fromEntries(s.data.map((x) => [x.gathering_id, x])))
   }, [])
 
   useEffect(() => { load() }, [load])
@@ -103,8 +100,7 @@ function AddGathering({ onAdded }: { onAdded: () => void }) {
       className="card stack"
       onSubmit={async (e) => {
         e.preventDefault()
-        const { error } = await supabase.from('gatherings')
-          .insert({ title: title.trim(), starts_at: fromInputs(date, time), time_tbd: !time })
+        const { error } = await api.post('/gatherings', { title: title.trim(), starts_at: fromInputs(date, time), time_tbd: !time })
         if (error) return setErr(error.message)
         setOpen(false); setTitle(''); setDate(''); setTime(''); onAdded()
       }}

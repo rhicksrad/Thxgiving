@@ -1,5 +1,5 @@
 // Service worker: makes the site installable and opens it fast from the home screen.
-// It only caches the app itself (HTML, JS, CSS, icons). Supabase, the file service, fonts and
+// It only caches the app itself (HTML, JS, CSS, icons). The API, fonts and
 // photos are other origins, so they always go straight to the network.
 //
 // - The page (index.html): network first, so every deploy shows up on the next open.

@@ -1,7 +1,7 @@
 import { Fragment, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { ImagePlus, Megaphone, MessageCircle, SendHorizontal, X } from 'lucide-react'
-import { supabase } from '../lib/supabase'
-import { removeFiles, uploadFile } from '../lib/storage'
+import { api, seg } from '../lib/api'
+import { uploadFile } from '../lib/storage'
 import { useLiveTable } from '../lib/realtime'
 import { extOf } from '../lib/images'
 import { clock, fullDay } from '../lib/format'
@@ -34,10 +34,10 @@ export default function Chat({ gatheringId, placeholder, readOnlyNote }: { gathe
   const keepOffset = useRef<number | null>(null)
   const loadingOlder = useRef(false)
 
-  const query = useCallback(() => {
-    const q = supabase.from('messages').select('*').order('created_at', { ascending: false }).limit(PAGE)
-    return gatheringId ? q.eq('gathering_id', gatheringId) : q.is('gathering_id', null)
-  }, [gatheringId])
+  // Newest first, a page at a time; `before` gets the page older than that.
+  const query = useCallback((before?: string) => api.get<Message[]>(
+    `/messages?gathering=${seg(gatheringId ?? '')}&limit=${PAGE}${before ? `&before=${seg(before)}` : ''}`,
+  ), [gatheringId])
 
   useEffect(() => {
     let live = true // a slow answer for the last room mustn't land in this one
@@ -56,7 +56,7 @@ export default function Chat({ gatheringId, placeholder, readOnlyNote }: { gathe
     if (!msgs?.length || loadingOlder.current) return // a double tap would load the same page twice
     loadingOlder.current = true
     try {
-      const { data } = await query().lt('created_at', msgs[0].created_at)
+      const { data } = await query(msgs[0].created_at)
       const rows = ((data ?? []) as Message[]).reverse()
       setHasMore(rows.length === PAGE)
       const el = scroller.current
@@ -144,9 +144,9 @@ export default function Chat({ gatheringId, placeholder, readOnlyNote }: { gathe
     setText('')
     setErr(null)
     stickToBottom.current = true
-    const { data, error } = await supabase.from('messages').insert({ gathering_id: gatheringId, body }).select().single()
-    if (error) { setErr(error.message); setText(typed); return }
-    setMsgs((cur) => (cur && !cur.some((x) => x.id === data.id) ? [...cur, data as Message] : cur))
+    const { data, error } = await api.post<Message>('/messages', { gathering_id: gatheringId, body })
+    if (error || !data) { setErr(error?.message ?? 'Could not send'); setText(typed); return }
+    setMsgs((cur) => (cur && !cur.some((x) => x.id === data.id) ? [...cur, data] : cur))
   }
 
   /** Upload a GIF/pic (from the picker, a paste, a drop, or a phone's GIF keyboard) and post it. */
@@ -161,11 +161,10 @@ export default function Chat({ gatheringId, placeholder, readOnlyNote }: { gathe
       if (file.size > MAX_IMAGE_MB * 1024 * 1024) { setErr(`${file.name || 'That image'} is over ${MAX_IMAGE_MB} MB.`); continue }
       const path = `${me.id}/chat/${crypto.randomUUID()}.${extOf(file)}`
       try { await uploadFile(path, file, file.type) } catch (e) { setErr((e as Error).message); continue }
-      const { data, error } = await supabase.from('messages')
-        .insert({ gathering_id: gatheringId, body: i === 0 ? caption : '', image_path: path }).select().single()
-      if (error) { setErr(error.message); continue }
+      const { data, error } = await api.post<Message>('/messages', { gathering_id: gatheringId, body: i === 0 ? caption : '', image_path: path })
+      if (error || !data) { setErr(error?.message ?? 'Could not send'); continue }
       if (i === 0 && caption) setText('')
-      setMsgs((cur) => (cur && !cur.some((x) => x.id === data.id) ? [...cur, data as Message] : cur))
+      setMsgs((cur) => (cur && !cur.some((x) => x.id === data.id) ? [...cur, data] : cur))
     }
     setUploading(false)
     if (fileInput.current) fileInput.current.value = ''
@@ -174,9 +173,8 @@ export default function Chat({ gatheringId, placeholder, readOnlyNote }: { gathe
   // Stable, so typing in the composer doesn't re-render every message.
   const remove = useCallback(async (m: Message) => {
     if (!confirm('Delete this message?')) return
-    const { error } = await supabase.from('messages').delete().eq('id', m.id)
+    const { error } = await api.del(`/messages/${seg(m.id)}`) // takes its picture with it
     if (error) return
-    if (m.image_path) removeFiles([m.image_path]).catch(() => {})
     setMsgs((cur) => cur?.filter((x) => x.id !== m.id) ?? cur)
   }, [])
   const onImageLoad = useCallback(() => { if (stickToBottom.current) scrollDown() }, [])

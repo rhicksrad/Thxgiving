@@ -1,7 +1,8 @@
-name: Deploy file service to Cloudflare
+name: Deploy the server to Cloudflare
 
-# Deploys worker/ (photos and videos in R2). Needs these repo secrets (Settings → Secrets and variables → Actions):
-#   CLOUDFLARE_API_TOKEN   a token from the "Edit Cloudflare Workers" template (with Workers R2 Storage: Edit)
+# Deploys worker/ (the API, D1 database, R2 photos and live updates) and brings the database up to date
+# (worker/schema.sql is safe to re-run). Needs these repo secrets (Settings → Secrets and variables → Actions):
+#   CLOUDFLARE_API_TOKEN   a token from the "Edit Cloudflare Workers" template, plus D1: Edit
 #   CLOUDFLARE_ACCOUNT_ID  from the Cloudflare dashboard sidebar
 #   FILES_SIGNING_SECRET   any long random string; it signs the photo links
 on:
@@ -20,13 +21,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install
+        working-directory: worker
+        run: npm ci
+
       - name: Deploy
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: worker
-          preCommands: npx wrangler r2 bucket create thxgiving-files || true
+          preCommands: |
+            npx wrangler r2 bucket create thxgiving-files || true
+            npx wrangler d1 execute thxgiving --remote --file schema.sql --yes
           secrets: |
             SIGNING_SECRET
         env:

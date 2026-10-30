@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Check, HandHelping, Plus, Star, UtensilsCrossed, X, type LucideIcon } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { api, seg } from '../lib/api'
 import { useLiveTable, upsertById } from '../lib/realtime'
 import type { ListItem, ListKind } from '../lib/types'
 import { useAuth } from '../auth'
@@ -10,20 +10,19 @@ const bySort = (a: ListItem, b: ListItem) => a.sort - b.sort || a.created_at.loc
 
 /** One of a gathering's lists: who's bringing what (food), or supplies & help (ask). */
 export default function List({ gatheringId, kind }: { gatheringId: string; kind: ListKind }) {
-  const { me } = useAuth()
   const [items, setItems] = useState<ListItem[] | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [myScores, setMyScores] = useState<Record<string, number>>({}) // food item id → my rating (only mine is readable)
 
   const load = useCallback(() => {
-    supabase.from('list_items').select('*').eq('gathering_id', gatheringId).eq('kind', kind).then(({ data, error }) => {
+    api.get<ListItem[]>(`/gatherings/${seg(gatheringId)}/items?kind=${kind}`).then(({ data, error }) => {
       setErr(error?.message ?? null)
-      if (!error) setItems((data ?? []) as ListItem[])
+      if (data) setItems(data)
       else setItems((cur) => cur ?? [])
     })
     if (kind === 'food') {
-      supabase.from('food_ratings').select('item_id, score, list_items!inner(gathering_id)').eq('list_items.gathering_id', gatheringId)
-        .then(({ data }) => setMyScores(Object.fromEntries((data ?? []).map((r) => [r.item_id, r.score]))))
+      api.get<{ item_id: string; score: number }[]>(`/gatherings/${seg(gatheringId)}/my-ratings`)
+        .then(({ data }) => { if (data) setMyScores(Object.fromEntries(data.map((r) => [r.item_id, r.score]))) })
     }
   }, [gatheringId, kind])
 
@@ -39,14 +38,13 @@ export default function List({ gatheringId, kind }: { gatheringId: string; kind:
   // Optimistic: update the screen now, then the database; realtime keeps everyone else in sync.
   const patch = async (id: string, changes: Partial<ListItem>) => {
     setItems((cur) => cur?.map((x) => (x.id === id ? { ...x, ...changes } : x)) ?? cur)
-    const { error } = await supabase.from('list_items').update(changes).eq('id', id)
+    const { error } = await api.patch(`/items/${seg(id)}`, changes)
     setErr(error?.message ?? null)
   }
   const add = async (label: string) => {
-    const { data, error } = await supabase
-      .from('list_items').insert({ gathering_id: gatheringId, kind, label, sort: 1000 }).select().single()
-    if (error) return setErr(error.message)
-    setItems((cur) => (cur ? upsertById(cur, data as ListItem) : cur))
+    const { data, error } = await api.post<ListItem>('/items', { gathering_id: gatheringId, kind, label })
+    if (error || !data) return setErr(error?.message ?? 'Could not add that')
+    setItems((cur) => (cur ? upsertById(cur, data) : cur))
   }
   // Anonymous 1–10 rating; null clears mine. The totals on the item are kept by the database and
   // arrive for everyone over realtime; adjust them here too so the change shows straight away.
@@ -64,15 +62,13 @@ export default function List({ gatheringId, kind }: { gatheringId: string; kind:
       rating_sum: (x.rating_sum ?? 0) - (prev ?? 0) + (score ?? 0),
       rating_count: (x.rating_count ?? 0) - (prev === undefined ? 0 : 1) + (score === null ? 0 : 1),
     }) ?? cur)
-    const { error } = score === null
-      ? await supabase.from('food_ratings').delete().eq('item_id', id).eq('user_id', me!.id)
-      : await supabase.from('food_ratings').upsert({ item_id: id, user_id: me!.id, score }, { onConflict: 'item_id,user_id' })
+    const { error } = await api.put(`/items/${seg(id)}/rating`, { score })
     setErr(error?.message ?? null)
     if (error) load()
   }
   const remove = async (id: string) => {
     setItems((cur) => cur?.filter((x) => x.id !== id) ?? cur)
-    const { error } = await supabase.from('list_items').delete().eq('id', id)
+    const { error } = await api.del(`/items/${seg(id)}`)
     setErr(error?.message ?? null)
   }
 

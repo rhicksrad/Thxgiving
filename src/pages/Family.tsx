@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { KeyRound, LogOut, UserMinus, UserPlus } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { api, seg } from '../lib/api'
 import { cleanPhone, formatPhone } from '../lib/phone'
 import { useAuth } from '../auth'
 import { Avatar, badgeFor, DEFAULT_BADGE } from '../components/Avatar'
@@ -14,7 +14,7 @@ type Member = { phone: string; name: string | null; created_at: string }
 const SITE = 'https://rhicksrad.github.io/Thxgiving/'
 
 export default function Family() {
-  const { me, profiles, saveProfile, session } = useAuth()
+  const { me, profiles, saveProfile, signOut } = useAuth()
   const { mode: installMode } = useInstall()
   const [name, setName] = useState(me?.display_name ?? '')
   const [badge, setBadge] = useState(badgeFor(me?.emoji)?.key ?? DEFAULT_BADGE)
@@ -35,7 +35,7 @@ export default function Family() {
   }, [myId])
 
   const loadMembers = () =>
-    supabase.from('members').select('phone, name, created_at').order('created_at').then(({ data }) => setMembers((data ?? []) as Member[]))
+    api.get<Member[]>('/members').then(({ data }) => { if (data) setMembers(data) })
   useEffect(() => { loadMembers() }, [])
 
   const addMember = async () => {
@@ -43,8 +43,8 @@ export default function Family() {
     const who = inviteName.trim().slice(0, 40)
     setErr(null); setNote(null)
     if (!phone) { setErr("That doesn't look like a phone number. Include the area code."); return false }
-    const { error } = await supabase.from('members').insert({ phone, name: who || null, invited_by: me?.id })
-    if (error) { setErr(error.code === '23505' ? 'That number is already on the list.' : error.message); return false }
+    const { error } = await api.post('/members', { phone, name: who || null })
+    if (error) { setErr(error.message); return false }
     setNote(`${who || formatPhone(phone)} is in. Text them ${SITE} and they'll pick a password the first time they sign in.`)
     loadMembers()
     return true
@@ -54,13 +54,13 @@ export default function Family() {
     const label = m.name ?? formatPhone(m.phone)
     if (!confirm(`Reset the password for ${label}? They'll pick a new one next time they sign in.`)) return
     setErr(null); setNote(null)
-    const { error } = await supabase.rpc('reset_member_password', { p_phone: m.phone })
+    const { error } = await api.post(`/members/${seg(m.phone)}/reset`)
     if (error) setErr(error.message)
     else setNote(`Done. ${label} can sign in and pick a new password.`)
   }
 
   const byPhone = Object.fromEntries(Object.values(profiles).map((p) => [p.phone, p]))
-  const myPhone = cleanPhone(session?.user.phone ?? '')
+  const myPhone = cleanPhone(me?.phone ?? '')
 
   return (
     <div className="stack-lg">
@@ -123,7 +123,7 @@ export default function Family() {
                     <button className="btn ghost sm danger" title="Remove from the family list" aria-label={`Remove ${label}`} onClick={async () => {
                       if (!confirm(`Take ${label} off the family list? They'll lose access.`)) return
                       setErr(null); setNote(null)
-                      const { error } = await supabase.from('members').delete().eq('phone', m.phone)
+                      const { error } = await api.del(`/members/${seg(m.phone)}`)
                       if (error) setErr(error.message)
                       loadMembers()
                     }}>
@@ -142,7 +142,7 @@ export default function Family() {
         <form className="row" onSubmit={async (e) => {
           e.preventDefault()
           if (newPw.length < 6) return setPwNote('At least 6 characters.')
-          const { error } = await supabase.auth.updateUser({ password: newPw })
+          const { error } = await api.post('/me/password', { password: newPw })
           setPwNote(error ? error.message : 'Password changed.')
           if (!error) setNewPw('')
         }}>
@@ -162,7 +162,7 @@ export default function Family() {
         </section>
       )}
 
-      <button className="btn ghost" onClick={() => supabase.auth.signOut()}><LogOut size={16} aria-hidden="true" />Sign out</button>
+      <button className="btn ghost" onClick={signOut}><LogOut size={16} aria-hidden="true" />Sign out</button>
     </div>
   )
 }

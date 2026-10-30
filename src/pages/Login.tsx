@@ -1,13 +1,17 @@
 import { useState } from 'react'
-import { supabase } from '../lib/supabase'
-import { cleanPhone, e164, formatPhone } from '../lib/phone'
+import { api } from '../lib/api'
+import { cleanPhone, formatPhone } from '../lib/phone'
+import type { Profile } from '../lib/types'
+import { useAuth } from '../auth'
 import Logo from '../components/Logo'
 
 // What phone_status() says about a number.
 type Status = 'not_member' | 'new' | 'set_password' | 'password'
 type Step = 'phone' | 'password' | 'create'
+type Session = { token: string; user: Profile }
 
 export default function Login() {
+  const { signIn: startSession } = useAuth()
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -23,10 +27,10 @@ export default function Login() {
     e.preventDefault()
     if (!digits) return setErr('That doesn\'t look like a phone number. Include the area code, like (317) 555-0123.')
     setBusy(true); setErr(null)
-    const { data, error } = await supabase.rpc('phone_status', { p_phone: digits })
+    const { data, error } = await api.post<{ status: Status }>('/auth/status', { phone: digits })
     setBusy(false)
-    if (error) return setErr(error.message)
-    const s = data as Status
+    if (error || !data) return setErr(error?.message ?? 'Something went wrong')
+    const s = data.status
     setStatus(s)
     if (s === 'not_member') return setErr(`${shown} isn't on the family list. Check for a typo, or ask anyone in the family to add you on the Family page.`)
     setPassword(''); setConfirm('')
@@ -36,13 +40,12 @@ export default function Login() {
   const signIn = async (e: React.FormEvent) => {
     e.preventDefault()
     setBusy(true); setErr(null)
-    const { error } = await supabase.auth.signInWithPassword({ phone: e164(digits), password })
+    const { data, error } = await api.post<Session>('/auth/login', { phone: digits, password })
     setBusy(false)
-    if (error) {
-      setErr(/invalid/i.test(error.message)
-        ? 'Wrong password. Forgot it? Anyone in the family can hit Reset next to your name on the Family page.'
-        : error.message)
-    }
+    if (data) return startSession(data.token, data.user)
+    setErr(error?.status === 401
+      ? 'Wrong password. Forgot it? Anyone in the family can hit Reset next to your name on the Family page.'
+      : error?.message ?? 'Something went wrong')
   }
 
   const create = async (e: React.FormEvent) => {
@@ -50,17 +53,10 @@ export default function Login() {
     if (password.length < 6) return setErr('Password needs at least 6 characters.')
     if (password !== confirm) return setErr("Passwords don't match.")
     setBusy(true); setErr(null)
-    if (status === 'new') {
-      const { data, error } = await supabase.auth.signUp({ phone: e164(digits), password })
-      if (error) { setBusy(false); return setErr(/database error/i.test(error.message) ? "That number isn't on the family list." : error.message) }
-      if (!data.session) await supabase.auth.signInWithPassword({ phone: e164(digits), password })
-    } else {
-      const { error } = await supabase.rpc('set_first_password', { p_phone: digits, p_password: password })
-      if (error) { setBusy(false); return setErr(error.message) }
-      const { error: signInErr } = await supabase.auth.signInWithPassword({ phone: e164(digits), password })
-      if (signInErr) { setBusy(false); return setErr(signInErr.message) }
-    }
+    const { data, error } = await api.post<Session>('/auth/signup', { phone: digits, password })
     setBusy(false)
+    if (data) return startSession(data.token, data.user)
+    setErr(error?.message ?? 'Something went wrong')
   }
 
   const back = () => { setStep('phone'); setErr(null); setPassword(''); setConfirm('') }

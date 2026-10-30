@@ -1,0 +1,14 @@
+{
+  "name": "thxgiving-worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "schema": "wrangler d1 execute thxgiving --remote --file schema.sql",
+    "schema:local": "wrangler d1 execute thxgiving --local --file schema.sql"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { supabase } from './supabase'
+import { api, seg } from './api'
 import { useLiveTable } from './realtime'
 import type { Reaction, ReactionTarget } from './types'
 import { useAuth } from '../auth'
@@ -28,14 +28,14 @@ export function useReactions(type: ReactionTarget, ids: string[]): Reactions {
   const load = useCallback(async (todo: string[]) => {
     for (let i = 0; i < todo.length; i += CHUNK) {
       const part = todo.slice(i, i + CHUNK)
-      const { data, error } = await supabase.from('reactions').select('*').eq('target_type', type).in('target_id', part)
-      if (error) { part.forEach((id) => fetched.current.delete(id)); return }
+      const { data, error } = await api.get<Reaction[]>(`/reactions?type=${type}&ids=${seg(part.join(','))}`)
+      if (error || !data) { part.forEach((id) => fetched.current.delete(id)); return }
       setReady(true)
       const got = new Set(part)
       setRows((cur) => {
         const next: Record<string, Reaction> = {}
         for (const r of Object.values(cur)) if (!got.has(r.target_id)) next[r.id] = r
-        for (const r of (data ?? []) as Reaction[]) next[r.id] = r
+        for (const r of data) next[r.id] = r
         return next
       })
     }
@@ -77,7 +77,7 @@ export function useReactions(type: ReactionTarget, ids: string[]): Reactions {
     if (mine) {
       setRows((cur) => { const next = { ...cur }; delete next[mine.id]; return next })
       if (mine.id.startsWith('tmp:')) return
-      const { error } = await supabase.from('reactions').delete().eq('id', mine.id)
+      const { error } = await api.del(`/reactions/${seg(mine.id)}`)
       if (error) setRows((cur) => ({ ...cur, [mine.id]: mine }))
       return
     }
@@ -86,12 +86,11 @@ export function useReactions(type: ReactionTarget, ids: string[]): Reactions {
       user_id: myId, emoji, created_at: new Date().toISOString(),
     }
     setRows((cur) => ({ ...cur, [temp.id]: temp }))
-    const { data, error } = await supabase.from('reactions')
-      .insert({ target_type: type, target_id: targetId, emoji }).select().single()
+    const { data, error } = await api.post<Reaction>('/reactions', { target_type: type, target_id: targetId, emoji })
     setRows((cur) => {
       const next = { ...cur }
       delete next[temp.id]
-      if (!error && data) next[(data as Reaction).id] = data as Reaction
+      if (!error && data) next[data.id] = data
       return next
     })
   }, [myId, type])

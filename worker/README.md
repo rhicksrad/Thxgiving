@@ -1,38 +1,73 @@
-# File service (Cloudflare R2)
+# The server (Cloudflare Worker)
 
-Stores the site's photos, videos, chat pics and avatars in Cloudflare R2 instead of Supabase storage.
-R2 has 10 GB free, then $0.015/GB a month, and downloads are always free (Supabase's free tier stops at 1 GB).
-Only family gets in, you can only upload or delete your own files, and the site gets short-lived signed links.
-It also pings Supabase every other day so the free project never pauses for inactivity.
+Everything behind the site, on Cloudflare's free plan:
 
-Until `filesUrl` is set in `public/config.js`, the site uses the Supabase `gallery` bucket instead.
+| File | What |
+|---|---|
+| [`index.js`](index.js) | The API: sign-in, the family list, gatherings, lists, RSVPs, chat, photos, comments, reactions |
+| [`schema.sql`](schema.sql) | The D1 (SQLite) database. Safe to re-run; the deploy workflow runs it every time |
+| [`files.js`](files.js) | Photos and videos in R2: uploads, signed links, deletes |
+| [`live.js`](live.js) | The Durable Object that sends every change to everyone's screen over a WebSocket |
+| [`wrangler.toml`](wrangler.toml) | Which D1 database, R2 bucket and Durable Object it uses |
 
-## Set it up
+**Who gets in:** every route except sign-in and signed file links needs a sign-in token whose phone number is still on
+the family list (`members`). You can only upload, delete or edit your own photos, messages, comments and reactions, and
+only upload into your own `<user id>/` folder. Food ratings never leave the Worker except as totals.
 
-1. **Cloudflare:** turn on R2 (sidebar → R2 Object Storage). Copy your **Account ID**. Create an API token from the
-   **Edit Cloudflare Workers** template and check it includes **Workers R2 Storage: Edit**.
-2. **Point it at Supabase:** put the project URL and publishable key in `[vars]` in `worker/wrangler.toml`
-   (the same two values as `public/config.js`).
-3. **GitHub** (repo → Settings → Secrets and variables → Actions → New repository secret), add:
-   - `CLOUDFLARE_API_TOKEN`: the token
-   - `CLOUDFLARE_ACCOUNT_ID`: the Account ID
-   - `FILES_SIGNING_SECRET`: any long random string (it signs the photo links), e.g. from `openssl rand -hex 32`
-4. **Deploy:** Actions → **Deploy file service to Cloudflare** → Run workflow. It creates the `thxgiving-files`
-   bucket and deploys to `https://thxgiving-files.<your subdomain>.workers.dev`. After that it redeploys on its own
-   whenever `worker/` changes on `main`.
-5. **Switch the site over:** set `filesUrl: 'https://thxgiving-files.<your subdomain>.workers.dev'` in
-   `public/config.js` and push. Do this before anyone uploads photos: files already in Supabase storage aren't
-   copied over.
+**Sign-in:** passwords are PBKDF2-SHA256 (100,000 rounds, salted). A sign-in gets a random token; the database keeps
+only its SHA-256. A device that hasn't opened the site in six months signs in again. Ten wrong passwords for one
+number in 15 minutes locks it out until the window passes.
+
+## Free-plan room
+
+D1 allows millions of reads and around 100,000 writes a day; R2 has 10 GB of storage free (then $0.015/GB a month)
+and downloads are always free; the Durable Object sleeps between messages. A family Thanksgiving uses a tiny slice
+of all of it.
+
+## Deploying
+
+The GitHub workflow [`deploy-worker.yml`](../.github/workflows/deploy-worker.yml) does it: set up the repo secrets
+listed there, then Actions → **Deploy the server to Cloudflare** → Run workflow. By hand, from this folder:
+
+```sh
+npm install
+npx wrangler secret put SIGNING_SECRET     # once: any long random string
+npm run schema                             # bring the database up to date
+npm run deploy
+```
+
+## Running it locally
+
+```sh
+npm install
+echo "SIGNING_SECRET=local" > .dev.vars
+npm run schema:local
+npx wrangler d1 execute thxgiving --local --command "insert into members (phone, name, created_at) values ('13175550100', 'Me', datetime('now'))"
+npm run dev                                # http://localhost:8787
+```
+
+Then run the site against it from the repo root: `VITE_API_URL=http://localhost:8787 npm run dev`.
 
 ## Routes
 
+All JSON. "Family" = signed in, and the number is on the family list.
+
 | Route | Who | What |
 |---|---|---|
-| `POST /sign` `{ paths, ttl?, download? }` | family | Signed links, like Supabase's `createSignedUrls` |
-| `PUT /o/<path>` | family, own folder | Upload (photos and videos only, up to 100 MB); returns the file's MD5 |
-| `POST /delete` `{ paths }` | family, own folder | Delete |
-| `GET /usage` | family | Total bytes and files in the bucket (shown on the Photos page) |
-| `POST /hashes` `{ paths }` | family | Each file's MD5 (its R2 etag), so the site can stack duplicate uploads |
+| `POST /auth/status` `{ phone }` | anyone | `not_member`, `new`, `set_password` or `password` |
+| `POST /auth/signup` `{ phone, password }` | on the list, no password yet | Pick a password; returns `{ token, user }` |
+| `POST /auth/login` `{ phone, password }` | anyone | `{ token, user }` |
+| `POST /auth/logout`, `GET /me` | signed in | Sign out; who you are and whether you're on the list |
+| `PATCH /me`, `POST /me/password` | family | Your name, badge and photo; your password |
+| `GET /profiles`, `GET/POST /members`, `DELETE /members/:phone`, `POST /members/:phone/reset` | family | The family |
+| `GET/POST /gatherings`, `GET/PATCH /gatherings/:id`, `GET /stats[/:id]` | family | Get-togethers and their counts |
+| `GET /gatherings/:id/items`, `POST /items`, `PATCH/DELETE /items/:id`, `PUT /items/:id/rating` | family | The food and help lists |
+| `GET /gatherings/:id/my-ratings`, `GET /gatherings/:id/rsvps`, `PUT /gatherings/:id/rsvp` | family | Your ratings; who's coming |
+| `GET/POST /messages`, `GET/DELETE /messages/:id` | family (delete: yours) | Chat |
+| `GET/POST /photos`, `PATCH/DELETE /photos/:id` | family (edit, delete: yours) | Photos and videos |
+| `GET/POST /comments`, `GET/DELETE /comments/:id` | family (delete: yours) | Photo comments |
+| `GET/POST /reactions`, `DELETE /reactions/:id` | family (delete: yours) | Emoji reactions |
+| `GET /activity` | family | The latest from everyone else, for the bell |
+| `GET /live?token=…` | family | WebSocket of every change: `{ table, op: insert/update/delete, row }` |
+| `POST /sign`, `PUT /o/<path>`, `POST /delete`, `POST /hashes`, `GET /usage` | family (uploads, deletes: your folder) | Files in R2 |
 | `GET /f/<path>?e=…&s=…` | anyone with the link | The file, with range requests for video |
-
-"Family" means a valid Supabase session whose phone number passes `public.is_member()`.

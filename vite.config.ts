@@ -14,7 +14,6 @@ export default defineConfig({
         advancedChunks: {
           groups: [
             { name: 'react', test: /node_modules[\\/](react|react-dom|react-router|scheduler)[\\/]/ },
-            { name: 'supabase', test: /node_modules[\\/]@supabase[\\/]/ },
           ],
         },
       },

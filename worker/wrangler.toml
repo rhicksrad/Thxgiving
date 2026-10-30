@@ -1,18 +1,24 @@
-# Cloudflare Worker that stores the site's photos and videos in R2. See worker/README.md.
-name = "thxgiving-files"
+# The Thanksgiving site's backend: API, D1 database, R2 photos and live updates. See worker/README.md.
+name = "thxgiving"
 main = "index.js"
 compatibility_date = "2026-09-01"
 
-# Ping Supabase every other day so the free project never pauses for inactivity.
-[triggers]
-crons = ["41 13 */2 * *"]
+[[d1_databases]]
+binding = "DB"
+database_name = "thxgiving"
+database_id = "cc680a6d-d1b7-4377-8475-837ee38d5f4b"
 
 [[r2_buckets]]
 binding = "FILES"
 bucket_name = "thxgiving-files"
 
-# Same public values as public/config.js. The signing secret (SIGNING_SECRET) is set with
-# `wrangler secret put` or the deploy workflow, never here.
-[vars]
-SUPABASE_URL = "https://YOUR-PROJECT-REF.supabase.co"
-SUPABASE_KEY = "sb_publishable_YOUR-KEY"
+# One Durable Object holds everyone's live connection. SQLite-backed, which is what the free plan allows.
+[[durable_objects.bindings]]
+name = "LIVE"
+class_name = "Live"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Live"]
+
+# SIGNING_SECRET (signs the photo links) is a secret: set by the deploy workflow or `wrangler secret put`, never here.

@@ -1,51 +1,51 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import type { Session } from '@supabase/supabase-js'
-import { supabase } from './lib/supabase'
-import { useLiveTable } from './lib/realtime'
+import { api, getToken, setToken, whenSignedOut } from './lib/api'
+import { resetLive, useLiveTable } from './lib/realtime'
 import type { Profile } from './lib/types'
 
 type AuthState = {
-  session: Session | null
+  signedIn: boolean
   loading: boolean
   member: boolean | null // null = still checking
   me: Profile | null
   profiles: Record<string, Profile>
   refreshMember: () => Promise<void>
   saveProfile: (patch: Partial<Pick<Profile, 'display_name' | 'emoji' | 'avatar_path'>>) => Promise<string | null>
+  signIn: (token: string, user: Profile) => void
+  signOut: () => void
 }
 
 const Ctx = createContext<AuthState>(null as unknown as AuthState)
 export const useAuth = () => useContext(Ctx)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [token, setTok] = useState<string | null>(() => getToken())
+  const [user, setUser] = useState<Profile | null>(null)
   const [member, setMember] = useState<boolean | null>(null)
+  const [loading, setLoading] = useState(Boolean(token))
   const [profiles, setProfiles] = useState<Record<string, Profile>>({})
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session)
-      setLoading(false)
-    })
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s))
-    return () => sub.subscription.unsubscribe()
+  const forget = useCallback(() => {
+    setToken(null)
+    setTok(null); setUser(null); setMember(null); setProfiles({}); setLoading(false)
+    resetLive()
   }, [])
-
-  const userId = session?.user.id
+  useEffect(() => { whenSignedOut(forget); return () => whenSignedOut(null) }, [forget])
 
   const refreshMember = useCallback(async () => {
-    if (!userId) return setMember(null)
-    const { data, error } = await supabase.rpc('is_member')
-    setMember(error ? false : Boolean(data))
-  }, [userId])
+    if (!getToken()) return
+    const { data, error } = await api.get<{ user: Profile; member: boolean }>('/me')
+    if (data) { setUser(data.user); setMember(data.member) }
+    else if (error?.status !== 401) setMember((m) => m ?? false) // offline: let them retry from the "not on the list" screen
+    setLoading(false)
+  }, [])
 
-  useEffect(() => { refreshMember() }, [refreshMember])
+  useEffect(() => { if (token) refreshMember() }, [token, refreshMember])
 
   const loadProfiles = useCallback(() => {
-    supabase.from('profiles').select('*').then(({ data, error }) => {
-      if (error) return // keep what we have rather than blanking every name and avatar
-      setProfiles(Object.fromEntries((data ?? []).map((p) => [p.id, p as Profile])))
+    api.get<Profile[]>('/profiles').then(({ data }) => {
+      if (!data) return // keep what we have rather than blanking every name and avatar
+      setProfiles(Object.fromEntries(data.map((p) => [p.id, p])))
     })
   }, [])
 
@@ -56,27 +56,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onResync: loadProfiles,
   }, Boolean(member))
 
+  const userId = user?.id
   const saveProfile = useCallback<AuthState['saveProfile']>(async (patch) => {
     if (!userId) return 'Not signed in'
-    // Saving a name finishes onboarding; a photo uploaded mid-onboarding doesn't close the welcome form.
-    const changes = 'display_name' in patch ? { ...patch, onboarded: true } : patch
-    const { data, error } = await supabase
-      .from('profiles').update(changes).eq('id', userId).select().single()
-    if (error) return error.message
-    setProfiles((all) => ({ ...all, [userId]: data as Profile }))
+    const { data, error } = await api.patch<Profile>('/me', patch)
+    if (error || !data) return error?.message ?? 'Could not save'
+    setProfiles((all) => ({ ...all, [userId]: data }))
+    setUser(data)
     return null
   }, [userId])
 
-  const me = userId ? profiles[userId] ?? null : null
+  const signIn = useCallback((t: string, u: Profile) => {
+    setToken(t)
+    setUser(u); setMember(null); setLoading(true)
+    setTok(t)
+    resetLive()
+  }, [])
+
+  const signOut = useCallback(() => {
+    api.post('/auth/logout').finally(forget)
+  }, [forget])
+
+  const me = userId ? profiles[userId] ?? user : null
   // Every screen reads this, so only hand out a new object when something in it changed.
   const value = useMemo(
-    () => ({ session, loading, member, me, profiles, refreshMember, saveProfile }),
-    [session, loading, member, me, profiles, refreshMember, saveProfile],
+    () => ({ signedIn: Boolean(token), loading, member, me, profiles, refreshMember, saveProfile, signIn, signOut }),
+    [token, loading, member, me, profiles, refreshMember, saveProfile, signIn, signOut],
   )
 
-  return (
-    <Ctx.Provider value={value}>
-      {children}
-    </Ctx.Provider>
-  )
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

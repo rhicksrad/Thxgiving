@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { MessageSquare, SendHorizontal, X } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { api, seg } from '../lib/api'
 import { useLiveTable } from '../lib/realtime'
 import { useReactions } from '../lib/reactions'
 import { when } from '../lib/format'
@@ -18,10 +18,10 @@ export function usePhotoComments(photoIds: string[]) {
 
   const load = useCallback(async () => {
     if (!key) return setRows([])
-    const { data, error } = await supabase.from('photo_comments').select('*').in('photo_id', key.split(',')).order('created_at')
-    if (error) { setReady(false); setRows([]); return }
+    const { data, error } = await api.get<PhotoComment[]>(`/comments?photos=${seg(key)}`)
+    if (error || !data) { setReady(false); setRows([]); return }
     setReady(true)
-    setRows((data ?? []) as PhotoComment[])
+    setRows(data)
   }, [key])
   useEffect(() => { setRows(null); load() }, [load])
 
@@ -57,13 +57,13 @@ export function PhotoComments({ photoId, comments, onClose }: {
     if (!body) return
     setText('')
     setErr(null)
-    const { data, error } = await supabase.from('photo_comments').insert({ photo_id: photoId, body }).select().single()
-    if (error) { setErr(error.message); setText(body); return }
-    setRows((cur) => (cur && !cur.some((x) => x.id === data.id) ? [...cur, data as PhotoComment] : cur))
+    const { data, error } = await api.post<PhotoComment>('/comments', { photo_id: photoId, body })
+    if (error || !data) { setErr(error?.message ?? 'Could not post'); setText(body); return }
+    setRows((cur) => (cur && !cur.some((x) => x.id === data.id) ? [...cur, data] : cur))
   }
   const remove = async (c: PhotoComment) => {
     if (!confirm('Delete this comment?')) return
-    const { error } = await supabase.from('photo_comments').delete().eq('id', c.id)
+    const { error } = await api.del(`/comments/${seg(c.id)}`)
     if (!error) setRows((cur) => cur?.filter((x) => x.id !== c.id) ?? cur)
   }
 
@@ -115,8 +115,8 @@ export function PhotoComments({ photoId, comments, onClose }: {
 export function useCommentCounts() {
   const [rows, setRows] = useState<Record<string, string>>({}) // comment id → photo id
   const load = useCallback(async () => {
-    const { data, error } = await supabase.from('photo_comments').select('id, photo_id')
-    if (!error) setRows(Object.fromEntries((data ?? []).map((c) => [c.id as string, c.photo_id as string])))
+    const { data } = await api.get<{ id: string; photo_id: string }[]>('/comments')
+    if (data) setRows(Object.fromEntries(data.map((c) => [c.id, c.photo_id])))
   }, [])
   useEffect(() => { load() }, [load])
   useLiveTable<PhotoComment>('photo_comments', undefined, {

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { downloadZip } from 'client-zip'
 import { ChevronLeft, ChevronRight, Download, ImagePlus, Layers, MessageSquare, Play, Trash2, X } from 'lucide-react'
-import { supabase } from '../lib/supabase'
-import { fileHashes, removeFiles, signFiles, uploadFile } from '../lib/storage'
+import { api, seg } from '../lib/api'
+import { fileHashes, signFiles, uploadFile } from '../lib/storage'
 import { useSignedUrls } from '../lib/signedUrls'
 import { extOf, makeThumb, saveAs } from '../lib/images'
 import { fileReader, takenAt, urlReader } from '../lib/takenAt'
@@ -77,7 +77,7 @@ export function useContentHashes(photos: Photo[] | null) {
       bump((n) => n + 1) // even if the list changed meanwhile: these are cached, so no later run would show them
       for (const p of todo) {
         const h = knownHashes.get(p.path)
-        if (h && p.uploader_id === me?.id) await supabase.from('photos').update({ content_hash: h }).eq('id', p.id)
+        if (h && p.uploader_id === me?.id) await api.patch(`/photos/${seg(p.id)}`, { content_hash: h })
       }
     })()
   }, [photos, me?.id])
@@ -289,8 +289,7 @@ export function Lightbox({ photos, index, gatherings, onClose, onIndex, onDelete
   const del = async () => {
     if (!confirm(others ? 'Remove your copy? Others added this too, so it stays up for them.' : 'Delete this for everyone?')) return
     for (const c of mine) {
-      await removeFiles([c.path, ...(c.thumb_path ? [c.thumb_path] : [])])
-      const { error } = await supabase.from('photos').delete().eq('id', c.id)
+      const { error } = await api.del(`/photos/${seg(c.id)}`) // takes the files, comments and reactions with it
       if (!error) onDeleted(c.id)
     }
   }
@@ -402,15 +401,9 @@ export function Uploader({ gatherings, defaultGatheringId, onUploaded }: { gathe
           gathering_id: gatheringId || null, path, thumb_path, mime: file.type || 'image/jpeg', caption: caption.trim() || null,
           taken_at: (await takenAt(fileReader(file), file.type)) ?? fromLastModified(file), content_hash,
         }
-        let { data, error: dbErr } = await supabase.from('photos').insert(row).select().single()
-        // Database not updated yet (supabase/schema.sql): save without the newer columns it doesn't have.
-        for (const col of ['content_hash', 'taken_at']) {
-          if (!dbErr?.message.includes(col)) continue
-          delete row[col]
-          ;({ data, error: dbErr } = await supabase.from('photos').insert(row).select().single())
-        }
-        if (dbErr) throw dbErr
-        onUploaded(data as Photo)
+        const { data, error: dbErr } = await api.post<Photo>('/photos', row)
+        if (dbErr || !data) throw new Error(dbErr?.message ?? 'Could not save it')
+        onUploaded(data)
       } catch (e) {
         failed++
         setErr(`${file.name}: ${(e as Error).message}`)
@@ -464,7 +457,7 @@ export function useBackfillTakenAt(photos: Photo[] | null) {
           const [link] = await signFiles([p.path], 600)
           const reader = link && (await urlReader(link.url))
           const t = reader ? await takenAt(reader, p.mime) : null
-          await supabase.from('photos').update({ taken_at: t ?? p.created_at }).eq('id', p.id)
+          await api.patch(`/photos/${seg(p.id)}`, { taken_at: t ?? p.created_at })
         } catch { /* try again next visit */ tried.delete(p.id) }
       }
     })()

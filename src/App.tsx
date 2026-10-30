@@ -1,7 +1,7 @@
 import { lazy, Suspense, type ComponentType } from 'react'
 import { HashRouter, Navigate, Route, Routes } from 'react-router'
 import { AuthProvider, useAuth } from './auth'
-import { isConfigured, supabase } from './lib/supabase'
+import { isConfigured } from './lib/api'
 import Layout from './components/Layout'
 import Logo from './components/Logo'
 import Home from './pages/Home'
@@ -42,10 +42,10 @@ export default function App() {
 }
 
 function Gate() {
-  const { session, loading, member } = useAuth()
-  if (loading || (session && member === null)) return <Splash />
-  if (!session) return <Suspense fallback={<Splash />}><Login /></Suspense>
-  if (!member) return <NotOnList phone={session.user.phone ?? ''} />
+  const { signedIn, loading, member, me } = useAuth()
+  if (loading || (signedIn && member === null)) return <Splash />
+  if (!signedIn) return <Suspense fallback={<Splash />}><Login /></Suspense>
+  if (!member) return <NotOnList phone={me?.phone ?? ''} />
   return (
     <Layout>
       <Suspense fallback={<div className="loading">Loading…</div>}>
@@ -71,7 +71,7 @@ function Splash() {
 }
 
 function NotOnList({ phone }: { phone: string }) {
-  const { refreshMember } = useAuth()
+  const { refreshMember, signOut } = useAuth()
   return (
     <div className="center-screen">
       <div className="card narrow stack">
@@ -83,7 +83,7 @@ function NotOnList({ phone }: { phone: string }) {
         </p>
         <div className="row">
           <button className="btn gold" onClick={refreshMember}>I've been added</button>
-          <button className="btn ghost" onClick={() => supabase.auth.signOut()}>Use a different number</button>
+          <button className="btn ghost" onClick={signOut}>Use a different number</button>
         </div>
       </div>
     </div>
@@ -97,8 +97,8 @@ function SetupNeeded() {
         <Logo size={56} />
         <h1 className="display">Almost there</h1>
         <p>
-          The site isn't connected to Supabase yet. Put the project URL and publishable key in <code>public/config.js</code>{' '}
-          and redeploy. The README walks through it.
+          The site isn't connected to its server yet. Put the Worker's address in <code>apiUrl</code> in{' '}
+          <code>public/config.js</code> and redeploy. The README walks through it.
         </p>
       </div>
     </div>

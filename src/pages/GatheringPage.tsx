@@ -4,7 +4,7 @@ import {
   ArrowLeft, ArrowRight, Camera, CalendarClock, HandHelping, MapPin, MessageCircle, Pencil, StickyNote, UtensilsCrossed,
   type LucideIcon,
 } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { api, seg } from '../lib/api'
 import { dateInput, fromInputs, gatheringDay, gatheringTime, isPast, isToday, timeInput } from '../lib/format'
 import { useLiveTable, upsertById } from '../lib/realtime'
 import type { Gathering, GatheringStats, Photo } from '../lib/types'
@@ -31,8 +31,8 @@ export default function GatheringPage() {
 
   const load = useCallback(() => {
     if (!id) return
-    supabase.from('gatherings').select('*').eq('id', id).maybeSingle()
-      .then(({ data, error }) => { if (!error) setGathering(data as Gathering | null) })
+    api.get<Gathering | null>(`/gatherings/${seg(id)}`)
+      .then(({ data, error }) => { if (!error) setGathering(data) })
   }, [id])
 
   useEffect(() => { setGathering(undefined); load() }, [load])
@@ -60,8 +60,7 @@ export function Board({ gathering }: { gathering: Gathering }) {
   const [openId, setOpenId] = useState<string | null>(null)
 
   const loadPhotos = useCallback(() => {
-    supabase.from('photos').select('*').eq('gathering_id', id).order('created_at', { ascending: false })
-      .then(({ data, error }) => { if (!error) setPhotos((data ?? []) as Photo[]) })
+    api.get<Photo[]>(`/photos?gathering=${seg(id)}`).then(({ data }) => { if (data) setPhotos(data) })
   }, [id])
 
   // Going from one gathering to another reuses this board, so clear the last one's photos first.
@@ -158,8 +157,7 @@ function Hero({ gathering }: { gathering: Gathering }) {
   const [rsvps] = useRsvps(gathering.id)
   const [stats, setStats] = useState<GatheringStats | null>(null)
   const loadStats = useCallback(() => {
-    supabase.from('gathering_stats').select('*').eq('gathering_id', gathering.id).maybeSingle()
-      .then(({ data, error }) => { if (!error) setStats(data as GatheringStats | null) })
+    api.get<GatheringStats | null>(`/stats/${seg(gathering.id)}`).then(({ data, error }) => { if (!error) setStats(data) })
   }, [gathering.id])
   useEffect(() => { setStats(null); loadStats() }, [loadStats])
   // The totals come from the lists, so recount whenever something on them changes.
@@ -210,9 +208,8 @@ function EditWhen({ gathering, onDone }: { gathering: Gathering; onDone: () => v
   return (
     <form className="stack edit-when" onSubmit={async (e) => {
       e.preventDefault()
-      const { error } = await supabase.from('gatherings')
-        .update({ title: title.trim() || gathering.title, starts_at: fromInputs(date, time), time_tbd: !time })
-        .eq('id', gathering.id)
+      const { error } = await api.patch(`/gatherings/${seg(gathering.id)}`,
+        { title: title.trim() || gathering.title, starts_at: fromInputs(date, time), time_tbd: !time })
       if (error) return setErr(error.message)
       onDone()
     }}>
@@ -242,7 +239,7 @@ function EditableField({ gathering, field, Icon, label, placeholder }: {
     setFocused(false)
     const v = val.trim()
     if (v === (gathering[field] ?? '')) return
-    const { error } = await supabase.from('gatherings').update({ [field]: v || null }).eq('id', gathering.id)
+    const { error } = await api.patch(`/gatherings/${seg(gathering.id)}`, { [field]: v || null })
     if (error) { setVal(gathering[field] ?? ''); alert(`Couldn't save that: ${error.message}`) }
   }
   return (

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { Download, HardDrive, Images } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { api } from '../lib/api'
 import { isPast, isToday, plural } from '../lib/format'
 import { useLiveTable, upsertById } from '../lib/realtime'
 import type { Gathering, Photo } from '../lib/types'
@@ -32,11 +32,10 @@ export default function Gallery() {
   const [usage, setUsage] = useState<Usage | null>(null)
 
   const loadPhotos = useCallback(() => {
-    supabase.from('photos').select('*').order('created_at', { ascending: false })
-      .then(({ data, error }) => setPhotos((cur) => (error && cur ? cur : (data ?? []) as Photo[])))
+    api.get<Photo[]>('/photos').then(({ data }) => setPhotos((cur) => (!data && cur ? cur : data ?? [])))
   }, [])
   useEffect(() => {
-    supabase.from('gatherings').select('*').order('starts_at', { ascending: false }).then(({ data }) => setGatherings((data ?? []) as Gathering[]))
+    api.get<Gathering[]>('/gatherings').then(({ data }) => { if (data) setGatherings(data.reverse()) })
     loadPhotos()
   }, [loadPhotos])
 

@@ -1,7 +1,6 @@
-// Phone numbers are saved as digits with the country code and no "+" (13175550123), the way Supabase Auth
-// keeps them. US numbers can be typed any way: (317) 555-0123, 317.555.0123, +1 317 555 0123.
+// Phone numbers are saved as digits with the country code and no "+" (13175550123). US numbers can be typed any way: (317) 555-0123, 317.555.0123, +1 317 555 0123.
 
-/** Digits with the country code, or '' if it doesn't look like a phone number. Matches clean_phone() in schema.sql. */
+/** Digits with the country code, or '' if it doesn't look like a phone number. Matches cleanPhone() in worker/index.js. */
 export function cleanPhone(raw: string) {
   const d = raw.replace(/\D/g, '')
   const full = d.length === 10 ? `1${d}` : d
@@ -15,5 +14,3 @@ export function formatPhone(digits?: string | null) {
   return d ? `+${d}` : ''
 }
 
-/** What Supabase Auth wants: +<digits>. */
-export const e164 = (digits: string) => `+${digits}`
