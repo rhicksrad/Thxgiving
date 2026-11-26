@@ -16,7 +16,7 @@ const NAV = [
   { to: '/chat', label: 'Chat', Icon: MessagesSquare },
   { to: '/gallery', label: 'Photos', Icon: Images },
   { to: '/family', label: 'Family', Icon: Users },
-  { to: '/mine', label: 'My page', Icon: LockKeyhole },
+  { to: '/mine', label: 'Mine', Icon: LockKeyhole },
 ]
 
 export default function Layout({ children }: { children: ReactNode }) {

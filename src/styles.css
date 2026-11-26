@@ -307,7 +307,7 @@ select.input { appearance: none; cursor: pointer; background-image: linear-gradi
 .gp-chat { grid-area: chat; }
 .gp-pics { grid-area: pics; display: flex; flex-direction: column; gap: 14px; }
 @media (max-width: 899px) {
-  .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; padding: 4px; background: color-mix(in srgb, var(--card) 95%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--line); border-radius: 12px; position: sticky; top: calc(var(--topbar-h) + 8px); z-index: 10; }
+  .tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; padding: 4px; background: color-mix(in srgb, var(--card) 95%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--line); border-radius: 12px; position: sticky; top: calc(var(--topbar-h) + 8px); z-index: 10; }
   .tabs button { min-height: 50px; padding: 4px 2px; white-space: nowrap; font-size: 11.5px; font-weight: 600; line-height: 1.1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); cursor: pointer; transition: background 0.15s, color 0.15s; }
   .tabs button.on { background: var(--gold-soft); color: var(--gold); }
   /* Phones: the details and who's coming sit on top, then the tabs switch between food, help, chat and photos. */
@@ -657,7 +657,11 @@ select.input { appearance: none; cursor: pointer; background-image: linear-gradi
 .quick > span { display: flex; flex-direction: column; gap: 2px; }
 @media (max-width: 760px) { .quick-links { grid-template-columns: 1fr; } }
 
-/* My page */
-.my-blank { align-items: flex-start; gap: 10px; }
-.my-blank .badge svg.lucide { margin-right: 2px; }
-.wish-box textarea { resize: vertical; min-height: 120px; }
+/* ---------- Mine: everyone's private page ---------- */
+.mine-private { display: inline-flex; align-items: center; gap: 6px; margin: 0; }
+.mine-private svg { color: var(--gold); }
+.mine-wish { min-height: 120px; line-height: 1.5; }
+.mine-page iframe { display: block; width: 100%; border: 0; background: transparent; color-scheme: dark; }
+.mine-change summary { cursor: pointer; list-style: none; }
+.mine-change summary::-webkit-details-marker { display: none; }
+.mine-change:not([open]) { gap: 0; }
