@@ -230,5 +230,23 @@ select lower(hex(randomblob(16))), 'thanksgiving-2026', t.kind, t.label, t.sort,
 from list_template t
 where not exists (select 1 from list_items where gathering_id = 'thanksgiving-2026');
 
+-- The archive: get-togethers moved off Home's "Coming up" into its Archive section.
+-- (A separate table, not a column, so this file stays safe to re-run.)
+create table if not exists archived_gatherings (
+  gathering_id text primary key references gatherings(id) on delete cascade,
+  archived_at  text not null
+);
+insert or ignore into archived_gatherings (gathering_id, archived_at)
+values ('thanksgiving-2026', '2026-11-26T23:45:00.000Z');
+
+-- Family Christmas: Saturday, January 2, 2027, time to be decided. Starter lists copied once.
+insert or ignore into gatherings (id, title, starts_at, time_tbd, created_at)
+values ('christmas-2026', 'Family Christmas', '2027-01-02T17:00:00.000Z', 1, '2026-11-26T23:45:00.000Z');
+
+insert into list_items (id, gathering_id, kind, label, sort, created_at)
+select lower(hex(randomblob(16))), 'christmas-2026', t.kind, t.label, t.sort, '2026-11-26T23:45:00.000Z'
+from list_template t
+where not exists (select 1 from list_items where gathering_id = 'christmas-2026');
+
 -- FIRST RUN: add yourself so you can sign in, then add everyone else from the Family page:
 --   npx wrangler d1 execute thxgiving --remote --command "insert into members (phone, name, created_at) values ('13175550123', 'Your Name', datetime('now'))"
