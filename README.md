@@ -113,7 +113,7 @@ Thanksgiving 2026 and its lists. What's left:
    - `FILES_SIGNING_SECRET`: any long random string (it signs photo links), e.g. from `openssl rand -hex 32`
 2. **Deploy the server:** Actions → **Deploy the server to Cloudflare** → Run workflow. It redeploys on its own whenever
    `worker/` changes on `main`, and brings the database up to date each time.
-3. **Check the address:** the Worker lands at `https://thxgiving.<your workers.dev subdomain>.workers.dev`. If that
+3. **Check the address:** the Worker answers at `https://api.hicksfamily.app` (and its workers.dev address). If that
    isn't what `apiUrl` in [`public/config.js`](public/config.js) says, fix it there and push.
 4. **GitHub Pages:** repo → Settings → Pages → Source: **GitHub Actions**.
 5. **Add yourself** so you can sign in (then add everyone else from the Family page). In Cloudflare: Storage & Databases →
