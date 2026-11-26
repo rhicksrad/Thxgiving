@@ -109,8 +109,8 @@ async function route(req, env, ctx, url) {
   }
 
   // Gatherings
-  if (at('GET', 'gatherings')) return json((await db.all('select * from gatherings order by starts_at')).map(gathering))
-  if (at('GET', 'gatherings', '*')) return json(gathering(await db.one('select * from gatherings where id = ?', b)))
+  if (at('GET', 'gatherings')) return json((await db.all(`${GATHERINGS} order by g.starts_at`)).map(gathering))
+  if (at('GET', 'gatherings', '*')) return json(gathering(await db.one(`${GATHERINGS} where g.id = ?`, b)))
   if (at('POST', 'gatherings')) return addGathering(req, db, live)
   if (at('PATCH', 'gatherings', '*')) return updateGathering(req, db, b, live)
   if (at('GET', 'stats')) return json(await db.all(STATS))
@@ -289,7 +289,9 @@ const profile = (u) => u && ({
   id: u.id, phone: u.phone, display_name: u.display_name, emoji: u.emoji, avatar_path: u.avatar_path,
   onboarded: Boolean(u.onboarded), created_at: u.created_at,
 })
-const gathering = (g) => g && ({ ...g, time_tbd: Boolean(g.time_tbd) })
+const gathering = (g) => g && ({ ...g, time_tbd: Boolean(g.time_tbd), archived: Boolean(g.archived) })
+// Gatherings with whether each one has been put in the archive.
+const GATHERINGS = `select g.*, exists (select 1 from archived_gatherings a where a.gathering_id = g.id) as archived from gatherings g`
 
 async function broadcast(env, table, op, row) {
   try {
@@ -519,8 +521,14 @@ async function addGathering(req, db, live) {
 
 async function updateGathering(req, db, id, live) {
   const p = await body(req)
-  const cur = await db.one('select * from gatherings where id = ?', id)
+  const cur = await db.one(`${GATHERINGS} where g.id = ?`, id)
   if (!cur) fail('That is gone', 404)
+  if ('archived' in p) {
+    cur.archived = p.archived ? 1 : 0
+    await db.run(cur.archived
+      ? 'insert or ignore into archived_gatherings (gathering_id, archived_at) values (?1, ?2)'
+      : 'delete from archived_gatherings where gathering_id = ?1', ...(cur.archived ? [id, now()] : [id]))
+  }
   if ('title' in p) cur.title = opt(p.title, 80) ?? cur.title
   if ('starts_at' in p) { if (!isTime(p.starts_at)) fail('Pick a date'); cur.starts_at = new Date(p.starts_at).toISOString() }
   if ('time_tbd' in p) cur.time_tbd = p.time_tbd ? 1 : 0

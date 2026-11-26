@@ -15,6 +15,7 @@ export type Gathering = {
   time_tbd: boolean         // date set, time not yet
   place: string | null      // whose house / the address
   notes: string | null      // parking, bring a chair, anything else
+  archived?: boolean        // put in the archive by hand (past ones go there on their own)
   created_at?: string
 }
 

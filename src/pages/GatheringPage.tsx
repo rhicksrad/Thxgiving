@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
 import {
-  ArrowLeft, ArrowRight, Camera, CalendarClock, HandHelping, MapPin, MessageCircle, Pencil, StickyNote, UtensilsCrossed,
+  Archive, ArchiveRestore, ArrowLeft, ArrowRight, Camera, CalendarClock, HandHelping, MapPin, MessageCircle, Pencil, StickyNote, UtensilsCrossed,
   type LucideIcon,
 } from 'lucide-react'
 import { api, seg } from '../lib/api'
@@ -166,7 +166,9 @@ function Hero({ gathering }: { gathering: Gathering }) {
   return (
     <section className="hero card">
       <div className="hero-kicker">
-        {isToday(gathering) ? <span className="badge live">Today!</span> : past ? <span className="badge">Looking back</span> : <span className="badge">Save the date</span>}
+        {gathering.archived ? <span className="badge">Archived</span> : isToday(gathering) ? <span className="badge live">Today!</span>
+          : past ? <span className="badge">Looking back</span> : <span className="badge">Save the date</span>}
+        <ArchiveToggle gathering={gathering} />
       </div>
       <h1 className="display huge">{gathering.title}</h1>
       <div className="hero-when">
@@ -187,6 +189,21 @@ function Hero({ gathering }: { gathering: Gathering }) {
         </div>
       )}
     </section>
+  )
+}
+
+/** Put a get-together in the archive early (it goes there by itself once its day is over), or bring it back. */
+function ArchiveToggle({ gathering }: { gathering: Gathering }) {
+  const [busy, setBusy] = useState(false)
+  if (isPast(gathering) && !gathering.archived) return null
+  return (
+    <button className="btn ghost sm" disabled={busy} onClick={async () => {
+      setBusy(true)
+      await api.patch(`/gatherings/${seg(gathering.id)}`, { archived: !gathering.archived })
+      setBusy(false)
+    }}>
+      {gathering.archived ? <><ArchiveRestore size={14} aria-hidden="true" />Bring it back</> : <><Archive size={14} aria-hidden="true" />Move to archive</>}
+    </button>
   )
 }
 

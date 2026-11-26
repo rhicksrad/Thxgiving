@@ -8,8 +8,9 @@ the pictures. It dresses up for the season with a new look every month.
 - **Home** is the family's front page:
   - A welcome in this month's theme (see **Seasons** below), with what's going on this month.
   - **Coming up:** the next get-together with its countdown, and a button into its sign-up board.
-  - Shortcuts to the chat, photos and family list, then every other get-together: what's still ahead, and
-    **Looking back** for the ones that are done.
+  - Shortcuts to the chat, photos and family list, then every other get-together still ahead.
+  - **Archive** (tap to open): the get-togethers that are over, with their photos, chat and lists. Each one moves
+    there on its own the day after; **Move to archive** on its page puts one away early (**Bring it back** undoes it).
 - **Each get-together has its own page**, like **Thanksgiving 2026** (Thursday, November 26):
   - A countdown, plus the date and time (tap the pencil to change them; leave the time blank until it's decided).
   - **Where** and **Notes:** whose house, the address, parking, bring a chair…

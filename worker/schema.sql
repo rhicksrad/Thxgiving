@@ -55,6 +55,13 @@ create table if not exists gatherings (
 );
 create index if not exists gatherings_starts_idx on gatherings (starts_at);
 
+-- Gatherings put away in the archive by hand (anything past its day goes there on its own).
+-- Its own table rather than a column, so this file stays safe to re-run.
+create table if not exists archived_gatherings (
+  gathering_id text primary key references gatherings(id) on delete cascade,
+  archived_at  text not null
+);
+
 -- The starter lists every new gathering gets. Edit these to change the defaults.
 create table if not exists list_template (
   kind  text not null check (kind in ('food', 'ask')),

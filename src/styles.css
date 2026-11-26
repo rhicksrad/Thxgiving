@@ -712,3 +712,9 @@ select.input { appearance: none; cursor: pointer; background-image: linear-gradi
   .cal-more { display: none; }
   .tabbar a { font-size: 10.5px; }
 }
+/* ---------- Archive (Home) ---------- */
+.archive summary { list-style: none; cursor: pointer; }
+.archive summary::-webkit-details-marker { display: none; }
+.archive summary .section-title svg { color: var(--gold); }
+.archive[open] summary .section-title { margin-bottom: 6px; }
+.archive > p { margin: 0 0 12px; }

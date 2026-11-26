@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router'
-import { ArrowRight, Camera, ChevronRight, Images, MapPin, MessageCircle, MessagesSquare, Plus, Users } from 'lucide-react'
+import { Archive, ArrowRight, Camera, ChevronRight, Images, MapPin, MessageCircle, MessagesSquare, Plus, Users } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAuth } from '../auth'
 import { useTheme } from '../lib/theme'
@@ -35,10 +35,12 @@ export default function Home() {
   })
 
   // The next one coming up gets the spotlight; the rest are split into what's ahead and what's behind.
+  // The archive: everything that's over, plus anything put there by hand, newest first.
   const { next, upcoming, past } = useMemo(() => {
     const list = gatherings ?? []
-    const ahead = list.filter((g) => !isPast(g))
-    return { next: ahead[0], upcoming: ahead.slice(1), past: list.filter(isPast).reverse() }
+    const done = (g: Gathering) => isPast(g) || Boolean(g.archived)
+    const ahead = list.filter((g) => !done(g))
+    return { next: ahead[0], upcoming: ahead.slice(1), past: list.filter(done).reverse() }
   }, [gatherings])
 
   const first = me?.display_name?.split(' ')[0]
@@ -84,12 +86,13 @@ export default function Home() {
       )}
 
       {past.length > 0 && (
-        <section>
-          <h2 className="section-title">Looking back</h2>
+        <details className="archive">
+          <summary><h2 className="section-title"><Archive size={18} aria-hidden="true" />Archive <span className="muted small">({past.length})</span></h2></summary>
+          <p className="muted small">Past get-togethers, with their photos, chat and lists still here.</p>
           <div className="gathering-list">
             {past.map((g) => <GatheringRow key={g.id} gathering={g} stats={stats[g.id]} />)}
           </div>
-        </section>
+        </details>
       )}
 
       <AddGathering onAdded={load} />
