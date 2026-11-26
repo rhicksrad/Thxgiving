@@ -43,7 +43,9 @@
   --display: 'Fraunces', Georgia, 'Times New Roman', serif;
   --body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --tabbar-h: 64px;
-  --topbar-h: 64px;
+  --topbar-row: 64px;
+  /* On an iPhone home-screen app the page runs under the clock and notch, so the top bar grows by that much. */
+  --topbar-h: calc(var(--topbar-row) + env(safe-area-inset-top, 0px));
   --shadow-pop: 0 16px 40px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.45);
   color-scheme: dark;
 }
@@ -113,7 +115,7 @@ html:has(.app), html:has(.app) body { height: 100%; overflow: hidden; }
   position: sticky; top: 0; z-index: 20;
   height: var(--topbar-h);
   display: flex; align-items: center; gap: 20px;
-  padding: 0 24px;
+  padding: env(safe-area-inset-top, 0px) 24px 0;
   background: color-mix(in srgb, var(--bg) 90%, transparent);
   backdrop-filter: saturate(140%) blur(12px);
   -webkit-backdrop-filter: saturate(140%) blur(12px);
@@ -142,8 +144,8 @@ html:has(.app), html:has(.app) body { height: 100%; overflow: hidden; }
 .tabbar { display: none; }
 
 @media (max-width: 760px) {
-  :root { --topbar-h: 56px; }
-  .topbar { padding: 0 16px; }
+  :root { --topbar-row: 56px; }
+  .topbar { padding: env(safe-area-inset-top, 0px) 16px 0; }
   .brand-name { font-size: 19px; }
   .topnav, .me-chip { display: none; }
   .tabbar {
