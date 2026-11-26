@@ -206,6 +206,20 @@ select w.user_id, w.wish, w.updated_at from page_wishes w where exists (select 1
 drop table if exists page_wishes;
 drop table if exists private_data;
 
+-- The family calendar: anything anyone adds (birthdays, games, trips). Get-togethers and the big holidays show
+-- on it too, but those come from gatherings and the site itself. Dates are the family's local day, YYYY-MM-DD.
+create table if not exists events (
+  id         text primary key,
+  title      text not null check (length(title) between 1 and 80),
+  day        text not null check (day glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
+  time       text check (time is null or time glob '[0-9][0-9]:[0-9][0-9]'), -- null = all day
+  yearly     integer not null default 0,                                     -- 1 = every year (birthdays)
+  note       text check (length(note) <= 500),
+  created_by text not null,
+  created_at text not null
+);
+create index if not exists events_day_idx on events (day);
+
 -- Thanksgiving 2026: Thursday, November 26, time to be decided (noon Eastern until someone sets it).
 -- Its starter lists are copied from list_template, once.
 insert or ignore into gatherings (id, title, starts_at, time_tbd, created_at)

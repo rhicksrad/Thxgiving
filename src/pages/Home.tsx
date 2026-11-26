@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router'
-import { ArrowRight, Camera, ChevronRight, Images, MapPin, MessageCircle, MessagesSquare, Plus, Users } from 'lucide-react'
+import { ArrowRight, CalendarDays, Camera, ChevronRight, Images, MapPin, MessageCircle, MessagesSquare, Plus, Users } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAuth } from '../auth'
 import { useTheme } from '../lib/theme'
@@ -69,6 +69,7 @@ export default function Home() {
       </section>
 
       <nav className="quick-links">
+        <Link to="/calendar" className="card quick"><CalendarDays size={22} aria-hidden="true" /><span><b>Calendar</b><span className="muted small">Birthdays, plans and holidays</span></span></Link>
         <Link to="/chat" className="card quick"><MessagesSquare size={22} aria-hidden="true" /><span><b>Family chat</b><span className="muted small">Talk about anything, any day</span></span></Link>
         <Link to="/gallery" className="card quick"><Images size={22} aria-hidden="true" /><span><b>Photos</b><span className="muted small">Every get-together's pictures</span></span></Link>
         <Link to="/family" className="card quick"><Users size={22} aria-hidden="true" /><span><b>Family</b><span className="muted small">Who's here, and your profile</span></span></Link>

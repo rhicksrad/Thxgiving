@@ -100,3 +100,14 @@ export type Reaction = {
   emoji: string
   created_at: string
 }
+
+export type FamilyEvent = {
+  id: string
+  title: string
+  day: string          // YYYY-MM-DD, the family's local day
+  time: string | null  // HH:MM, or null for all day
+  yearly: boolean      // repeats every year (birthdays, anniversaries)
+  note: string | null
+  created_by: string
+  created_at: string
+}

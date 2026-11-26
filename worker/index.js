@@ -116,6 +116,29 @@ async function route(req, env, ctx, url) {
   if (at('GET', 'stats')) return json(await db.all(STATS))
   if (at('GET', 'stats', '*')) return json(await db.one(`${STATS} where g.id = ?`, b))
 
+  // The family calendar
+  if (at('GET', 'events')) return json((await db.all('select * from events order by day, time')).map(event))
+  if (at('POST', 'events')) {
+    const row = { id: uuid(), ...eventFields(await body(req)), created_by: uid, created_at: now() }
+    await db.insert('events', row)
+    live('events', 'insert', event(row))
+    return json(event(row))
+  }
+  if (at('PATCH', 'events', '*')) {
+    const cur = await db.one('select * from events where id = ?', b)
+    if (!cur) fail('That is gone', 404)
+    const next = { ...cur, ...eventFields({ ...event(cur), ...(await body(req)) }) }
+    await db.run('update events set title = ?, day = ?, time = ?, yearly = ?, note = ? where id = ?',
+      next.title, next.day, next.time, next.yearly, next.note, b)
+    live('events', 'update', event(next))
+    return json(event(next))
+  }
+  if (at('DELETE', 'events', '*')) {
+    await db.run('delete from events where id = ?', b)
+    live('events', 'delete', { id: b })
+    return json({ ok: true })
+  }
+
   // Food and help lists
   if (at('GET', 'gatherings', '*', 'items')) {
     const kind = url.searchParams.get('kind')
@@ -460,6 +483,21 @@ async function removeMember(env, db, me, raw, ctx) {
   ])
   if (user) ctx.waitUntil(env.LIVE.get(env.LIVE.idFromName('family')).kick(user.id).catch(() => {}))
   return json({ ok: true })
+}
+
+// ---------------------------------------------------------------------------
+// The family calendar
+// ---------------------------------------------------------------------------
+const event = (r) => ({ ...r, yearly: Boolean(r.yearly) })
+
+function eventFields(p) {
+  const title = opt(p.title, 80)
+  if (!title) fail('Give it a name')
+  const day = str(p.day)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || Number.isNaN(Date.parse(`${day}T00:00:00Z`))) fail('Pick a date')
+  const time = opt(p.time, 5)
+  if (time && !/^\d{2}:\d{2}$/.test(time)) fail('That time doesn\'t look right')
+  return { title, day, time, yearly: p.yearly ? 1 : 0, note: opt(p.note, 500) }
 }
 
 // ---------------------------------------------------------------------------

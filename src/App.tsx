@@ -29,6 +29,7 @@ const Login = page(() => import('./pages/Login'))
 const FamilyChat = page(() => import('./pages/FamilyChat'))
 const Gallery = page(() => import('./pages/Gallery'))
 const Family = page(() => import('./pages/Family'))
+const Calendar = page(() => import('./pages/Calendar'))
 const Mine = page(() => import('./pages/Mine'))
 
 export default function App() {
@@ -53,6 +54,7 @@ function Gate() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/g/:id" element={<GatheringPage />} />
+          <Route path="/calendar" element={<Calendar />} />
           <Route path="/chat" element={<FamilyChat />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/family" element={<Family />} />
