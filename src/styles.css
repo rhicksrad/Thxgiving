@@ -296,7 +296,7 @@ select.input { appearance: none; cursor: pointer; background-image: linear-gradi
 .gr-title { font-family: var(--display); font-weight: 700; font-size: 19px; line-height: 1.15; }
 .gr-stats { display: inline-flex; gap: 10px; font-size: 12.5px; color: var(--muted); }
 .gr-stats span { display: inline-flex; align-items: center; gap: 4px; }
-.add-gathering-toggle { align-self: flex-start; }
+.add-gathering-toggle { align-self: flex-start; max-width: 100%; white-space: normal; text-align: left; height: auto; min-height: 34px; }
 
 /* ---------- gathering page ---------- */
 .back { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; font-size: 14px; color: var(--text-2); align-self: flex-start; }
@@ -713,6 +713,12 @@ select.input { appearance: none; cursor: pointer; background-image: linear-gradi
 .cal-list button { width: 100%; display: flex; align-items: center; gap: 12px; padding: 8px 10px; background: none; border: 1px solid transparent; border-radius: 8px; text-align: left; cursor: pointer; }
 .cal-list button:hover { background: var(--card-2); border-color: var(--line); }
 .cal-list-day { flex: none; width: 92px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
-.cal-list .cal-item { flex: 1; }
+.cal-list .cal-item { flex: 1; min-width: 0; }
+@media (max-width: 640px) {
+  /* Phones: the date sits above the item so names get the full width. */
+  .cal-list button { flex-wrap: wrap; gap: 2px 12px; }
+  .cal-list-day { width: 100%; }
+  .cal-head h2 { font-size: 22px; white-space: nowrap; }
+}
 .cal-check { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-2); }
 .cal-check input { width: 18px; height: 18px; accent-color: var(--gold); }
