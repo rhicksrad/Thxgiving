@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "Thanksgiving 2026",
-  "short_name": "Thanksgiving",
-  "description": "Our family Thanksgiving: who's coming, who's bringing what, and all the pictures.",
+  "name": "Hicks Family",
+  "short_name": "Hicks Family",
+  "description": "The Hicks family's site: get-togethers, the family chat and all the pictures, all year.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

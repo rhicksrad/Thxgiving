@@ -1,28 +1,33 @@
-/* Thanksgiving: a warm, dark harvest table. "gold" is the accent everywhere (pumpkin here). */
+/* The palette changes every month (src/lib/theme.ts sets --bg, --text and the accents on <html>); everything
+   else here is mixed from those, so each theme only picks a handful of colors. The values below are
+   November's, used until the script runs. "gold" is the accent everywhere. */
 :root {
   /* brand */
-  --gold: #f0a04b;        /* pumpkin */
+  --gold: #f0a04b;
   --gold-hi: #f6bd7c;
-  --gold-soft: rgba(240, 160, 75, 0.13);
-  --gold-line: rgba(240, 160, 75, 0.38);
-  --rush: #f2cf6b;        /* maize */
-  --aged: #c8553d;        /* cranberry-rust */
-  --dust: #f3dfb8;        /* pie crust */
-  --ink: #140d08;
+  --gold-soft: color-mix(in srgb, var(--gold) 13%, transparent);
+  --gold-line: color-mix(in srgb, var(--gold) 38%, transparent);
+  --rush: #f2cf6b;
+  --aged: #c8553d;
+  --dust: #f3dfb8;
+  --stripe: linear-gradient(90deg, var(--aged), var(--gold), var(--rush));
+  --ink: color-mix(in srgb, var(--bg) 70%, #000);
 
   /* surfaces, darkest to lightest */
   --bg: #1a120c;
-  --card: #241911;
-  --card-2: #2d2016;
-  --card-3: #37281c;
-  --line: #3a2a1d;
-  --line-2: #4a3626;
+  --card: color-mix(in srgb, var(--bg) 94.5%, var(--text));
+  --card-2: color-mix(in srgb, var(--bg) 91%, var(--text));
+  --card-3: color-mix(in srgb, var(--bg) 87%, var(--text));
+  --line: color-mix(in srgb, var(--bg) 86%, var(--text));
+  --line-2: color-mix(in srgb, var(--bg) 79%, var(--text));
+  --line-3: color-mix(in srgb, var(--bg) 70%, var(--text));
 
   /* text */
   --text: #f8efe2;
-  --text-2: #d3c1aa;
-  --muted: #a8937b;
-  --steel: #6f5b48;
+  --text-2: color-mix(in srgb, var(--text) 82%, var(--bg));
+  --muted: color-mix(in srgb, var(--text) 62%, var(--bg));
+  --muted-2: color-mix(in srgb, var(--text) 50%, var(--bg));
+  --steel: color-mix(in srgb, var(--text) 38%, var(--bg));
 
   /* status */
   --ok: #9cc48a;          /* sage */
@@ -39,7 +44,7 @@
   --body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --tabbar-h: 64px;
   --topbar-h: 64px;
-  --shadow-pop: 0 16px 40px rgba(8, 4, 1, 0.6), 0 2px 8px rgba(8, 4, 1, 0.45);
+  --shadow-pop: 0 16px 40px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.45);
   color-scheme: dark;
 }
 
@@ -61,7 +66,7 @@ code { background: var(--card-2); padding: 1px 5px; border-radius: 5px; }
 button { font: inherit; color: inherit; }
 svg.lucide { flex: none; }
 :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-::selection { background: rgba(240, 160, 75, 0.35); }
+::selection { background: color-mix(in srgb, var(--gold) 35%, transparent); }
 
 .display { font-family: var(--display); font-weight: 700; letter-spacing: 0.01em; margin: 0; line-height: 1.05; }
 h1.display { font-size: clamp(28px, 5vw, 36px); }
@@ -109,12 +114,12 @@ html:has(.app), html:has(.app) body { height: 100%; overflow: hidden; }
   height: var(--topbar-h);
   display: flex; align-items: center; gap: 20px;
   padding: 0 24px;
-  background: rgba(26, 18, 12, 0.9);
+  background: color-mix(in srgb, var(--bg) 90%, transparent);
   backdrop-filter: saturate(140%) blur(12px);
   -webkit-backdrop-filter: saturate(140%) blur(12px);
   border-bottom: 1px solid var(--line);
 }
-.topbar::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold-line), transparent); }
+.topbar::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--stripe); background-size: 96px 100%; opacity: 0.75; }
 .brand { display: flex; align-items: center; gap: 12px; color: var(--text); }
 .brand:hover { color: var(--text); }
 .brand-name { display: block; font-family: var(--display); font-weight: 800; font-size: 21px; letter-spacing: 0; line-height: 1; color: var(--text); }
@@ -146,7 +151,7 @@ html:has(.app), html:has(.app) body { height: 100%; overflow: hidden; }
     flex: none; position: relative; z-index: 30;
     height: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
     padding-bottom: env(safe-area-inset-bottom);
-    background: rgba(26, 18, 12, 0.95);
+    background: color-mix(in srgb, var(--bg) 95%, transparent);
     backdrop-filter: saturate(140%) blur(12px);
     -webkit-backdrop-filter: saturate(140%) blur(12px);
     border-top: 1px solid var(--line);
@@ -189,7 +194,7 @@ html:has(.app), html:has(.app) body { height: 100%; overflow: hidden; }
 .btn.gold { background: var(--gold); color: var(--ink); }
 .btn.gold:hover { background: var(--gold-hi); color: var(--ink); }
 .btn.ghost { background: var(--card-2); color: var(--text); border-color: var(--line-2); }
-.btn.ghost:hover { background: var(--card-3); color: var(--text); border-color: #5a4430; }
+.btn.ghost:hover { background: var(--card-3); color: var(--text); border-color: var(--line-3); }
 .btn.danger:hover { border-color: var(--bad); color: var(--bad); background: var(--bad-soft); }
 .btn.sm { min-height: 32px; padding: 0 12px; font-size: 13px; border-radius: 8px; gap: 6px; }
 .btn.big { min-height: 50px; font-size: 15.5px; width: 100%; }
@@ -206,9 +211,9 @@ html:has(.app), html:has(.app) body { height: 100%; overflow: hidden; }
   background: var(--ink); color: var(--text); border: 1px solid var(--line-2); border-radius: var(--radius-sm);
   font: inherit; font-size: 14.5px; outline: none; transition: border-color 0.15s, box-shadow 0.15s;
 }
-.input::placeholder { color: #8a7560; }
-.input:hover { border-color: #5a4430; }
-.input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(240, 160, 75, 0.16); }
+.input::placeholder { color: var(--muted-2); }
+.input:hover { border-color: var(--line-3); }
+.input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 16%, transparent); }
 textarea.input { resize: vertical; }
 select.input { appearance: none; cursor: pointer; background-image: linear-gradient(45deg, transparent 50%, var(--text-2) 50%), linear-gradient(135deg, var(--text-2) 50%, transparent 50%); background-position: calc(100% - 18px) 17px, calc(100% - 13px) 17px; background-size: 5px 5px; background-repeat: no-repeat; padding-right: 32px; }
 .label { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--text-2); font-size: 12.5px; letter-spacing: 0.02em; }
@@ -245,7 +250,7 @@ select.input { appearance: none; cursor: pointer; background-image: linear-gradi
 
 /* ---------- login ---------- */
 .login { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 16px; gap: 28px;
-  background: radial-gradient(700px 360px at 50% 0%, rgba(240, 160, 75, 0.09), transparent 70%); }
+  background: radial-gradient(700px 360px at 50% 0%, color-mix(in srgb, var(--gold) 9%, transparent), transparent 70%); }
 .login-hero { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 14px; }
 .login-card { padding: 24px; }
 .login-card .label { font-size: 13px; color: var(--text); }
@@ -254,8 +259,8 @@ select.input { appearance: none; cursor: pointer; background-image: linear-gradi
 
 /* ---------- home ---------- */
 .hero { display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; padding: 28px 20px; position: relative; overflow: hidden;
-  background: radial-gradient(600px 240px at 50% 0%, rgba(240, 160, 75, 0.08), transparent 75%), var(--card); }
-.hero::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 3px; background: linear-gradient(90deg, var(--aged), var(--gold), var(--aged)); }
+  background: radial-gradient(600px 240px at 50% 0%, color-mix(in srgb, var(--gold) 8%, transparent), transparent 75%), var(--card); }
+.hero::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 4px; background: var(--stripe); background-size: 120px 100%; }
 .hero-kicker { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; align-items: center; }
 .hero-empty { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .hero-empty p { margin: 0; }
@@ -302,7 +307,7 @@ select.input { appearance: none; cursor: pointer; background-image: linear-gradi
 .gp-chat { grid-area: chat; }
 .gp-pics { grid-area: pics; display: flex; flex-direction: column; gap: 14px; }
 @media (max-width: 899px) {
-  .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; padding: 4px; background: rgba(36, 25, 17, 0.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--line); border-radius: 12px; position: sticky; top: calc(var(--topbar-h) + 8px); z-index: 10; }
+  .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; padding: 4px; background: color-mix(in srgb, var(--card) 95%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--line); border-radius: 12px; position: sticky; top: calc(var(--topbar-h) + 8px); z-index: 10; }
   .tabs button { min-height: 50px; padding: 4px 2px; white-space: nowrap; font-size: 11.5px; font-weight: 600; line-height: 1.1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); cursor: pointer; transition: background 0.15s, color 0.15s; }
   .tabs button.on { background: var(--gold-soft); color: var(--gold); }
   /* Phones: the details and who's coming sit on top, then the tabs switch between food, help, chat and photos. */
@@ -356,7 +361,7 @@ select.input { appearance: none; cursor: pointer; background-image: linear-gradi
   transition: border-color 0.15s, color 0.15s;
 }
 .who-pick:hover { border-color: var(--gold-line); color: var(--text); }
-.who-pick.set { border-style: solid; border-color: rgba(156, 196, 138, 0.4); background-color: var(--ok-soft); color: var(--ok); font-weight: 600; }
+.who-pick.set { border-style: solid; border-color: color-mix(in srgb, var(--ok) 40%, transparent); background-color: var(--ok-soft); color: var(--ok); font-weight: 600; }
 .who-pick:focus { outline: none; border-color: var(--gold); }
 .who-pick option { background: var(--card); color: var(--text); }
 .rating { display: inline-flex; align-items: center; gap: 8px; }
@@ -388,7 +393,7 @@ select.input { appearance: none; cursor: pointer; background-image: linear-gradi
 .msg-name { font-weight: 600; font-size: 14px; color: var(--text); }
 .msg.mine .msg-name { color: var(--gold); }
 .msg-time { font-size: 11.5px; color: var(--muted); }
-.msg-body { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14.5px; color: #f1e6d6; }
+.msg-body { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14.5px; color: var(--text); }
 .msg-img { display: block; max-width: min(320px, 100%); max-height: 280px; border-radius: 10px; margin-top: 6px; }
 .msg-actions { position: absolute; right: 6px; top: 6px; display: flex; gap: 4px; }
 .msg-act { display: grid; place-items: center; width: 26px; height: 26px; background: var(--card-2); border: 1px solid var(--line-2); color: var(--muted); border-radius: 6px; cursor: pointer; opacity: 0; transition: opacity 0.15s; }
@@ -435,7 +440,7 @@ select.input { appearance: none; cursor: pointer; background-image: linear-gradi
 .lb-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 18px calc(12px + env(safe-area-inset-bottom)); background: rgba(19, 19, 19, 0.92); border-top: 1px solid var(--line); flex-wrap: wrap; }
 .lb-caption { font-weight: 600; }
 .lb-nav { position: absolute; top: 50%; transform: translateY(-50%); display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.06); color: #fff; cursor: pointer; border-radius: 50%; transition: background 0.15s; }
-.lb-nav:hover { background: rgba(240, 160, 75, 0.25); }
+.lb-nav:hover { background: color-mix(in srgb, var(--gold) 25%, transparent); }
 .lb-nav.prev { left: 12px; }
 .lb-nav.next { right: 12px; }
 .lb-close { position: absolute; top: 12px; right: 12px; display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 50%; background: rgba(255, 255, 255, 0.06); color: #fff; cursor: pointer; }
@@ -502,7 +507,7 @@ select.input { appearance: none; cursor: pointer; background-image: linear-gradi
 
 /* ---------- add to home screen ---------- */
 .install-banner { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-color: var(--gold-line);
-  background: linear-gradient(90deg, rgba(240, 160, 75, 0.10), transparent 70%), var(--card); }
+  background: linear-gradient(90deg, color-mix(in srgb, var(--gold) 10%, transparent), transparent 70%), var(--card); }
 .install-title { font-weight: 700; font-size: 15px; }
 .install-actions { display: flex; align-items: center; gap: 6px; flex: none; }
 @media (max-width: 520px) {
@@ -527,7 +532,7 @@ select.input { appearance: none; cursor: pointer; background-image: linear-gradi
 /* ---------- emoji reactions ---------- */
 .reactions { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 6px; }
 .react-chip { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 9px 0 7px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--card-2); color: var(--text-2); font-size: 12.5px; font-weight: 600; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
-.react-chip:hover { border-color: #5a4430; }
+.react-chip:hover { border-color: var(--line-3); }
 .react-chip.on { border-color: var(--gold-line); background: var(--gold-soft); color: var(--gold); }
 .react-emoji { font-size: 15px; line-height: 1; }
 .react-add { display: grid; place-items: center; width: 28px; height: 26px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; }
@@ -598,3 +603,56 @@ select.input { appearance: none; cursor: pointer; background-image: linear-gradi
 .invite-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; }
 @media (max-width: 560px) { .invite-row { grid-template-columns: 1fr; } }
 .big-input { font-size: 18px; padding: 14px 16px; }
+
+/* ---------- seasons ---------- */
+/* This month's little things drifting behind everything (components/SeasonSky.tsx). */
+.season-sky { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.season-sky span { position: absolute; display: block; opacity: 0.24; will-change: transform; animation: 30s linear infinite; }
+.season-sky.fall span { top: -40px !important; animation-name: sky-fall; }
+.season-sky.rise span { top: auto !important; bottom: -40px; animation-name: sky-rise; }
+.season-sky.sway span { top: -40px !important; animation-name: sky-sway; }
+.season-sky.twinkle span { animation-name: sky-twinkle; animation-timing-function: ease-in-out; }
+@keyframes sky-fall { from { transform: translate(0, 0) rotate(0); } to { transform: translate(40px, 110vh) rotate(300deg); } }
+@keyframes sky-rise { from { transform: translate(0, 0); } 50% { transform: translate(-24px, -55vh); } to { transform: translate(10px, -110vh); } }
+@keyframes sky-sway {
+  0% { transform: translate(0, 0) rotate(-20deg); } 25% { transform: translate(50px, 28vh) rotate(25deg); }
+  50% { transform: translate(-10px, 55vh) rotate(-15deg); } 75% { transform: translate(45px, 82vh) rotate(20deg); }
+  100% { transform: translate(0, 110vh) rotate(-20deg); }
+}
+@keyframes sky-twinkle { 0%, 100% { opacity: 0.05; transform: scale(0.7) rotate(0); } 50% { opacity: 0.28; transform: scale(1.1) rotate(20deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .season-sky span { animation: none !important; }
+  .season-sky.fall span, .season-sky.sway span { top: auto !important; }
+}
+.app-scroll, .tabbar { position: relative; z-index: 1; }
+.login { position: relative; }
+.login > :not(.season-sky) { position: relative; z-index: 1; }
+
+/* Home */
+.welcome { display: flex; align-items: center; gap: 22px; position: relative; overflow: hidden;
+  background: radial-gradient(520px 220px at 0% 0%, color-mix(in srgb, var(--gold) 14%, transparent), transparent 75%),
+    radial-gradient(420px 200px at 100% 100%, color-mix(in srgb, var(--aged) 12%, transparent), transparent 75%), var(--card); }
+.welcome::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 4px; background: var(--stripe); background-size: 120px 100%; }
+.welcome-mark { filter: drop-shadow(0 6px 18px color-mix(in srgb, var(--gold) 30%, transparent)); animation: mark-bob 6s ease-in-out infinite; }
+@keyframes mark-bob { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-4px) rotate(3deg); } }
+@media (prefers-reduced-motion: reduce) { .welcome-mark { animation: none; } }
+.welcome-text { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0; }
+.welcome-text h1 { font-size: clamp(28px, 5vw, 40px); }
+.welcome-text p { margin: 0; }
+.welcome-greet { font-size: 16.5px; color: var(--text-2); }
+@media (max-width: 560px) {
+  .welcome { flex-direction: column; text-align: center; }
+  .welcome-text { align-items: center; }
+}
+.stack > .section-title { margin: 0; }
+.next-up { color: var(--text); }
+.next-up:hover { color: var(--text); border-color: var(--gold-line); }
+.next-title { font-size: clamp(30px, 7vw, 44px) !important; color: var(--gold); justify-content: center; }
+.next-up .btn { width: 100%; max-width: 360px; }
+.next-stats { margin-top: -6px; }
+.quick-links { display: grid; gap: 10px; grid-template-columns: repeat(3, 1fr); }
+.quick { display: flex; align-items: center; gap: 14px; color: var(--text); padding: 16px; transition: border-color 0.15s, background 0.15s; }
+.quick:hover { color: var(--text); border-color: var(--gold-line); background: var(--card-2); }
+.quick svg.lucide { color: var(--gold); }
+.quick > span { display: flex; flex-direction: column; gap: 2px; }
+@media (max-width: 760px) { .quick-links { grid-template-columns: 1fr; } }

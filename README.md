@@ -1,10 +1,16 @@
-# Thanksgiving 2026 🦃
+# Hicks Family 🏡
 
-Our family Thanksgiving sign-up: who's coming, who's bringing what, and all the pictures.
+The Hicks family's site, all year round: get-togethers (who's coming, who's bringing what), the family chat, and all
+the pictures. It dresses up for the season with a new look every month.
 
 **Live:** https://rhicksrad.github.io/Thxgiving/
 
-- **Home** is the Thanksgiving 2026 board (Thursday, November 26):
+- **Home** is the family's front page:
+  - A welcome in this month's theme (see **Seasons** below), with what's going on this month.
+  - **Coming up:** the next get-together with its countdown, and a button into its sign-up board.
+  - Shortcuts to the chat, photos and family list, then every other get-together: what's still ahead, and
+    **Looking back** for the ones that are done.
+- **Each get-together has its own page**, like **Thanksgiving 2026** (Thursday, November 26):
   - A countdown, plus the date and time (tap the pencil to change them; leave the time blank until it's decided).
   - **Where** and **Notes:** whose house, the address, parking, bring a chair…
   - **Who's coming:** everyone says **I'll be there**, **Maybe** or **Can't make it**, and how many people they're
@@ -16,8 +22,8 @@ Our family Thanksgiving sign-up: who's coming, who's bringing what, and all the 
   - **Supplies & Help:** who's hosting, who's carving, enough chairs, leftover containers, who's saying grace…
     Mark each Yes or No, pick who's on it, and add the answer.
   - **Chat** and **Photos** for the day.
-- **Plan another get-together** (bottom of Home): Christmas, a birthday, Thanksgiving 2027. Each one gets its own lists,
-  chat and photos. Home always shows the next one coming up; the rest are listed below it.
+- **Plan a get-together** (bottom of Home): Christmas, a birthday, a cookout, Thanksgiving 2027. Each one gets its own
+  page with lists, chat and photos. Home always shows the next one coming up; the rest are listed below it.
 - **Chat:** the family group chat, any day. Type **@** to tag someone (**@family** tags everybody). GIFs and photos work.
 - **Photos:** everyone's pics and videos, filterable by get-together and by who added them, in the order they were
   taken. The same pic added by two people shows once. Originals stay full-size; download one or zip a whole day.
@@ -26,6 +32,31 @@ Our family Thanksgiving sign-up: who's coming, who's bringing what, and all the 
   cell number.
 
 Everything updates live for everyone.
+
+## Seasons
+
+The site picks one of 12 looks from the month on each visitor's own phone or computer, and switches over on its own
+when the month changes. Each month has its own colors, emblem in the top bar, striped trim, little things drifting
+down the background, and a set of "question of the day" prompts for the family chat.
+
+| Month | Theme | Emblem | Drifting |
+|---|---|---|---|
+| January | Fresh snow | Snowflake | Snow |
+| February | Sweethearts | Heart | Hearts |
+| March | Lucky green | Shamrock | Clovers |
+| April | Spring showers | Tulip | Raindrops |
+| May | In bloom | Flower | Petals |
+| June | Sunshine | Sun | Sparkles |
+| July | Stars & stripes | Firework | Stars |
+| August | Beach days | Watermelon | Bubbles |
+| September | Apple picking | Apple | Leaves |
+| October | Spooky season | Jack-o'-lantern | Bats |
+| November | Harvest | Turkey | Leaves |
+| December | Merry & bright | Christmas tree | Snow |
+
+To peek at another month, pick it under **Family → Season theme** (that device only; everyone else still sees the
+current month), or add `?month=7` to the address before the `#`. People who've asked their phone to reduce motion
+get the decorations without the movement.
 
 ## Signing in
 
@@ -58,7 +89,10 @@ Everything runs free: the site on GitHub Pages, everything else on Cloudflare's 
 - **The site:** React + Vite in `src/`, deployed to GitHub Pages on every push to `main`
   ([`deploy-pages.yml`](.github/workflows/deploy-pages.yml)). Installable as an app
   ([`public/manifest.webmanifest`](public/manifest.webmanifest), a service worker in [`public/sw.js`](public/sw.js),
-  icons drawn from the turkey in `src/components/Logo.tsx` by `node scripts/make-icons.mjs`).
+  icons drawn from the house in `src/lib/marks.ts` by `node scripts/make-icons.mjs`).
+- **Seasons:** the 12 themes (colors, taglines, chat questions) are in [`src/lib/theme.ts`](src/lib/theme.ts), and their
+  emblems and background shapes in [`src/lib/marks.ts`](src/lib/marks.ts). `styles.css` mixes every other color
+  from the few each theme sets.
 - **The server:** one Cloudflare Worker in [`worker/`](worker/README.md):
   - the API, with sign-in (passwords are salted and hashed; devices keep a random sign-in token) and the family-only
     rules for every request
@@ -97,6 +131,7 @@ Thanksgiving 2026 and its lists. What's left:
 |---|---|
 | Change the starter food or help list for new get-togethers | Edit `list_template` (D1 console), or the insert in `worker/schema.sql` |
 | Change the database | Edit `worker/schema.sql` (keep it safe to re-run) and push; the deploy runs it |
+| Change a month's look | Edit its entry in `src/lib/theme.ts` (colors, tagline, chat questions) or its emblem in `src/lib/marks.ts` |
 | Change the time zone | `TZ` in `src/lib/format.ts` |
 | Delete a get-together | D1 console: `delete from gatherings where title = '…'` (takes its lists, chat and RSVPs with it) |
 | Run it locally | `cd worker && npm install && npm run schema:local && npm run dev`, then in another terminal `VITE_API_URL=http://localhost:8787 npm run dev` and open http://localhost:5173 |

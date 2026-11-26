@@ -67,7 +67,7 @@ function IosGuide({ onClose }: { onClose: () => void }) {
           </li>
           <li>
             <span className="step-ic"><Logo size={22} /></span>
-            <span>Tap <b>Add</b>. Open Thanksgiving from your home screen from now on.</span>
+            <span>Tap <b>Add</b>. Open Hicks Family from your home screen from now on.</span>
           </li>
         </ol>
         <button className="btn gold" onClick={onClose}>Got it</button>
