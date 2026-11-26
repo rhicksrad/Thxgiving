@@ -184,6 +184,22 @@ create table if not exists reactions (
 create index if not exists reactions_target_idx on reactions (target_id);
 create index if not exists reactions_owner_idx on reactions (owner_id, created_at);
 
+-- Private pages. Each person's page starts blank; they write what they want it to be (their wish), and it gets
+-- built for them in a later site update (src/private/). Only the owner can ever read either table.
+create table if not exists page_wishes (
+  user_id    text primary key references users(id) on delete cascade,
+  wish       text not null check (length(wish) <= 4000),
+  updated_at text not null
+);
+-- Whatever a built private page needs to remember (a list, notes, settings), by name, for its owner only.
+create table if not exists private_data (
+  user_id    text not null references users(id) on delete cascade,
+  key        text not null check (length(key) between 1 and 64),
+  value      text not null check (length(value) <= 200000),
+  updated_at text not null,
+  primary key (user_id, key)
+);
+
 -- Thanksgiving 2026: Thursday, November 26, time to be decided (noon Eastern until someone sets it).
 -- Its starter lists are copied from list_template, once.
 insert or ignore into gatherings (id, title, starts_at, time_tbd, created_at)

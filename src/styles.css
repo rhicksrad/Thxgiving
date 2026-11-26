@@ -147,7 +147,7 @@ html:has(.app), html:has(.app) body { height: 100%; overflow: hidden; }
   .brand-name { font-size: 19px; }
   .topnav, .me-chip { display: none; }
   .tabbar {
-    display: grid; grid-template-columns: repeat(4, 1fr);
+    display: grid; grid-template-columns: repeat(5, 1fr);
     flex: none; position: relative; z-index: 30;
     height: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
     padding-bottom: env(safe-area-inset-bottom);
@@ -656,3 +656,8 @@ select.input { appearance: none; cursor: pointer; background-image: linear-gradi
 .quick svg.lucide { color: var(--gold); }
 .quick > span { display: flex; flex-direction: column; gap: 2px; }
 @media (max-width: 760px) { .quick-links { grid-template-columns: 1fr; } }
+
+/* My page */
+.my-blank { align-items: flex-start; gap: 10px; }
+.my-blank .badge svg.lucide { margin-right: 2px; }
+.wish-box textarea { resize: vertical; min-height: 120px; }
