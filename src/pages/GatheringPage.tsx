@@ -24,7 +24,7 @@ const TABS: { id: Tab; Icon: LucideIcon; label: string }[] = [
   { id: 'pics', Icon: Camera, label: 'Photos' },
 ]
 
-/** /g/:id — one gathering's board, by id (older years, or anything added by hand). */
+/** /g/:id — one get-together's page (Thanksgiving 2026, Christmas, a birthday…): its sign-up board, chat and photos. */
 export default function GatheringPage() {
   const { id } = useParams()
   const [gathering, setGathering] = useState<Gathering | null | undefined>(undefined)

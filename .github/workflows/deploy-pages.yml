@@ -1,4 +1,4 @@
-name: Deploy Thanksgiving to GitHub Pages
+name: Deploy the family site to GitHub Pages
 
 on:
   push:

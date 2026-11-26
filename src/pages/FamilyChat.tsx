@@ -1,18 +1,10 @@
 import { Lightbulb } from 'lucide-react'
 import Chat from '../components/Chat'
-
-const PROMPTS = [
-  "What are you most thankful for this year?",
-  "Best Thanksgiving dish of all time? Defend your answer.",
-  "Stuffing or dressing? Inside the bird or in a pan?",
-  "Share a favorite Thanksgiving memory from when you were a kid.",
-  "Pumpkin, pecan, or apple? Pick one pie.",
-  "Who's got the best leftover sandwich recipe?",
-  "Drop an old family photo. The older the better.",
-]
+import { useTheme } from '../lib/theme'
 
 export default function FamilyChat() {
-  const prompt = PROMPTS[new Date().getDate() % PROMPTS.length]
+  const { prompts } = useTheme() // this month's questions
+  const prompt = prompts[new Date().getDate() % prompts.length]
   return (
     <div className="stack-lg">
       <header className="page-head">

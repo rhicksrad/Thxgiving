@@ -8,9 +8,11 @@ import AvatarPicker from './AvatarPicker'
 import ActivityBell from './ActivityBell'
 import PullToRefresh from './PullToRefresh'
 import { scroller } from '../lib/scroller'
+import { useTheme } from '../lib/theme'
+import SeasonSky from './SeasonSky'
 
 const NAV = [
-  { to: '/', label: 'Thanksgiving', Icon: House, end: true },
+  { to: '/', label: 'Home', Icon: House, end: true },
   { to: '/chat', label: 'Chat', Icon: MessagesSquare },
   { to: '/gallery', label: 'Photos', Icon: Images },
   { to: '/family', label: 'Family', Icon: Users },
@@ -18,6 +20,7 @@ const NAV = [
 
 export default function Layout({ children }: { children: ReactNode }) {
   const { me } = useAuth()
+  const theme = useTheme()
   // A new page starts at the top, like an app, instead of keeping the last page's scroll.
   const { pathname } = useLocation()
   useEffect(() => { scroller().scrollTo(0, 0) }, [pathname])
@@ -29,13 +32,14 @@ export default function Layout({ children }: { children: ReactNode }) {
   }, [])
   return (
     <div className="app">
+      <SeasonSky />
       <div className="app-scroll">
         <header className="topbar">
           <NavLink to="/" className="brand">
             <Logo size={36} />
             <span>
-              <span className="brand-name">Thanksgiving 2026</span>
-              <span className="brand-tag">Gather 'round</span>
+              <span className="brand-name">Hicks Family</span>
+              <span className="brand-tag">{theme.tagline}</span>
             </span>
           </NavLink>
           <nav className="topnav">
@@ -82,7 +86,7 @@ function Onboard() {
           setErr(await saveProfile({ display_name: name.trim().slice(0, 30), emoji: badge }))
         }}
       >
-        <h2 className="display">Welcome to the table</h2>
+        <h2 className="display">Welcome home</h2>
         <p className="muted">What should the family call you? Pick a badge too, or upload a photo.</p>
         <input className="input" value={name} onChange={(e) => setName(e.target.value)} maxLength={30} aria-label="Your name" />
         <AvatarPicker badge={badge} onPick={setBadge} />

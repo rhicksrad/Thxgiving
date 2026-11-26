@@ -7,6 +7,7 @@ import { Avatar, badgeFor, DEFAULT_BADGE } from '../components/Avatar'
 import AvatarPicker from '../components/AvatarPicker'
 import { InstallButton } from '../components/Install'
 import { useInstall } from '../lib/install'
+import { pinMonth, pinnedMonth, THEMES, useTheme } from '../lib/theme'
 
 type Member = { phone: string; name: string | null; created_at: string }
 
@@ -154,6 +155,8 @@ export default function Family() {
         {pwNote && <p className="muted small">{pwNote}</p>}
       </section>
 
+      <ThemePicker />
+
       {installMode && (
         <section className="card stack">
           <h2 className="display">Get the app</h2>
@@ -164,5 +167,30 @@ export default function Family() {
 
       <button className="btn ghost" onClick={signOut}><LogOut size={16} aria-hidden="true" />Sign out</button>
     </div>
+  )
+}
+
+const MONTHS = THEMES.map((t) => new Date(2000, t.month - 1, 1).toLocaleString('en-US', { month: 'long' }))
+
+/** The site picks its look from the month. This lets someone peek at another month's on this device only. */
+function ThemePicker() {
+  const theme = useTheme()
+  const [pin, setPin] = useState(pinnedMonth())
+  const today = new Date().getMonth() + 1
+  return (
+    <section className="card stack">
+      <h2 className="display">Season theme</h2>
+      <p className="muted small">
+        The site changes its look every month on its own. It's {theme.name.toLowerCase()} right now. Pick a month to
+        try another one on this device; everyone else still sees this month's.
+      </p>
+      <select className="input" aria-label="Theme" value={pin ?? 0} onChange={(e) => {
+        const m = Number(e.target.value) || null
+        pinMonth(m); setPin(m)
+      }}>
+        <option value={0}>Automatic ({MONTHS[today - 1]}: {THEMES[today - 1].name})</option>
+        {THEMES.map((t, i) => <option key={t.key} value={t.month}>{MONTHS[i]}: {t.name}</option>)}
+      </select>
+    </section>
   )
 }

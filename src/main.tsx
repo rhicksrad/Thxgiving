@@ -2,7 +2,10 @@ import './lib/install' // first, so the browser's one-time install offer isn't m
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
+import { applyTheme } from './lib/theme'
 import './styles.css'
+
+applyTheme() // this month's colors, before anything draws
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

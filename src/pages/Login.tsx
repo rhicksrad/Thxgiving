@@ -4,6 +4,8 @@ import { cleanPhone, formatPhone } from '../lib/phone'
 import type { Profile } from '../lib/types'
 import { useAuth } from '../auth'
 import Logo from '../components/Logo'
+import SeasonSky from '../components/SeasonSky'
+import { useTheme } from '../lib/theme'
 
 // What phone_status() says about a number.
 type Status = 'not_member' | 'new' | 'set_password' | 'password'
@@ -11,6 +13,7 @@ type Step = 'phone' | 'password' | 'create'
 type Session = { token: string; user: Profile }
 
 export default function Login() {
+  const theme = useTheme()
   const { signIn: startSession } = useAuth()
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
@@ -63,10 +66,11 @@ export default function Login() {
 
   return (
     <div className="login">
+      <SeasonSky />
       <div className="login-hero">
         <Logo size={96} />
-        <h1 className="display huge">Thanksgiving<br />2026</h1>
-        <p className="tagline">Gather 'round. Who's coming, who's bringing what, and all the pictures.</p>
+        <h1 className="display huge">Hicks<br />Family</h1>
+        <p className="tagline">{theme.tagline}. Get-togethers, the family chat, and all the pictures, all year.</p>
       </div>
       <div className="card narrow login-card">
         {step === 'phone' && (
