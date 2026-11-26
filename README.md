@@ -84,6 +84,9 @@ down the background, and a set of "question of the day" prompts for the family c
 | November | Harvest | Turkey | Leaves |
 | December | Merry & bright | Christmas tree | Snow |
 
+Christmas doesn't wait for December: the December theme starts at 5 PM on Thanksgiving (the 4th Thursday of
+November) and runs through the end of December.
+
 To peek at another month, pick it under **Family → Season theme** (that device only; everyone else still sees the
 current month), or add `?month=7` to the address before the `#`. People who've asked their phone to reduce motion
 get the decorations without the movement.

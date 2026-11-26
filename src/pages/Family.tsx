@@ -7,7 +7,7 @@ import { Avatar, badgeFor, DEFAULT_BADGE } from '../components/Avatar'
 import AvatarPicker from '../components/AvatarPicker'
 import { InstallButton } from '../components/Install'
 import { useInstall } from '../lib/install'
-import { pinMonth, pinnedMonth, THEMES, useTheme } from '../lib/theme'
+import { pinMonth, pinnedMonth, seasonMonth, THEMES, useTheme } from '../lib/theme'
 
 type Member = { phone: string; name: string | null; created_at: string }
 
@@ -176,7 +176,7 @@ const MONTHS = THEMES.map((t) => new Date(2000, t.month - 1, 1).toLocaleString('
 function ThemePicker() {
   const theme = useTheme()
   const [pin, setPin] = useState(pinnedMonth())
-  const today = new Date().getMonth() + 1
+  const today = seasonMonth()
   return (
     <section className="card stack">
       <h2 className="display">Season theme</h2>
