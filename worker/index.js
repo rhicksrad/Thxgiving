@@ -77,6 +77,27 @@ async function route(req, env, ctx, url) {
     return json({ ok: true })
   }
 
+  // Your private page. Only ever your own row, and never broadcast: nobody else's screen hears about it.
+  if (at('GET', 'me', 'page')) {
+    const row = await db.one('select wish, wish_at, page, page_at, data from private_pages where user_id = ?', uid)
+    return json(row ?? { wish: '', wish_at: null, page: '', page_at: null, data: null })
+  }
+  if (at('PUT', 'me', 'page', 'wish')) {
+    const wish = str((await body(req)).wish).trim()
+    if (wish.length > 4000) fail('That\'s a lot! Keep it under 4,000 characters.')
+    await db.run(`insert into private_pages (user_id, wish, wish_at) values (?, ?, ?)
+                  on conflict (user_id) do update set wish = excluded.wish, wish_at = excluded.wish_at`, uid, wish, now())
+    return json({ ok: true })
+  }
+  if (at('PUT', 'me', 'page', 'data')) {
+    const { data } = await body(req)
+    const saved = data === null || data === undefined ? null : JSON.stringify(data)
+    if (saved && saved.length > 100000) fail('Your page is out of room (100 KB).')
+    await db.run(`insert into private_pages (user_id, data, data_at) values (?, ?, ?)
+                  on conflict (user_id) do update set data = excluded.data, data_at = excluded.data_at`, uid, saved, now())
+    return json({ ok: true })
+  }
+
   // The family
   if (at('GET', 'profiles')) return json((await db.all('select * from users order by created_at')).map(profile))
   if (at('GET', 'members')) return json(await db.all('select phone, name, created_at from members order by created_at'))

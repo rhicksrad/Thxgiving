@@ -31,7 +31,37 @@ the pictures. It dresses up for the season with a new look every month.
 - **Family:** your name and avatar (upload a photo or pick a badge), and the family list: add people by name and
   cell number.
 
-Everything updates live for everyone.
+- **Mine:** everyone's own private page. Only they can open it. It starts blank with one box: type what you want
+  your page to be (a birthday countdown, a recipe box, a to-do list, a journal, a game…). The next time the site is
+  updated, it gets made for you. Change your mind any time under **Change your page**.
+
+Everything updates live for everyone (except **Mine**, which only ever goes to its owner).
+
+## Making everyone's private pages
+
+Each time the site gets updated, check what people asked for and build their pages. From `worker/` (signed in to
+Cloudflare with `npx wrangler login`):
+
+```sh
+npm run pages                  # who asked for what: NEW, CHANGE ASKED, up to date, or blank
+npm run pages -- pull          # copies each request into private-pages/<name>/wish.md (plus their live page)
+# write private-pages/<name>/page.html
+npm run pages -- push <name>   # puts it live for that person
+```
+
+`private-pages/` is git-ignored on purpose: the pages and requests are private, and this repo is public. They live
+only in the D1 table `private_pages`, and only their owner can read them through the API.
+
+`page.html` is what goes inside `<body>`: HTML with any `<style>` and `<script>` it needs, up to 90 KB. It runs in a
+sandboxed frame, so its scripts can't touch the rest of the site, the person's sign-in, or anyone else's data. It gets:
+
+- the month's colors as CSS variables: `var(--bg)`, `var(--card)`, `var(--line)`, `var(--text)`, `var(--muted)`,
+  `var(--gold)`, `var(--ink)`…
+- `page.name`: the person's name
+- `page.data`: whatever the page saved last time (`null` at first)
+- `page.save(value)`: keeps any JSON-able value (up to 100 KB) for next time, like their to-do list
+
+Add `--local` to any of these to work against the `wrangler dev` database instead.
 
 ## Seasons
 
