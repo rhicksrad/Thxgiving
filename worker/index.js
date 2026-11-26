@@ -116,6 +116,29 @@ async function route(req, env, ctx, url) {
   if (at('GET', 'stats')) return json(await db.all(STATS))
   if (at('GET', 'stats', '*')) return json(await db.one(`${STATS} where g.id = ?`, b))
 
+  // The family calendar: anyone can add, change or remove
+  if (at('GET', 'events')) return json(await db.all('select * from events order by day, time'))
+  if (at('POST', 'events')) {
+    const row = { id: uuid(), ...eventFields(await body(req)), created_by: uid, created_at: now() }
+    await db.insert('events', row)
+    live('events', 'insert', row)
+    return json(row)
+  }
+  if (at('PATCH', 'events', '*')) {
+    const cur = await db.one('select * from events where id = ?', b)
+    if (!cur) fail('That is gone', 404)
+    const next = { ...cur, ...eventFields({ ...cur, ...(await body(req)) }) }
+    await db.run('update events set title = ?, day = ?, end_day = ?, time = ?, notes = ? where id = ?',
+      next.title, next.day, next.end_day, next.time, next.notes, b)
+    live('events', 'update', next)
+    return json(next)
+  }
+  if (at('DELETE', 'events', '*')) {
+    await db.run('delete from events where id = ?', b)
+    live('events', 'delete', { id: b })
+    return json({ ok: true })
+  }
+
   // Food and help lists
   if (at('GET', 'gatherings', '*', 'items')) {
     const kind = url.searchParams.get('kind')
@@ -507,6 +530,20 @@ async function updateGathering(req, db, id, live) {
     cur.title, cur.starts_at, cur.time_tbd, cur.place, cur.notes, id)
   live('gatherings', 'update', gathering(cur))
   return json(gathering(cur))
+}
+
+const isDay = (v) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(`${v}T00:00:00Z`))
+
+/** A calendar event's fields, checked: a title, a day, maybe a last day, maybe a time ('14:30'), maybe notes. */
+function eventFields(p) {
+  const title = opt(p.title, 100)
+  if (!title) fail('Give it a name')
+  if (!isDay(p.day)) fail('Pick a day')
+  const end = p.end_day && p.end_day !== p.day ? str(p.end_day) : null
+  if (end && (!isDay(end) || end < p.day)) fail('The last day has to come after the first')
+  const time = p.time ? str(p.time) : null
+  if (time && !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) fail('That time doesn\'t look right')
+  return { title, day: p.day, end_day: end, time, notes: opt(p.notes, 500) }
 }
 
 // ---------------------------------------------------------------------------

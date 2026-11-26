@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { NavLink, useLocation } from 'react-router'
-import { House, Images, LockKeyhole, MessagesSquare, Users } from 'lucide-react'
+import { CalendarDays, House, Images, LockKeyhole, MessagesSquare, Users } from 'lucide-react'
 import { useAuth } from '../auth'
 import Logo from './Logo'
 import { Avatar, badgeFor, DEFAULT_BADGE } from './Avatar'
@@ -15,6 +15,7 @@ const NAV = [
   { to: '/', label: 'Home', Icon: House, end: true },
   { to: '/chat', label: 'Chat', Icon: MessagesSquare },
   { to: '/gallery', label: 'Photos', Icon: Images },
+  { to: '/calendar', label: 'Calendar', Icon: CalendarDays },
   { to: '/family', label: 'Family', Icon: Users },
   { to: '/mine', label: 'Mine', Icon: LockKeyhole },
 ]

@@ -31,6 +31,10 @@ the pictures. It dresses up for the season with a new look every month.
 - **Family:** your name and avatar (upload a photo or pick a badge), and the family list: add people by name and
   cell number.
 
+- **Calendar:** the family calendar, a month at a time. Anyone can put something on it (a birthday, a trip, a
+  ballgame): a name, the day, a time or all day, a last day for trips, and notes. Anyone can change or remove it.
+  Every get-together shows on it too (tap it for its sign-up board), and so do the big six holidays: New Year's Day,
+  Memorial Day, Independence Day, Labor Day, Thanksgiving and Christmas. Tap a day to see everything on it.
 - **Mine:** everyone's own private page. Only they can open it. It starts blank with one box: type what you want
   your page to be (a birthday countdown, a recipe box, a to-do list, a journal, a game…). The next time the site is
   updated, it gets made for you. Change your mind any time under **Change your page**.

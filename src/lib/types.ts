@@ -100,3 +100,14 @@ export type Reaction = {
   emoji: string
   created_at: string
 }
+
+export type CalendarEvent = {
+  id: string
+  title: string
+  day: string             // '2026-12-24', the family's own calendar date
+  end_day: string | null  // last day of a trip or anything spanning days
+  time: string | null     // '14:30', or null for all day
+  notes: string | null
+  created_by: string | null
+  created_at: string
+}

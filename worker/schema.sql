@@ -184,6 +184,21 @@ create table if not exists reactions (
 create index if not exists reactions_target_idx on reactions (target_id);
 create index if not exists reactions_owner_idx on reactions (owner_id, created_at);
 
+-- The family calendar: anything anyone puts on it (birthdays, trips, appointments, a ballgame).
+-- Days are the family's own calendar dates ('2026-12-24'), not timestamps. Get-togethers and the big
+-- holidays show on the calendar too, but they aren't stored here.
+create table if not exists events (
+  id         text primary key,
+  title      text not null check (length(title) between 1 and 100),
+  day        text not null check (day glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
+  end_day    text check (end_day glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'), -- several days (a trip); null = one day
+  time       text check (time glob '[0-9][0-9]:[0-9][0-9]'),                       -- null = all day
+  notes      text check (length(notes) <= 500),
+  created_by text references users(id) on delete set null,
+  created_at text not null
+);
+create index if not exists events_day_idx on events (day);
+
 -- Everyone's own private page ("Mine"). Only its owner can read it through the API, and it is never sent live
 -- to anyone else. wish = what they typed they want the page to be. page = the page built for them (HTML, run in a
 -- sandboxed frame on the site), written by whoever updates the site with `npm run pages` in worker/.
