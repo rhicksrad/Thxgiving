@@ -11,8 +11,8 @@ import { pinMonth, pinnedMonth, THEMES, useTheme } from '../lib/theme'
 
 type Member = { phone: string; name: string | null; created_at: string }
 
-// Where the site lives, for the "text them the link" note.
-const SITE = 'https://rhicksrad.github.io/Thxgiving/'
+// Where the site lives, for the "text them the link" note: wherever this page was opened from (hicksfamily.app).
+const SITE = `${window.location.origin}${window.location.pathname}`.replace(/\/$/, '')
 
 export default function Family() {
   const { me, profiles, saveProfile, signOut } = useAuth()

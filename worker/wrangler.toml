@@ -1,7 +1,12 @@
-# The Thanksgiving site's backend: API, D1 database, R2 photos and live updates. See worker/README.md.
+# The family site's backend: API, D1 database, R2 photos and live updates. See worker/README.md.
 name = "thxgiving"
 main = "index.js"
 compatibility_date = "2026-09-01"
+
+# The API answers at api.hicksfamily.app (Cloudflare makes the DNS record and certificate on deploy) and still
+# at thxgiving.<subdomain>.workers.dev, so phones holding the old address keep working.
+workers_dev = true
+routes = [{ pattern = "api.hicksfamily.app", custom_domain = true }]
 
 [[d1_databases]]
 binding = "DB"

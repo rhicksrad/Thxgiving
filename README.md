@@ -3,7 +3,7 @@
 The Hicks family's site, all year round: get-togethers (who's coming, who's bringing what), the family chat, and all
 the pictures. It dresses up for the season with a new look every month.
 
-**Live:** https://rhicksrad.github.io/Thxgiving/
+**Live:** https://hicksfamily.app
 
 - **Home** is the family's front page:
   - A welcome in this month's theme (see **Seasons** below), with what's going on this month.
@@ -124,6 +124,18 @@ Thanksgiving 2026 and its lists. What's left:
    ```
 
    The number is digits only, with the 1 in front.
+
+## The address: hicksfamily.app
+
+The domain is registered on Cloudflare.
+
+- **The site** is served by GitHub Pages at `hicksfamily.app` (`public/CNAME`). In Cloudflare DNS for hicksfamily.app,
+  a `CNAME` named `@` points to `rhicksrad.github.io`, and a `CNAME` named `www` does too. Both are set to
+  **DNS only** (grey cloud), so GitHub can issue the HTTPS certificate. In the repo, Settings → Pages →
+  Custom domain is `hicksfamily.app`, with **Enforce HTTPS** on. The old `rhicksrad.github.io/Thxgiving/` address
+  redirects there.
+- **The server** answers at `api.hicksfamily.app`. `worker/wrangler.toml` claims it on deploy, and Cloudflare
+  makes that DNS record and certificate itself. It still answers at its `workers.dev` address too.
 
 ## Changing things
 
