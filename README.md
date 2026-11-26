@@ -28,10 +28,33 @@ the pictures. It dresses up for the season with a new look every month.
 - **Photos:** everyone's pics and videos, filterable by get-together and by who added them, in the order they were
   taken. The same pic added by two people shows once. Originals stay full-size; download one or zip a whole day.
 - **Reactions & comments** on any photo, video or message, and a bell in the top bar for what's new.
+- **My page:** a private tab for each person (see **Private pages** below).
 - **Family:** your name and avatar (upload a photo or pick a badge), and the family list: add people by name and
   cell number.
 
 Everything updates live for everyone.
+
+## Private pages
+
+Everyone gets a **My page** tab that nobody else can see. It starts blank, with a box where they describe what
+they want it to be (a recipe box, a to-do list, a countdown…). Every time we update the site, we build each
+person's page from what they asked for. After that it shows on their tab, with the box underneath for changes.
+
+**At each update:**
+
+1. See what people asked for (in Cloudflare: Storage & Databases → D1 → `thxgiving` → Console):
+
+   ```sql
+   select u.display_name, u.id, w.wish, w.updated_at from page_wishes w join users u on u.id = w.user_id order by w.updated_at desc;
+   ```
+
+2. Build each page as `src/private/<name>.tsx` (a React component), and list it in
+   [`src/private/index.ts`](src/private/index.ts) under that person's `id`. It loads only for them.
+3. Anything the page needs to remember (their list, their notes) goes through `usePrivateData('name', initial)`
+   from `src/lib/privateData.ts`. It's saved on the server and only that person can read it back. The site's
+   code is public, so nothing personal should be typed into the page's code itself.
+
+The server only ever hands someone their own request and their own saved data.
 
 ## Seasons
 

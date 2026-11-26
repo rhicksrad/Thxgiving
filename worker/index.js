@@ -77,6 +77,34 @@ async function route(req, env, ctx, url) {
     return json({ ok: true })
   }
 
+  // Your private page: what you asked for, and whatever your built page saves. Only ever your own rows.
+  if (at('GET', 'me', 'page')) return json(await db.one('select wish, updated_at from page_wishes where user_id = ?', uid))
+  if (at('PUT', 'me', 'page')) {
+    const { wish } = await body(req)
+    const text = str(wish).trim().slice(0, 4000)
+    if (!text) {
+      await db.run('delete from page_wishes where user_id = ?', uid)
+      return json(null)
+    }
+    const row = { wish: text, updated_at: now() }
+    await db.run(`insert into page_wishes (user_id, wish, updated_at) values (?, ?, ?)
+                  on conflict (user_id) do update set wish = excluded.wish, updated_at = excluded.updated_at`, uid, row.wish, row.updated_at)
+    return json(row)
+  }
+  if (at('GET', 'me', 'data', '*')) {
+    const row = await db.one('select value from private_data where user_id = ? and key = ?', uid, parts[2])
+    return json(row ? JSON.parse(row.value) : null)
+  }
+  if (at('PUT', 'me', 'data', '*')) {
+    const key = parts[2]
+    if (!key || key.length > 64) fail('Bad key')
+    const value = JSON.stringify((await body(req)).value ?? null)
+    if (value.length > 200000) fail('That is too much to save in one go')
+    await db.run(`insert into private_data (user_id, key, value, updated_at) values (?, ?, ?, ?)
+                  on conflict (user_id, key) do update set value = excluded.value, updated_at = excluded.updated_at`, uid, key, value, now())
+    return json({ ok: true })
+  }
+
   // The family
   if (at('GET', 'profiles')) return json((await db.all('select * from users order by created_at')).map(profile))
   if (at('GET', 'members')) return json(await db.all('select phone, name, created_at from members order by created_at'))

@@ -29,6 +29,7 @@ const Login = page(() => import('./pages/Login'))
 const FamilyChat = page(() => import('./pages/FamilyChat'))
 const Gallery = page(() => import('./pages/Gallery'))
 const Family = page(() => import('./pages/Family'))
+const MyPage = page(() => import('./pages/MyPage'))
 
 export default function App() {
   if (!isConfigured) return <SetupNeeded />
@@ -55,6 +56,7 @@ function Gate() {
           <Route path="/chat" element={<FamilyChat />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/family" element={<Family />} />
+          <Route path="/mine" element={<MyPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
