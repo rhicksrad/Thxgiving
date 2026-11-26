@@ -220,8 +220,20 @@ function pinned(): number | null {
   return null
 }
 
-/** The month that picks the theme: a pinned one, or today's month on the visitor's own clock. */
-export const currentMonth = () => pinned() ?? new Date().getMonth() + 1
+/**
+ * The month whose theme shows on a given day, on the visitor's own clock. Christmas doesn't wait for December 1:
+ * it starts at 5 PM on Thanksgiving (the 4th Thursday of November), once dinner is done.
+ */
+export function seasonMonth(d = new Date()) {
+  const month = d.getMonth() + 1
+  if (month !== 11) return month
+  const firstThu = 1 + ((4 - new Date(d.getFullYear(), 10, 1).getDay() + 7) % 7)
+  const christmasStarts = new Date(d.getFullYear(), 10, firstThu + 21, 17)
+  return d >= christmasStarts ? 12 : 11
+}
+
+/** The month that picks the theme: a pinned one, or the season on the visitor's own clock. */
+export const currentMonth = () => pinned() ?? seasonMonth()
 export const pinnedMonth = pinned
 
 let active: Theme = THEMES[currentMonth() - 1]
