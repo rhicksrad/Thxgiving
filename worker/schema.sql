@@ -184,21 +184,27 @@ create table if not exists reactions (
 create index if not exists reactions_target_idx on reactions (target_id);
 create index if not exists reactions_owner_idx on reactions (owner_id, created_at);
 
--- Private pages. Each person's page starts blank; they write what they want it to be (their wish), and it gets
--- built for them in a later site update (src/private/). Only the owner can ever read either table.
-create table if not exists page_wishes (
-  user_id    text primary key references users(id) on delete cascade,
-  wish       text not null check (length(wish) <= 4000),
-  updated_at text not null
+-- Everyone's own private page ("Mine"). Only its owner can read it through the API, and it is never sent live
+-- to anyone else. wish = what they typed they want the page to be. page = the page built for them (HTML, run in a
+-- sandboxed frame on the site), written by whoever updates the site with `npm run pages` in worker/.
+-- data = whatever that page saves for itself (a to-do list, notes…), as JSON.
+create table if not exists private_pages (
+  user_id  text primary key references users(id) on delete cascade,
+  wish     text not null default '' check (length(wish) <= 4000),
+  wish_at  text,
+  page     text not null default '' check (length(page) <= 90000),
+  page_at  text,
+  data     text check (length(data) <= 100000),
+  data_at  text
 );
--- Whatever a built private page needs to remember (a list, notes, settings), by name, for its owner only.
-create table if not exists private_data (
-  user_id    text not null references users(id) on delete cascade,
-  key        text not null check (length(key) between 1 and 64),
-  value      text not null check (length(value) <= 200000),
-  updated_at text not null,
-  primary key (user_id, key)
-);
+
+-- An earlier version kept requests in page_wishes and page data in private_data: carry any requests over, then
+-- drop both (safe to re-run: on later runs the empty old table is made and dropped again).
+create table if not exists page_wishes (user_id text primary key, wish text not null, updated_at text not null);
+insert or ignore into private_pages (user_id, wish, wish_at)
+select w.user_id, w.wish, w.updated_at from page_wishes w where exists (select 1 from users u where u.id = w.user_id);
+drop table if exists page_wishes;
+drop table if exists private_data;
 
 -- Thanksgiving 2026: Thursday, November 26, time to be decided (noon Eastern until someone sets it).
 -- Its starter lists are copied from list_template, once.

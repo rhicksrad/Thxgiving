@@ -77,31 +77,24 @@ async function route(req, env, ctx, url) {
     return json({ ok: true })
   }
 
-  // Your private page: what you asked for, and whatever your built page saves. Only ever your own rows.
-  if (at('GET', 'me', 'page')) return json(await db.one('select wish, updated_at from page_wishes where user_id = ?', uid))
-  if (at('PUT', 'me', 'page')) {
-    const { wish } = await body(req)
-    const text = str(wish).trim().slice(0, 4000)
-    if (!text) {
-      await db.run('delete from page_wishes where user_id = ?', uid)
-      return json(null)
-    }
-    const row = { wish: text, updated_at: now() }
-    await db.run(`insert into page_wishes (user_id, wish, updated_at) values (?, ?, ?)
-                  on conflict (user_id) do update set wish = excluded.wish, updated_at = excluded.updated_at`, uid, row.wish, row.updated_at)
-    return json(row)
+  // Your private page. Only ever your own row, and never broadcast: nobody else's screen hears about it.
+  if (at('GET', 'me', 'page')) {
+    const row = await db.one('select wish, wish_at, page, page_at, data from private_pages where user_id = ?', uid)
+    return json(row ?? { wish: '', wish_at: null, page: '', page_at: null, data: null })
   }
-  if (at('GET', 'me', 'data', '*')) {
-    const row = await db.one('select value from private_data where user_id = ? and key = ?', uid, parts[2])
-    return json(row ? JSON.parse(row.value) : null)
+  if (at('PUT', 'me', 'page', 'wish')) {
+    const wish = str((await body(req)).wish).trim()
+    if (wish.length > 4000) fail('That\'s a lot! Keep it under 4,000 characters.')
+    await db.run(`insert into private_pages (user_id, wish, wish_at) values (?, ?, ?)
+                  on conflict (user_id) do update set wish = excluded.wish, wish_at = excluded.wish_at`, uid, wish, now())
+    return json({ ok: true })
   }
-  if (at('PUT', 'me', 'data', '*')) {
-    const key = parts[2]
-    if (!key || key.length > 64) fail('Bad key')
-    const value = JSON.stringify((await body(req)).value ?? null)
-    if (value.length > 200000) fail('That is too much to save in one go')
-    await db.run(`insert into private_data (user_id, key, value, updated_at) values (?, ?, ?, ?)
-                  on conflict (user_id, key) do update set value = excluded.value, updated_at = excluded.updated_at`, uid, key, value, now())
+  if (at('PUT', 'me', 'page', 'data')) {
+    const { data } = await body(req)
+    const saved = data === null || data === undefined ? null : JSON.stringify(data)
+    if (saved && saved.length > 100000) fail('Your page is out of room (100 KB).')
+    await db.run(`insert into private_pages (user_id, data, data_at) values (?, ?, ?)
+                  on conflict (user_id) do update set data = excluded.data, data_at = excluded.data_at`, uid, saved, now())
     return json({ ok: true })
   }
 
