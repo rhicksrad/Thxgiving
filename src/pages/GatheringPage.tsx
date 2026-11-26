@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
 import {
+  Archive, ArchiveRestore,
   ArrowLeft, ArrowRight, Camera, CalendarClock, HandHelping, MapPin, MessageCircle, Pencil, StickyNote, UtensilsCrossed,
   type LucideIcon,
 } from 'lucide-react'
@@ -166,7 +167,7 @@ function Hero({ gathering }: { gathering: Gathering }) {
   return (
     <section className="hero card">
       <div className="hero-kicker">
-        {isToday(gathering) ? <span className="badge live">Today!</span> : past ? <span className="badge">Looking back</span> : <span className="badge">Save the date</span>}
+        {isToday(gathering) && !gathering.archived ? <span className="badge live">Today!</span> : past || gathering.archived ? <span className="badge">In the archive</span> : <span className="badge">Save the date</span>}
       </div>
       <h1 className="display huge">{gathering.title}</h1>
       <div className="hero-when">
@@ -175,10 +176,17 @@ function Hero({ gathering }: { gathering: Gathering }) {
         <span>{gatheringTime(gathering)}</span>
         <button className="btn ghost sm icon" title="Change the name, date or time" aria-label="Change the name, date or time"
           onClick={() => setEditing((v) => !v)}><Pencil size={14} aria-hidden="true" /></button>
+        {!past && (
+          <button className="btn ghost sm icon" title={gathering.archived ? 'Bring back to Coming up' : 'Move to the archive'}
+            aria-label={gathering.archived ? 'Bring back to Coming up' : 'Move to the archive'}
+            onClick={() => api.patch(`/gatherings/${seg(gathering.id)}`, { archived: !gathering.archived })}>
+            {gathering.archived ? <ArchiveRestore size={14} aria-hidden="true" /> : <Archive size={14} aria-hidden="true" />}
+          </button>
+        )}
       </div>
       {gathering.place && <div className="hero-lot"><MapPin size={15} aria-hidden="true" />{gathering.place}</div>}
       {editing && <EditWhen gathering={gathering} onDone={() => setEditing(false)} />}
-      {!past && <Countdown gathering={gathering} />}
+      {!past && !gathering.archived && <Countdown gathering={gathering} />}
       {stats && (
         <div className="hero-stats">
           <Stat n={String(rsvps ? headcount(rsvps) : stats.coming)} label={past ? 'Were there' : 'Coming'} />

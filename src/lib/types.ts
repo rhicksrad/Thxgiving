@@ -13,6 +13,7 @@ export type Gathering = {
   title: string             // "Thanksgiving 2026"
   starts_at: string
   time_tbd: boolean         // date set, time not yet
+  archived: boolean         // moved to Home's Archive
   place: string | null      // whose house / the address
   notes: string | null      // parking, bring a chair, anything else
   created_at?: string

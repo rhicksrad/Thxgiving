@@ -34,11 +34,12 @@ export default function Home() {
     onResync: load,
   })
 
-  // The next one coming up gets the spotlight; the rest are split into what's ahead and what's behind.
+  // The next one coming up gets the spotlight; the rest are split into what's ahead and the archive (past or archived).
   const { next, upcoming, past } = useMemo(() => {
     const list = gatherings ?? []
-    const ahead = list.filter((g) => !isPast(g))
-    return { next: ahead[0], upcoming: ahead.slice(1), past: list.filter(isPast).reverse() }
+    const done = (g: Gathering) => g.archived || isPast(g)
+    const ahead = list.filter((g) => !done(g))
+    return { next: ahead[0], upcoming: ahead.slice(1), past: list.filter(done).reverse() }
   }, [gatherings])
 
   const first = me?.display_name?.split(' ')[0]
@@ -86,7 +87,7 @@ export default function Home() {
 
       {past.length > 0 && (
         <section>
-          <h2 className="section-title">Looking back</h2>
+          <h2 className="section-title">Archive</h2>
           <div className="gathering-list">
             {past.map((g) => <GatheringRow key={g.id} gathering={g} stats={stats[g.id]} />)}
           </div>
