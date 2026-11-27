@@ -99,6 +99,18 @@ export const BIRTHDAYS = [
   { key: 'navy-tattoo', colors: { bg: '#0a1326', gold: '#e7c15a', rush: '#f3e6c8', aged: '#c8323b', dust: '#f6eedc' },
     scene: 'a tall sailing ship on a dark night ocean under nautical stars, painted in bold American traditional sailor tattoo flash style with thick confident outlines and limited flat colors, rope border along the bottom edge.',
     motif: 'American traditional sailor tattoo flash: a bold anchor wrapped in rope, two swallows, a nautical star and an empty banner scroll with NO text, thick black outlines, navy, cream, red and gold.' },
+  { key: 'ai-it', colors: { bg: '#0a1024', gold: '#5fe0f0', rush: '#a98cff', aged: '#3a6fd8', dust: '#e2f4ff' },
+    scene: 'a cozy night-time tech nook: a server rack with blinking cyan lights, a glowing laptop on a desk, network cables, faint glowing circuit traces running along the floor, and a small friendly round helper robot. No readable text on any screen.',
+    motif: 'a cute friendly round helper robot waving, a glowing laptop with an abstract screen (no text), coiled network cables, a small server rack with blinking lights and circuit traces.' },
+  { key: 'podcast-party', colors: { bg: '#170c1c', gold: '#ff9a4a', rush: '#ff7ab6', aged: '#9a6cff', dust: '#fde6f0' },
+    scene: 'a lively house party at night seen from the yard: warm glowing windows with small silhouettes of friends gathered inside, string lights across the porch, and on a porch table a podcast microphone with headphones. Silhouettes only, no faces.',
+    motif: 'a podcast microphone on a stand with headphones, string lights, party cups, a few balloons and confetti.' },
+  { key: 'calm-pilates', colors: { bg: '#121a16', gold: '#e8a7b5', rush: '#c3b2ea', aged: '#8fb89a', dust: '#f4ece6' },
+    scene: 'a serene Pilates studio at soft dawn: a wooden reformer and a rolled mat by tall windows, potted plants, and in the corner a cozy armchair with a cup of tea and a small side table.',
+    motif: 'a rolled yoga mat, a Pilates ring, a trailing pothos plant, a cozy armchair corner with a cup of tea and a small notebook.' },
+  { key: 'grandma', colors: { bg: '#1c120d', gold: '#e9b25a', rush: '#e58a8f', aged: '#b5673a', dust: '#f6e8d2' },
+    scene: 'the coziest grandma\'s house at evening seen through a warm window: a rocking chair with a patchwork quilt, a pie and cookies cooling on the sill, a knitting basket with yarn, a teapot, flowers in a vase and framed family photos on the wall (no faces in detail). Rich, warm and loving.',
+    motif: 'all the grandma goodness: a lattice-top cherry pie and a plate of cookies, a flowered teapot and teacup, a knitting basket with yarn and needles, a patchwork quilt corner, roses in a vase and a little framed photo (no faces in detail).' },
 ]
 
 export const JOBS = [
