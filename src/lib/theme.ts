@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import { BIRTHDAY_MARK, MONTH_MARKS, PARTICLES, type ParticleKind } from './marks'
+import { DAY_ART, specialDay, type DayLook } from './days'
 import { birthdaysOn, PARTY, previewBirthday, type Birthday } from './birthdays'
 
 /**
@@ -28,6 +29,7 @@ export type Theme = {
   motion: 'fall' | 'rise' | 'twinkle' | 'sway'
   prompts: string[]        // the family chat's question of the day
   mark: string             // emblem SVG (64×64 grid)
+  day?: DayLook            // set on a holiday or special day: its own look for the day
   birthday?: Birthday      // set on someone's birthday: the site wears their look for the day
   art?: string             // the painted art's file key, when it isn't the month's own
 }
@@ -241,15 +243,23 @@ export const pinnedMonth = pinned
 
 const HEX = /^#[0-9a-f]{3,8}$/i
 
+/** Anniversaries ride along with birthdays; their calendar ids start with "anniv-". */
+export const isAnniversary = (b: Birthday) => b.event_id.startsWith('anniv-')
+
 /** The month's theme dressed up for a birthday: that person's colors, drifting bits and words. */
 function birthdayTheme(base: Theme, b: Birthday): Theme {
   const t = b.theme && Object.values(b.theme.colors ?? {}).length === 7 && Object.values(b.theme.colors).every((c) => HEX.test(c)) ? b.theme : PARTY
   const stripe = t.stripe?.every((c) => HEX.test(c)) ? t.stripe : [t.colors.aged, t.colors.rush, t.colors.gold]
+  const anniv = isAnniversary(b)
   return {
-    ...base, mark: BIRTHDAY_MARK, name: t.name, tagline: `Happy birthday, ${b.name}!`,
+    ...base, mark: BIRTHDAY_MARK, name: t.name, tagline: `Happy ${anniv ? 'anniversary' : 'birthday'}, ${b.name}!`,
     greeting: t.greeting ?? PARTY.greeting!, colors: t.colors, stripe,
     particle: t.particle && t.particle in PARTICLES ? t.particle : 'confetti', motion: t.motion ?? 'fall',
-    prompts: [
+    prompts: anniv ? [
+      `It's ${b.name}'s anniversary! Say congratulations here.`,
+      `Favorite memory of ${b.name} together?`,
+      `Drop your best photo of ${b.name}.`,
+    ] : [
       `It's ${b.name}'s birthday! Say happy birthday here.`,
       `What's your favorite memory with ${b.name}?`,
       `Drop your best photo of ${b.name}.`,
@@ -258,13 +268,21 @@ function birthdayTheme(base: Theme, b: Birthday): Theme {
   }
 }
 
-/** Today's look: a birthday if it's somebody's day (a pinned month wins over that), else the month. */
+/** Today's look: a birthday or anniversary first, then a holiday or special day, else the month. A pinned month wins over all. */
 function pick(): Theme {
   const base = THEMES[currentMonth() - 1]
   const b = previewBirthday() ?? (pinned() ? null : birthdaysOn()[0])
-  return b ? birthdayTheme(base, b) : base
+  if (b) return birthdayTheme(base, b)
+  const day = pinned() ? null : specialDay()
+  if (!day) return base
+  const cs = day.colors
+  return {
+    ...base, name: day.name, tagline: day.tagline, greeting: day.greeting, colors: cs,
+    stripe: [cs.aged, cs.rush, cs.gold], particle: day.particle, motion: day.motion, prompts: day.prompts,
+    day, art: DAY_ART.has(day.key) ? `day-${day.key}` : undefined,
+  }
 }
-const sig = (t: Theme) => `${t.month}:${t.birthday ? JSON.stringify(t.birthday) : ''}`
+const sig = (t: Theme) => `${t.month}:${t.day?.key ?? ''}:${t.day?.title ?? ''}:${t.birthday ? JSON.stringify(t.birthday) : ''}`
 
 let active: Theme = pick()
 const listeners = new Set<() => void>()
@@ -280,6 +298,7 @@ export function applyTheme() {
   set('--stripe', `linear-gradient(90deg, ${active.stripe.map((s, i) => `${s} ${(i / active.stripe.length) * 100}% ${((i + 1) / active.stripe.length) * 100}%`).join(', ')})`)
   root.dataset.month = active.key
   if (active.birthday) root.dataset.birthday = 'true'; else delete root.dataset.birthday
+  if (active.day) root.dataset.day = active.day.key; else delete root.dataset.day
   // The painted art (public/art, made with Codex: scripts/make-art.mjs): this month's, or the birthday's own.
   // A birthday look with no painting of its own yet goes without, so Christmas trees don't crash a July party.
   const art = (name: string) => active.birthday && !active.art ? 'none'

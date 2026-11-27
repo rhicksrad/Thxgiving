@@ -3,7 +3,8 @@ import { Link } from 'react-router'
 import { ArrowRight, Camera, ChevronRight, MapPin, MessageCircle, Plus, Users } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAuth } from '../auth'
-import { useTheme } from '../lib/theme'
+import { applyTheme, isAnniversary, useTheme } from '../lib/theme'
+import { dayKey, rememberGatherings } from '../lib/days'
 import { fromInputs, gatheringDay, gatheringTime, isPast, isToday } from '../lib/format'
 import { useLiveTable, upsertById } from '../lib/realtime'
 import type { Gathering, GatheringStats } from '../lib/types'
@@ -43,8 +44,16 @@ export default function Home() {
     return { next: ahead[0], upcoming: ahead.slice(1), past: list.filter(done).reverse() }
   }, [gatherings])
 
+  // The days of the get-togethers still on, so the site wears its get-together look on the day.
+  useEffect(() => {
+    if (!gatherings) return
+    rememberGatherings(gatherings.filter((g) => !g.archived).map((g) => ({ day: dayKey(new Date(g.starts_at)), title: g.title })))
+    applyTheme()
+  }, [gatherings])
+
   const first = me?.display_name?.split(' ')[0]
   const bday = theme.birthday
+  const anniv = Boolean(bday && isAnniversary(bday))
   const mine = Boolean(bday?.user_id && bday.user_id === me?.id)
   const monthName = new Date(2000, theme.month - 1, 1).toLocaleString('en-US', { month: 'long' })
 
@@ -55,14 +64,14 @@ export default function Home() {
       <section className="card welcome">
         <Logo size={84} className="welcome-mark" />
         <div className="welcome-text">
-          <span className="badge">{bday ? 'Birthday' : monthName} · {theme.name}</span>
+          <span className="badge">{bday ? (anniv ? 'Anniversary' : 'Birthday') : theme.day ? theme.day.title : monthName} · {theme.name}</span>
           <h1 className="display">
-            {bday ? (mine ? `Happy birthday, ${first ?? bday.name}!` : `It's ${bday.name}'s birthday!`)
+            {bday ? (anniv ? `Happy anniversary, ${bday.name}!` : mine ? `Happy birthday, ${first ?? bday.name}!` : `It's ${bday.name}'s birthday!`)
               : first ? `Welcome home, ${first}` : 'Welcome home'}
           </h1>
           <p className="welcome-greet">{theme.greeting}</p>
           {bday
-            ? <p className="muted small">{mine ? 'The whole site is dressed up for you today.' : <>The site is dressed up for the day. <Link to="/chat">Say happy birthday in the chat</Link>.</>}</p>
+            ? <p className="muted small">{mine ? 'The whole site is dressed up for you today.' : <>The site is dressed up for the day. <Link to="/chat">{anniv ? 'Say congratulations in the chat' : 'Say happy birthday in the chat'}</Link>.</>}</p>
             : <p className="muted small">This month: {theme.highlights}</p>}
         </div>
       </section>

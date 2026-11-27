@@ -59,7 +59,7 @@ export function previewBirthday(): Birthday | null {
   const want = new URLSearchParams(window.location.search).get('bday')?.toLowerCase()
   if (!want) return null
   if (want === 'party') return { event_id: 'preview', md: md(new Date()), user_id: null, name: 'Somebody', theme: null }
-  return all.find((b) => b.name.toLowerCase() === want || b.event_id === `bday-${want}`) ?? null
+  return all.find((b) => b.name.toLowerCase() === want || b.event_id === want || b.event_id === `bday-${want}`) ?? null
 }
 
 const subscribe = (l: () => void) => { listeners.add(l); return () => { listeners.delete(l) } }
