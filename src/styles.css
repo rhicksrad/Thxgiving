@@ -737,3 +737,33 @@ select.input { appearance: none; cursor: pointer; background-image: linear-gradi
 .cal-field { display: flex; flex-direction: column; gap: 4px; }
 .cal-check { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-2); }
 .cal-check input { width: 18px; height: 18px; accent-color: var(--gold); }
+
+/* ---------- Seasonal art (public/art, made with Codex; theme.ts sets --art-bg and --art-hero) ---------- */
+/* The month's painted scene, behind everything. Dark to begin with, then faded into the page color toward the
+   top so headings and cards always sit on near-plain background. */
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    linear-gradient(to bottom, var(--bg) 0%, color-mix(in srgb, var(--bg) 70%, transparent) 40%, color-mix(in srgb, var(--bg) 25%, transparent) 100%),
+    var(--art-bg, none) center bottom / cover no-repeat;
+  opacity: 0.9;
+}
+/* The welcome card on Home: the month's accent, tucked into its right side. "lighten" drops the art's own dark
+   background so only the painted decoration shows on the card. */
+.welcome::after {
+  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: var(--art-hero, none) right center / auto 100% no-repeat;
+  mix-blend-mode: lighten; opacity: 0.9;
+  -webkit-mask-image: linear-gradient(to right, transparent 35%, #000 80%);
+  mask-image: linear-gradient(to right, transparent 35%, #000 80%);
+}
+.welcome > * { position: relative; z-index: 1; }
+@media (max-width: 560px) {
+  /* Phones stack the card, so the accent stays up by the emblem, clear of the words. */
+  .welcome::after {
+    background-size: auto 46%; background-position: right top; opacity: 0.85;
+    -webkit-mask-image: linear-gradient(to left, #000 20%, transparent 70%), linear-gradient(to bottom, #000 30%, transparent 46%);
+    mask-image: linear-gradient(to left, #000 20%, transparent 70%), linear-gradient(to bottom, #000 30%, transparent 46%);
+    -webkit-mask-composite: source-in; mask-composite: intersect;
+  }
+}
