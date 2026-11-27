@@ -78,7 +78,34 @@ export const SPOTS = {
   gather: 'a round dinner table seen from above with a pie, a bowl of salad, a pitcher and a candle, cozy and inviting.',
 }
 
+// Birthday looks (src/lib/birthdays.ts `art`): keyed by theme, never by person, since the repo is public.
+//   bg-bday-<key>, hero-bday-<key>: used on that person's day exactly like the month pieces.
+export const BIRTHDAYS = [
+  { key: 'garden-opera', colors: { bg: '#0d1a12', gold: '#d9b45a', rush: '#e0475e', aged: '#3f8f5a', dust: '#f3e3c8' },
+    scene: 'a moonlit rose garden in full bloom leading up to the glowing arched doors of a grand old opera house, a hint of red velvet curtain and gold balconies through the windows.',
+    motif: 'climbing red roses and green leaves woven around a gold opera balcony rail, a swag of red velvet curtain with a gold tassel, and a few floating music notes.' },
+  { key: 'fishing-news', colors: { bg: '#0b1a1f', gold: '#f2d27a', rush: '#7cc6d6', aged: '#2f8f9a', dust: '#eef4e6' },
+    scene: 'a still lake at first light with mist on the water, a small wooden dock with a fishing rod leaning on a post and a tackle box, pines on the far shore.',
+    motif: 'a fishing rod with a red and white bobber, a tackle box, a folded morning newspaper with blank columns (no readable text) and a steaming mug of coffee.' },
+  { key: 'chiefs', colors: { bg: '#1a0b0d', gold: '#f2c14e', rush: '#ffd76a', aged: '#d62b3a', dust: '#fbe9d0' },
+    scene: 'a football stadium at night seen from the field, bright stadium lights, red and gold crowd glow, a football resting on the grass at the fifty. Team colors only: absolutely no logos, no wordmarks, no arrowheads, no letters or numbers.',
+    motif: 'a football, red and gold pennants with no lettering, a red foam finger with no lettering, gold streamers and confetti. No logos, no arrowheads, no letters or numbers.' },
+  { key: 'grill-football', colors: { bg: '#18110b', gold: '#f29a4a', rush: '#ffd27a', aged: '#5f9e4a', dust: '#f6e8d0' },
+    scene: 'a backyard at dusk with a charcoal kettle grill glowing and smoking, burgers on the grate, a football lying on the lawn, warm string lights across a wooden fence.',
+    motif: 'a charcoal grill with sizzling burgers and smoke, a spatula, a football, and a curl of string lights.' },
+  { key: 'pets-beach', colors: { bg: '#081a1d', gold: '#ff9a8a', rush: '#ffd9a0', aged: '#3fc9c1', dust: '#e8f7f4' },
+    scene: 'a sunny beach in the golden late afternoon, gentle aqua waves, soft sand with seashells, a playful puppy and a curious kitten sitting together at the water line, seen small in the distance.',
+    motif: 'a cute puppy and a fluffy kitten cuddled together on a beach towel, seashells, a starfish and a little sand bucket.' },
+  { key: 'navy-tattoo', colors: { bg: '#0a1326', gold: '#e7c15a', rush: '#f3e6c8', aged: '#c8323b', dust: '#f6eedc' },
+    scene: 'a tall sailing ship on a dark night ocean under nautical stars, painted in bold American traditional sailor tattoo flash style with thick confident outlines and limited flat colors, rope border along the bottom edge.',
+    motif: 'American traditional sailor tattoo flash: a bold anchor wrapped in rope, two swallows, a nautical star and an empty banner scroll with NO text, thick black outlines, navy, cream, red and gold.' },
+]
+
 export const JOBS = [
+  ...BIRTHDAYS.flatMap((b) => [
+    { name: `bg-bday-${b.key}`, prompt: BG(b.colors, b.scene) },
+    { name: `hero-bday-${b.key}`, prompt: HERO(b.colors, b.motif) },
+  ]),
   ...MONTHS.flatMap((m) => [
     { name: `bg-${m.key}`, prompt: BG(m.colors, m.scene) },
     { name: `hero-${m.key}`, prompt: HERO(m.colors, m.motif) },
