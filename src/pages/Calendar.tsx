@@ -100,7 +100,7 @@ export default function Calendar() {
       <header className="page-head with-spot">
         <div>
           <h1 className="display">Family calendar</h1>
-          <p className="muted">Birthdays, games, trips, anything. Everyone can add to it, and get-togethers and the big holidays are already on it.</p>
+          <p className="muted">Birthdays, games, trips, anything. Tap a day to add to it.</p>
         </div>
         <Spot name="calendar" className="page-spot" />
       </header>
@@ -119,7 +119,7 @@ export default function Calendar() {
               if (!k) return <div key={`x${i}`} className="cal-cell empty" />
               const items = itemsOn(k)
               return (
-                <button key={k} className={`cal-cell${k === today ? ' today' : ''}${k === selected ? ' on' : ''}`} onClick={() => setSelected(k)}
+                <button key={k} className={`cal-cell${k === today ? ' today' : ''}${k === selected ? ' on' : ''}${k < today ? ' past' : ''}${i % 7 === 0 || i % 7 === 6 ? ' wkend' : ''}`} onClick={() => setSelected(k)}
                   aria-label={`${longDay(k)}${items.length ? `, ${items.length} on the calendar` : ''}`}>
                   <span className="cal-num">{parse(k).d}</span>
                   <span className="cal-chips">
@@ -130,6 +130,9 @@ export default function Calendar() {
                 </button>
               )
             })}
+          </div>
+          <div className="cal-legend" aria-hidden="true">
+            <span><i className="holiday" />Holiday</span><span><i className="gathering" />Get-together</span><span><i className="event" />Family event</span>
           </div>
         </section>
 

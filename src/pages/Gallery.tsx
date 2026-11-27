@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
-import { CheckSquare, Download, HardDrive, Share, X } from 'lucide-react'
+import { CheckSquare, Download, HardDrive, Share } from 'lucide-react'
 import { api } from '../lib/api'
 import { isPast, isToday, plural } from '../lib/format'
 import { useLiveTable, upsertById } from '../lib/realtime'
@@ -129,36 +129,37 @@ export default function Gallery() {
       <header className="page-head with-spot">
         <div>
           <h1 className="display">Gallery</h1>
-          <p className="muted">Everyone's photos and videos, kept at full size. Tap Select to pick some and save them to your phone.</p>
+          <p className="muted">{photos === null ? 'Everyone\'s photos and videos.' : total ? `${plural(total, 'photo')} and videos from everyone, kept at full size.` : 'Everyone\'s photos and videos, kept at full size.'}</p>
         </div>
         <Spot name="photos" className="page-spot" />
       </header>
 
-      {usage && <StorageMeter usage={usage} />}
-
-      <Uploader gatherings={uploadable.length ? uploadable : gatherings} defaultGatheringId={defaultGathering}
-        onUploaded={(p) => setPhotos((cur) => cur && (cur.some((x) => x.id === p.id) ? cur : [p, ...cur]))} />
-
-      <div className="filter-bar">
-        <select className="input" value={filter} onChange={(e) => pick(e.target.value, by)} aria-label="Gathering">
-          <option value="all">All photos ({total})</option>
-          {gatherings.filter((g) => counts[g.id]).map((g) => (
-            <option key={g.id} value={g.id}>{g.title} ({counts[g.id]})</option>
-          ))}
-          {counts.none ? <option value="none">Other ({counts.none})</option> : null}
-          {filter !== 'all' && filter !== 'none' && !counts[filter] && gatheringsById[filter] &&
-            <option value={filter}>{gatheringsById[filter].title} (0)</option>}
-        </select>
-        <select className="input" value={by} onChange={(e) => pick(filter, e.target.value)} aria-label="Added by">
-          <option value="all">Everyone ({inGathering.length})</option>
-          {people.map(([id, n]) => <option key={id} value={id}>{nameOf(profiles[id])} ({n})</option>)}
-          {by !== 'all' && !people.some(([id]) => id === by) && <option value={by}>{nameOf(profiles[by])} (0)</option>}
-        </select>
-        {!picked && (
-          <button className="btn ghost" disabled={!shown.length} onClick={() => setPicked(new Set())}>
-            <CheckSquare size={16} aria-hidden="true" />Select
+      <div className="gal-top">
+        <Uploader compact gatherings={uploadable.length ? uploadable : gatherings} defaultGatheringId={defaultGathering}
+          onUploaded={(p) => setPhotos((cur) => cur && (cur.some((x) => x.id === p.id) ? cur : [p, ...cur]))}>
+          <button className={`btn ghost ${picked ? 'on' : ''}`} disabled={!shown.length} aria-pressed={Boolean(picked)}
+            onClick={() => (picked ? stopPicking() : setPicked(new Set()))}>
+            <CheckSquare size={16} aria-hidden="true" />{picked ? 'Done' : 'Select'}
           </button>
-        )}
+        </Uploader>
+
+        {/* Which get-together (chips that scroll sideways), then whose pics. */}
+        <div className="gal-filters">
+          <div className="chips" role="group" aria-label="Get-together">
+            <button className={`chip ${filter === 'all' ? 'on' : ''}`} onClick={() => pick('all', by)}>All <span>{total}</span></button>
+            {gatherings.filter((g) => counts[g.id] || g.id === filter).map((g) => (
+              <button key={g.id} className={`chip ${filter === g.id ? 'on' : ''}`} onClick={() => pick(g.id, by)}>{g.title} <span>{counts[g.id] ?? 0}</span></button>
+            ))}
+            {counts.none ? <button className={`chip ${filter === 'none' ? 'on' : ''}`} onClick={() => pick('none', by)}>Other <span>{counts.none}</span></button> : null}
+          </div>
+          {(people.length > 1 || by !== 'all') && (
+            <select className="input gal-by" value={by} onChange={(e) => pick(filter, e.target.value)} aria-label="Added by">
+              <option value="all">Everyone</option>
+              {people.map(([id, n]) => <option key={id} value={id}>{nameOf(profiles[id])} ({n})</option>)}
+              {by !== 'all' && !people.some(([id]) => id === by) && <option value={by}>{nameOf(profiles[by])} (0)</option>}
+            </select>
+          )}
+        </div>
       </div>
 
       {picked && (
@@ -171,7 +172,6 @@ export default function Gallery() {
             {share ? <Share size={15} aria-hidden="true" /> : <Download size={15} aria-hidden="true" />}
             {saving ? 'Getting them ready…' : ready ? 'Ready: tap to save' : share ? 'Save to Photos' : 'Download'}
           </button>
-          <button className="btn ghost sm icon" aria-label="Stop picking" title="Stop picking" onClick={stopPicking}><X size={16} aria-hidden="true" /></button>
           {saveErr && <p className="error small">{saveErr}</p>}
         </div>
       )}
@@ -180,6 +180,8 @@ export default function Gallery() {
         : shown.length ? <PhotoGrid photos={shown} gatherings={gatheringsById} selected={picked ?? undefined}
             onOpen={(i) => (picked ? toggle(shown[i].id) : setOpenId(shown[i].id))} />
         : <div className="card empty"><Spot name="photos" size={96} />Nothing here yet. Add the first photo above.</div>}
+
+      {usage && <StorageMeter usage={usage} />}
 
       {open >= 0 && (
         <Lightbox photos={shown} index={open} gatherings={gatheringsById} onClose={close} onIndex={(i) => setOpenId(shown[i].id)}
