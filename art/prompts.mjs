@@ -205,11 +205,154 @@ export const DAYS = [
     motif: 'a long table with dishes being passed, string lights, a welcome wreath on a door and lots of chairs. No faces.' },
 ]
 
+// Second and third tier days.
+DAYS.push(
+  { key: 'mlk', colors: C('#0c1220', '#e9c46a', '#cfe0f5', '#6a7fb8', '#f4f1ea'),
+    scene: 'a quiet, dignified dawn over a long reflecting pool with a lit podium and microphones at the near end and white doves rising into the soft light. No people, no faces, no text.',
+    motif: 'a podium microphone, white doves in flight and a soft sunrise glow. No faces, no text.' },
+  { key: 'groundhog', colors: C('#0e1418', '#e9c46a', '#cfe0f5', '#8a6d4a', '#f2f4f6'),
+    scene: 'a snowy meadow at morning where a groundhog peeks out of its burrow, its shadow stretched long on the snow.',
+    motif: 'a cute groundhog popping out of a snowy burrow, its shadow beside it, a few snowflakes.' },
+  { key: 'presidents', colors: C('#0b1128', '#e9c46a', '#e8ecf5', '#b5313b', '#f4f1ea'),
+    scene: 'a classic marble monument at dusk with flags and red, white and blue bunting, stars in the sky. No faces, no text.',
+    motif: 'a stovepipe hat, a tricorn hat, a quill pen, stars and bunting. No faces, no text.' },
+  { key: 'mardigras', colors: C('#140c1c', '#e9c46a', '#5fcf80', '#8a4fe0', '#f6eefc'),
+    scene: 'a festive street at night with balconies hung with purple, green and gold beads and lanterns, confetti in the air.',
+    motif: 'a feathered carnival mask, strings of purple, green and gold beads and a slice of king cake.' },
+  { key: 'spring', colors: C('#111a14', '#f2c45a', '#c3a3f0', '#6fbf7a', '#f2f6ea'),
+    scene: 'the first day of spring: crocuses pushing up through melting snow in a garden, a robin on a branch with fresh buds.',
+    motif: 'purple and yellow crocuses, a robin, budding branches and a little melting snow.' },
+  { key: 'taxday', colors: C('#0f1418', '#7fd08a', '#f2d36b', '#4a8f6a', '#eef4ee'),
+    scene: 'a playful home desk at night with a calculator, a cup of coffee, a lamp and stacks of paper forms with no readable text.',
+    motif: 'a calculator, a pencil, a piggy bank with coins and a stack of paper forms with no readable text, playful.' },
+  { key: 'cinco', colors: C('#140f0c', '#f2b84a', '#ff7a6a', '#5fbf7a', '#fbefe0'),
+    scene: 'a festive patio at dusk under strings of colorful papel picado banners with no text, lanterns glowing and a table set with food.',
+    motif: 'tacos, limes, maracas and colorful papel picado banners with no text.' },
+  { key: 'derby', colors: C('#140c0e', '#e9c46a', '#e0475e', '#4a8f5a', '#f8ecdc'),
+    scene: 'a historic horse racing track at golden hour with twin-spired grandstands, a racehorse silhouette galloping past and red roses along the rail.',
+    motif: 'a garland of red roses, a big fancy derby hat with flowers, a mint drink and a horseshoe.' },
+  { key: 'flagday', colors: C('#0b1128', '#e9c46a', '#e8ecf5', '#c8323b', '#f4f1ea'),
+    scene: 'a small-town street of front porches each flying an American flag, bunting on the railings, a summer evening sky with stars.',
+    motif: 'an American flag on a porch post, red, white and blue bunting and stars.' },
+  { key: 'juneteenth', colors: C('#140c0a', '#f2c45a', '#e0474e', '#3f9e5a', '#fbefe0'),
+    scene: 'a joyful backyard celebration cookout at sunset with string lights, a sunburst sky in red, gold and green, a long table of food. Silhouettes only, no faces, no text.',
+    motif: 'a bottle of strawberry soda, a slice of watermelon, a red velvet cupcake and a sunburst in red, green, gold and black. No text.' },
+  { key: 'labor', colors: C('#0e161a', '#f2a04a', '#ffd27a', '#3f9ec8', '#f2efe6'),
+    scene: 'the last cookout of summer by a lake at sunset: a grill smoking, lawn chairs on the dock, a canoe pulled up on shore.',
+    motif: 'a grill with corn on the cob and burgers, a folding lawn chair, a cooler and a sunset.' },
+  { key: 'winter', colors: C('#0a1220', '#f2c45a', '#cfe8ff', '#6f8fd8', '#eef4fc'),
+    scene: 'the first day of winter, the longest night: a snowy cabin in the woods with firelight glowing in the windows under a sky full of stars.',
+    motif: 'a crackling fireplace corner, a mug of cocoa, a knit blanket, a lantern and snowflakes.' },
+)
+
 const ANNIVERSARY = { key: 'anniversary', colors: C('#1a0b12', '#e7b9a0', '#f4d4c8', '#8a1f3a', '#fbeee8'),
   scene: 'a romantic candlelit table for two by a window at night, roses in a vase, soft rose gold glow and deep wine red tones.',
   motif: 'two champagne glasses clinking, a pair of gold wedding rings, red roses and a lit candle, rose gold and deep wine red.' }
 
+// Game days (src/lib/games.ts): a different look for every football and basketball game of a season, in
+// old gold and black. Generic on purpose: no school, conference or opponent logos, wordmarks or mascots.
+const GAME = C('#0d0c0a', '#cfb991', '#e8d9a8', '#8e6f3e', '#f5efe0')
+const NO_MARKS = ' No logos, no wordmarks, no letters or numbers, no mascots, no detailed faces.'
+// Scene numbers match the look names in src/lib/games.ts.
+export const FOOTBALL = [
+  ['the opening kickoff at sunset: a football on a tee at midfield, the stadium glowing gold.', 'a football on a kicking tee, a gold pennant with no lettering and stadium light beams.'],
+  ['a tailgate in a grassy lot at golden hour: grills smoking, coolers, gold and black canopy tents, string lights.', 'a tailgate grill with burgers, a cooler, a football and gold and black bunting.'],
+  ['a giant bass drum on the field with the marching band lined up behind it under the lights.', 'a giant bass drum with mallets, a plumed band hat and gold music notes.'],
+  ['an old-fashioned black and gold steam locomotive puffing steam beside a stadium at dusk.', 'a black and gold steam locomotive with puffs of steam and a football.'],
+  ['a night game under bright stadium lights, the green field striped, a gold and black crowd glow.', 'a football glowing under a stadium light, gold sparkles.'],
+  ['a blacksmith forge glowing at night beside a stadium: anvil, sparks flying, a plain gold football helmet with no marks.', 'a plain gold football helmet with no marks, a blacksmith hammer, rivets and sparks.'],
+  ['a homecoming parade on a campus street of old brick buildings: banners with no text, chrysanthemum mums, gold and black balloons.', 'a big homecoming mum corsage with gold and black ribbons, balloons and a crown.'],
+  ['a marching band\'s brass section and sousaphones gleaming on the field at halftime.', 'a sousaphone, a trumpet and a drum major\'s plumed hat in old gold and black.'],
+  ['a roaring student section in gold and black waving pom-poms, confetti in the air, seen from behind.', 'gold and black pom-poms, a megaphone with no lettering and confetti.'],
+  ['a frosty late-fall game: breath visible in the cold air, scarves in the stands, frost on the field edges.', 'a gold and black scarf, mittens, a thermos and a frosty football.'],
+  ['the goal line: an orange pylon and a football crossing the plane, chalk dust flying.', 'a goal-line pylon, a football and a burst of chalk dust.'],
+  ['rivalry week: an old wooden oaken bucket trophy on a pedestal at midfield under the lights.', 'an old wooden oaken bucket with an iron handle, a football and a laurel wreath.'],
+  ['a snow game: snowflakes swirling through the stadium lights, the field dusted white.', 'a football in the snow, a gold and black knit hat and falling snowflakes.'],
+  ['a championship trophy case glowing in a quiet stadium hallway, gold trophies and footballs.', 'gold trophies, a vintage football and a gold star.'],
+  ['a bowl trip: a warm-weather stadium at sunset with palm trees and sunshine beyond the stands.', 'palm fronds, sunglasses, a football and a gold trophy.'],
+  ['victory fireworks bursting in gold over the stadium after a win.', 'gold fireworks, a football and gold streamers.'],
+]
+export const BASKETBALL = [
+  ['the opening tip-off: the jump ball high above center court, two silhouetted players reaching.', 'a basketball at the top of its arc with gold streaks.'],
+  ['a gleaming hardwood court under bright arena lights, the polish reflecting everything.', 'a basketball resting on shining hardwood with a gold glow.'],
+  ['the net in close-up as a ball swishes through, arena lights blurred behind.', 'a net mid-swish with a basketball and motion lines.'],
+  ['a domed college arena exterior at night, lit up gold, fans walking up.', 'a little domed arena shape glowing gold, a basketball and stars.'],
+  ['a roaring student section jumping in gold and black, seen from the court.', 'gold and black foam fingers with no lettering, confetti and a megaphone.'],
+  ['a fast break: a player silhouette racing down the court, motion blur.', 'a basketball with speed lines and gold sparks.'],
+  ['the three-point arc on the floor with a ball in flight toward the hoop.', 'a basketball in flight over a curved court line, gold stars.'],
+  ['a battle in the paint: silhouetted players jostling under the basket.', 'a basketball, a rim and a burst of gold energy.'],
+  ['a pep band in the arena corner with brass instruments and a drum.', 'a trumpet, a snare drum and gold music notes.'],
+  ['a scoreboard glowing high above the court with no digits or text, lights everywhere.', 'a hanging scoreboard shape with no digits, a basketball and lights.'],
+  ['a pair of gold and black basketball sneakers on the court with a ball beside them.', 'high-top basketball sneakers in gold and black with no logos and a basketball.'],
+  ['a black and gold team bus on a highway at dusk heading to an away game.', 'a black and gold bus, a road and a basketball.'],
+  ['holiday hoops: the arena decorated with evergreen garland and warm lights in December.', 'a basketball with a red bow, holly and gold ornaments.'],
+  ['a snowy night outside the arena, warm light spilling from the doors, fans in hats arriving.', 'a knit beanie, a basketball, snowflakes and a cup of cocoa.'],
+  ['new year\'s hoops: gold balloons and confetti dropping from the rafters.', 'gold balloons, a basketball and confetti.'],
+  ['a deep-winter conference grind: a loud dark road arena with spotlights sweeping.', 'a basketball, spotlights and gold sparks.'],
+  ['a buzzer beater: the ball in the air, a red clock light glowing with no readable digits, fans leaping.', 'a basketball in flight, a glowing red light and gold confetti.'],
+  ['a full house: every seat filled, the whole arena glowing gold and black, seen from the rafters.', 'a packed crowd silhouette, a basketball and gold sparkles.'],
+  ['a coach\'s clipboard with chalk X and O marks only, a whistle and chalk dust on the bench.', 'a clipboard with abstract chalk marks only, a whistle and a piece of chalk.'],
+  ['a locker room with gold lockers, jerseys with no numbers hanging, a ball on the bench.', 'a jersey with no numbers, a towel, a water bottle and a basketball.'],
+  ['a gold-out crowd: the entire arena dressed in old gold, shimmering.', 'gold shakers, gold confetti and a basketball.'],
+  ['a black-out crowd: the entire arena dressed in black with gold lights.', 'black shakers, gold sparkles and a basketball.'],
+  ['a train whistle and steam rising in the arena tunnel as the team runs out.', 'a brass train whistle with steam and a basketball.'],
+  ['the free throw line: a ball held at the stripe, the hoop waiting, quiet tension.', 'a basketball on a free throw line with a gold glow.'],
+  ['a rebound: hands reaching up for the ball above the rim, silhouettes.', 'a basketball bouncing off the rim with gold sparks.'],
+  ['a slam dunk silhouette against bright arena lights, the rim bending.', 'a basketball, a bending rim and a starburst.'],
+  ['rivalry night: two halves of the crowd in different colors, the court glowing in the middle.', 'two crossed foam fingers with no lettering, a basketball and lightning bolts.'],
+  ['senior night: roses and a framed jersey with no numbers at center court.', 'a bouquet of roses, a framed jersey with no numbers and a basketball.'],
+  ['cutting down the nets after a big win: a ladder under the hoop, scissors, confetti falling.', 'scissors, a cut piece of net, a small ladder and gold confetti.'],
+  ['a gold championship trophy on a stand at center court under a spotlight.', 'a gold trophy, a basketball and confetti.'],
+  ['a blank tournament bracket on a wall with empty lines only, pencils and a basketball on a table.', 'a bracket chart with blank lines only, a pencil and a basketball.'],
+  ['a conference tournament arena in a big city with a skyline beyond, lights glowing.', 'a city skyline silhouette, a basketball and a gold trophy.'],
+  ['a selection-day watch party: a living room crowd around a TV, silhouettes, snacks and gold and black blankets.', 'a bowl of popcorn, a gold and black blanket, a remote and a basketball.'],
+  ['the March tournament dance: a huge dome arena with gold light and confetti.', 'a basketball, dancing confetti and a gold trophy.'],
+  ['the road to the next round: a highway at dawn stretching toward a distant city.', 'a winding road, a sunrise and a basketball.'],
+  ['the final buzzer: a confetti storm in gold and black over the court.', 'a whirlwind of gold and black confetti around a basketball.'],
+]
+// NFL game days (src/lib/games.ts): 12 looks per team in team colors only. No logos, wordmarks, mascots,
+// letters, numbers, horseshoes, arrowheads or animal-head marks.
+const NFL_MARKS = ' Team colors only: absolutely no logos, no wordmarks, no mascots, no letters, no numbers, no horseshoes, no arrowheads, no animal-head marks, no detailed faces.'
+export const NFL = {
+  bears: { colors: C('#0b1020', '#f07a2a', '#f6a86a', '#26345e', '#eef1f8'),
+    city: 'Chicago: the lakefront skyline and cold wind off the lake', team: 'navy blue and orange' },
+  colts: { colors: C('#08122a', '#3f7fe8', '#cfe0ff', '#1f4fb0', '#f2f6ff'),
+    city: 'Indianapolis: the downtown skyline and a big stadium with a retractable roof', team: 'royal blue and white' },
+  chiefs: { colors: C('#1a0a0c', '#f2c14e', '#ffd76a', '#d62b3a', '#fbe9d0'),
+    city: 'Kansas City: the city fountains and barbecue smoke drifting over the parking lot', team: 'red and gold' },
+}
+const NFL_SCENES = [
+  ['the opening kickoff: a football on a tee at midfield, the stadium full', 'a football on a kicking tee and stadium light beams'],
+  ['a tailgate in the stadium lot: grills smoking, canopy tents and flags in team colors, string lights', 'a tailgate grill, a cooler, a football and team-color bunting'],
+  ['a Sunday watch party in a cozy living room: a couch, a big TV glowing with an abstract green field, snacks on the table', 'a bowl of chips and dip, wings, a team-color blanket and a football'],
+  ['a night game under bright stadium lights, the field glowing', 'a football glowing under a stadium light with sparkles'],
+  ['a snow game: snowflakes swirling through the stadium lights, the field dusted white', 'a football in the snow, a team-color knit hat and falling snowflakes'],
+  ['the red zone: an orange pylon at the goal line and a football crossing it, chalk dust flying', 'a goal-line pylon, a football and a burst of chalk dust'],
+  ['the two-minute drill: a tense crowd on its feet, a glowing stadium clock with no digits', 'a stopwatch with no digits, a football and lightning sparks'],
+  ['the home crowd roaring, a sea of team colors filling the stands, seen from the field', 'foam fingers with no lettering, a megaphone and confetti in team colors'],
+  ['a road trip at dawn: a team-color bus on a highway and an airplane wing over the clouds', 'an airplane wing, a suitcase with team-color tags and a football'],
+  ['rivalry Sunday: the sky split in two tones, team color on one side and stormy grey on the other, over the stadium', 'two crossed foam fingers with no lettering, one team color and one grey, and a football'],
+  ['the late-season playoff push: cold breath in the air, frosty stadium lights, a determined crowd bundled up', 'a scarf and mittens in team colors, a thermos and a frosty football'],
+  ['a victory celebration: team-color confetti and fireworks over the stadium after a win', 'team-color confetti, a football and fireworks'],
+]
+
 export const JOBS = [
+  ...Object.entries(NFL).flatMap(([team, t]) => NFL_SCENES.flatMap(([scene, motif], i) => {
+    const n = String(i + 1).padStart(2, '0')
+    const flavor = ` City flavor: ${t.city}. Colors: ${t.team}.`
+    return [
+      { name: `bg-game-${team}-${n}`, prompt: BG(t.colors, `${scene}.${flavor}${NFL_MARKS}`) },
+      { name: `hero-game-${team}-${n}`, prompt: HERO(t.colors, `${motif}, in ${t.team}.${NFL_MARKS}`) },
+    ]
+  })),
+  ...FOOTBALL.flatMap(([scene, motif], i) => {
+    const n = String(i + 1).padStart(2, '0')
+    return [{ name: `bg-game-fb-${n}`, prompt: BG(GAME, scene + NO_MARKS) }, { name: `hero-game-fb-${n}`, prompt: HERO(GAME, motif + NO_MARKS) }]
+  }),
+  ...BASKETBALL.flatMap(([scene, motif], i) => {
+    const n = String(i + 1).padStart(2, '0')
+    return [{ name: `bg-game-bb-${n}`, prompt: BG(GAME, scene + NO_MARKS) }, { name: `hero-game-bb-${n}`, prompt: HERO(GAME, motif + NO_MARKS) }]
+  }),
   ...DAYS.flatMap((d) => [
     { name: `bg-day-${d.key}`, prompt: BG(d.colors, d.scene) },
     { name: `hero-day-${d.key}`, prompt: HERO(d.colors, d.motif) },
