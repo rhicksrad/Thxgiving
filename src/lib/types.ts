@@ -14,6 +14,7 @@ export type Gathering = {
   starts_at: string
   time_tbd: boolean         // date set, time not yet
   archived: boolean         // moved to Home's Archive
+  ends_on?: string | null   // a trip's last day ('YYYY-MM-DD'); unset for a one-day get-together
   place: string | null      // whose house / the address
   notes: string | null      // parking, bring a chair, anything else
   created_at?: string

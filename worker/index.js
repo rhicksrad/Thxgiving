@@ -187,6 +187,17 @@ async function route(req, env, ctx, url) {
   // Who's coming
   if (at('GET', 'gatherings', '*', 'rsvps')) return json(await db.all('select * from rsvps where gathering_id = ?', b))
   if (at('PUT', 'gatherings', '*', 'rsvp')) return rsvp(req, db, uid, b, live)
+  // Where each person is staying on a trip (their condo). An empty place takes yours off.
+  if (at('GET', 'gatherings', '*', 'stays')) return json(await db.all('select gathering_id, user_id, place, updated_at from stays where gathering_id = ?', b))
+  if (at('PUT', 'gatherings', '*', 'stay')) {
+    const place = opt((await body(req)).place, 120)
+    if (!await db.one('select 1 from gatherings where id = ?', b)) fail('That is gone', 404)
+    if (place) {
+      await db.run(`insert into stays (gathering_id, user_id, place, updated_at) values (?, ?, ?, ?)
+                    on conflict (gathering_id, user_id) do update set place = excluded.place, updated_at = excluded.updated_at`, b, uid, place, now())
+    } else await db.run('delete from stays where gathering_id = ? and user_id = ?', b, uid)
+    return json({ gathering_id: b, user_id: uid, place })
+  }
 
   // Chat
   if (at('GET', 'messages')) {
@@ -277,7 +288,7 @@ async function route(req, env, ctx, url) {
   if (at('GET', 'activity')) {
     const [posts, added, pics, reacts, comments] = await Promise.all([
       db.all('select id, gathering_id, author_id, body, created_at from messages where author_id <> ? order by created_at desc limit 30', uid),
-      // Rows with no creator are the starter list every new gathering gets, not something a person added.
+      // Rows with no creator are from the old starter lists, not something a person added.
       db.all(`select id, gathering_id, kind, label, created_by, created_at from list_items
               where created_by is not null and created_by <> ? order by created_at desc limit 30`, uid),
       db.all('select id, gathering_id, uploader_id, created_at from photos where uploader_id <> ? order by created_at desc limit 30', uid),
@@ -409,7 +420,8 @@ const profile = (u) => u && ({
 })
 const gathering = (g) => g && ({ ...g, time_tbd: Boolean(g.time_tbd), archived: Boolean(g.archived) })
 // Every gathering, with whether it has been moved to the archive.
-const GATHERINGS = `select g.*, exists (select 1 from archived_gatherings a where a.gathering_id = g.id) as archived from gatherings g`
+const GATHERINGS = `select g.*, exists (select 1 from archived_gatherings a where a.gathering_id = g.id) as archived,
+  (select t.end_day from gathering_trips t where t.gathering_id = g.id) as ends_on from gatherings g`
 
 async function broadcast(env, table, op, row) {
   try {
@@ -653,12 +665,7 @@ async function addGathering(req, db, live) {
   if (!title) fail('Give it a name')
   if (!isTime(p.starts_at)) fail('Pick a date')
   const row = { id: uuid(), title, starts_at: new Date(p.starts_at).toISOString(), time_tbd: p.time_tbd ? 1 : 0, created_at: now() }
-  // The new gathering and its starter lists, together.
-  await db.batch([
-    db.insertStmt('gatherings', row),
-    [`insert into list_items (id, gathering_id, kind, label, sort, created_at)
-      select lower(hex(randomblob(16))), ?, kind, label, sort, ? from list_template`, row.id, row.created_at],
-  ])
+  await db.insert('gatherings', row) // it starts blank: the family adds the food and the asks
   live('gatherings', 'insert', gathering(row))
   return json(gathering(row))
 }

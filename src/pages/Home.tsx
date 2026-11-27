@@ -48,7 +48,7 @@ export default function Home() {
   // The days of the get-togethers still on, so the site wears its get-together look on the day.
   useEffect(() => {
     if (!gatherings) return
-    rememberGatherings(gatherings.filter((g) => !g.archived).map((g) => ({ day: dayKey(new Date(g.starts_at)), title: g.title })))
+    rememberGatherings(gatherings.filter((g) => !g.archived && !g.ends_on).map((g) => ({ day: dayKey(new Date(g.starts_at)), title: g.title })))
     applyTheme()
   }, [gatherings])
 

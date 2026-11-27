@@ -1172,3 +1172,8 @@ body::before {
   .pk-team { font-size: 19px; }
   .pk-line { font-size: 16px; }
 }
+
+/* ---------- trips: who's in which condo ---------- */
+.stays { display: flex; flex-direction: column; gap: 10px; }
+.stay { display: flex; align-items: center; gap: 10px; min-height: 40px; }
+.stay .grow { flex: 1; min-width: 0; overflow-wrap: anywhere; }
