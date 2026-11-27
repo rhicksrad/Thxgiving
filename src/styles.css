@@ -970,3 +970,16 @@ body::before {
 .av-grid-toggle { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; }
 .av-grid-toggle svg { transition: transform 0.2s; }
 .av-grid-toggle.on svg { transform: rotate(180deg); }
+
+/* ---------- Get-together page on phones: a shorter top, so "Who's coming" is on the first screen ---------- */
+@media (max-width: 560px) {
+  .gathering-page .hero { gap: 12px; padding: 20px 14px 18px; }
+  .gathering-page .hero .huge { font-size: clamp(34px, 10vw, 44px) !important; }
+  .gathering-page .hero-stats { display: none; } /* the same numbers are on Who's coming and the lists just below */
+  .gathering-page .cd-cell { min-width: 60px; padding: 8px 4px 6px; }
+  .gathering-page .cd-num { font-size: 28px; }
+  .gathering-page.stack-lg { gap: 16px; }
+  .gathering-details { padding: 14px; }
+  .gathering-details .grid-2 { grid-template-columns: 1fr; gap: 10px; }
+  .gathering-details textarea { min-height: 44px; height: 44px; }
+}
