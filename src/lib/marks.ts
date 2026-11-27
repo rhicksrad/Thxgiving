@@ -96,6 +96,14 @@ export const MONTH_MARKS: string[] = [
    <path d="M32 3 L34.2 8 L39.5 8.4 L35.4 11.8 L36.7 17 L32 14.2 L27.3 17 L28.6 11.8 L24.5 8.4 L29.8 8 Z" fill="#f4d37a"/>`,
 ]
 
+/** Birthdays: a cake with three candles, on the same 64×64 grid as the month emblems. */
+export const BIRTHDAY_MARK = `<ellipse cx="32" cy="57" rx="25" ry="4" fill="#000" opacity=".18"/>
+   <rect x="9" y="36" width="46" height="20" rx="5" fill="#f08aa0"/>
+   <path d="M9 43c4 5 8 5 11.5 0s7.5-5 11.5 0 7.5 5 11.5 0 7.5-5 11.5 0v-3a5 5 0 0 0-5-5H14a5 5 0 0 0-5 5Z" fill="#fff4e0"/>
+   <rect x="15" y="26" width="34" height="12" rx="4" fill="#ffc94a"/>
+   <g fill="#5fd0e0"><rect x="20.5" y="14" width="3" height="12" rx="1.5"/><rect x="30.5" y="12" width="3" height="14" rx="1.5"/><rect x="40.5" y="14" width="3" height="12" rx="1.5"/></g>
+   <g fill="#ff8a3d"><path d="M22 6c2 2.5 2.5 4 2.5 5a2.5 2.5 0 0 1-5 0c0-1 .5-2.5 2.5-5Z"/><path d="M32 4c2 2.5 2.5 4 2.5 5a2.5 2.5 0 0 1-5 0c0-1 .5-2.5 2.5-5Z"/><path d="M42 6c2 2.5 2.5 4 2.5 5a2.5 2.5 0 0 1-5 0c0-1 .5-2.5 2.5-5Z"/></g>`
+
 /** Small one-color shapes (currentColor) that drift across the background, on a 24×24 grid. */
 export const PARTICLES = {
   snow: `<g stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2v20M3.3 7l17.4 10M3.3 17L20.7 7"/>
@@ -110,5 +118,10 @@ export const PARTICLES = {
   bubble: `<circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 9.5q1.5-2.5 4-2.8" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/>`,
   leaf: `<path d="M20 3C9 3 3 9 4 19c0 1 .5 1.8 1.2 2C6 14 10 10 15 8c-4 3-7 7-8.5 13.5C17 21 21 13 20 3Z" fill="currentColor"/>`,
   bat: `<path d="M12 9c1 0 1.5-1.8 1.5-1.8L14.5 9c2.5-.5 4-2.5 4.5-4.5C20 7 22.5 8.5 23.5 9 21.5 10 20.5 12 21 14.5 19 13 17 13.5 15.5 15.5 14.5 14 13 14 12 16c-1-2-2.5-2-3.5-.5C7 13.5 5 13 3 14.5 3.5 12 2.5 10 .5 9 1.5 8.5 4 7 5 4.5c.5 2 2 4 4.5 4.5l1-1.8S11 9 12 9Z" fill="currentColor"/>`,
+  confetti: `<rect x="5" y="9" width="14" height="6" rx="1.5" fill="currentColor" transform="rotate(-28 12 12)"/>`,
+  balloon: `<path d="M12 2a7 7 0 0 1 7 7c0 4-3.2 7.6-7 8.2C8.2 16.6 5 13 5 9a7 7 0 0 1 7-7Z" fill="currentColor"/><path d="M12 17.2q-1.5 2 0 4.8" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/>`,
+  flower: `<g fill="currentColor"><circle cx="12" cy="5.5" r="3.5"/><circle cx="18" cy="10" r="3.5"/><circle cx="15.8" cy="17" r="3.5"/><circle cx="8.2" cy="17" r="3.5"/><circle cx="6" cy="10" r="3.5"/></g><circle cx="12" cy="12" r="2.6" fill="currentColor" opacity=".55"/>`,
+  note: `<path d="M9 18V5l11-2.5v13" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="6.5" cy="18" rx="3.2" ry="2.6" fill="currentColor"/><ellipse cx="17.5" cy="15.5" rx="3.2" ry="2.6" fill="currentColor"/>`,
+  fish: `<path d="M2 12c3-5 8-6.5 13-4.5L21 4v16l-6-3.5C10 18.5 5 17 2 12Z" fill="currentColor"/>`,
 } as const
 export type ParticleKind = keyof typeof PARTICLES

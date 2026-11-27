@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { AtSign, Bell, Camera, HandHelping, Image, MessageCircle, MessageSquare, SmilePlus, UserPlus, UtensilsCrossed, type LucideIcon } from 'lucide-react'
+import { AtSign, Bell, Cake, Camera, HandHelping, Image, MessageCircle, MessageSquare, SmilePlus, UserPlus, UtensilsCrossed, type LucideIcon } from 'lucide-react'
 import { api, seg } from '../lib/api'
 import { useLiveTable } from '../lib/realtime'
 import { mentionsMe, plainMentions } from '../lib/mentions'
 import { plural, when } from '../lib/format'
 import type { ListItem, Message, Photo, PhotoComment, Profile, Reaction } from '../lib/types'
 import { useAuth } from '../auth'
+import { birthdaysOn, useBirthdays } from '../lib/birthdays'
 import { Avatar, nameOf } from './Avatar'
 
 type Post = Pick<Message, 'id' | 'gathering_id' | 'author_id' | 'body' | 'created_at'>
@@ -15,9 +16,9 @@ type Pic = Pick<Photo, 'id' | 'gathering_id' | 'uploader_id' | 'created_at'>
 type Reacted = Pick<Reaction, 'id' | 'target_type' | 'target_id' | 'user_id' | 'emoji' | 'created_at'>
 type Comment = Pick<PhotoComment, 'id' | 'photo_id' | 'author_id' | 'body' | 'created_at'>
 
-type Kind = 'join' | 'tag' | 'chat' | 'food' | 'ask' | 'photo' | 'react' | 'comment'
+type Kind = 'bday' | 'join' | 'tag' | 'chat' | 'food' | 'ask' | 'photo' | 'react' | 'comment'
 type Activity = {
-  key: string; kind: Kind; at: string; who: string; gatheringId: string | null; text: string
+  key: string; kind: Kind; at: string; who: string; name?: string; gatheringId: string | null; text: string
   target?: { type: Reaction['target_type']; id: string } // reactions and comments: the thing to open
 }
 
@@ -25,7 +26,7 @@ const KEEP = 30 // per source, and the most the bell lists
 const PHOTO_BURST = 10 * 60_000 // photos one person adds to one place within 10 minutes show as one line
 
 const ICONS: Record<Kind, LucideIcon> = {
-  join: UserPlus, tag: AtSign, chat: MessageCircle, food: UtensilsCrossed, ask: HandHelping, photo: Camera,
+  bday: Cake, join: UserPlus, tag: AtSign, chat: MessageCircle, food: UtensilsCrossed, ask: HandHelping, photo: Camera,
   react: SmilePlus, comment: MessageSquare,
 }
 const THING: Record<Reaction['target_type'], string> = { photo: 'your pic', message: 'your message', comment: 'your comment' }
@@ -64,6 +65,7 @@ export default function ActivityBell() {
   const [seen, setSeen] = useState('')
   const box = useRef<HTMLDivElement>(null)
   const myId = me?.id
+  const birthdays = useBirthdays()
 
   useEffect(() => {
     if (!myId) return
@@ -105,6 +107,16 @@ export default function ActivityBell() {
 
   const feed = useMemo(() => {
     const out: Activity[] = []
+    // Today's birthdays, dated the start of the day: a happy birthday for the person, a heads-up for everyone else.
+    const day = new Date(); day.setHours(0, 0, 0, 0)
+    for (const b of birthdaysOn()) {
+      const mine = b.user_id === myId
+      out.push({
+        key: `bday:${b.event_id}:${day.getFullYear()}`, kind: 'bday', at: day.toISOString(), who: b.user_id ?? '', gatheringId: null,
+        name: mine ? 'Hicks Family' : b.name,
+        text: mine ? `Happy birthday, ${b.name}! The whole site is dressed up for you today.` : `It's ${b.name}'s birthday today. Say happy birthday in the chat.`,
+      })
+    }
     // Profiles come from the family list everyone already loads; signing up is what makes the row.
     for (const p of Object.values(profiles) as Profile[]) {
       if (p.id !== myId && p.created_at) out.push({ key: `join:${p.id}`, kind: 'join', at: p.created_at, who: p.id, gatheringId: null, text: 'joined' })
@@ -147,7 +159,7 @@ export default function ActivityBell() {
       })
     }
     return out.sort((a, b) => b.at.localeCompare(a.at)).slice(0, KEEP)
-  }, [profiles, posts, added, pics, reacts, comments, myId])
+  }, [profiles, posts, added, pics, reacts, comments, myId, birthdays])
 
   useEffect(() => {
     if (!open) return
@@ -178,13 +190,14 @@ export default function ActivityBell() {
       if (!data) return
       return navigate(data.gathering_id ? `/g/${data.gathering_id}?tab=chat` : '/chat')
     }
+    if (a.kind === 'bday') return navigate('/chat')
     if (a.kind === 'join') return navigate('/family')
     if (a.kind === 'photo') return navigate(a.gatheringId ? `/g/${a.gatheringId}?tab=pics` : '/gallery')
     const tab = a.kind === 'tag' ? 'chat' : a.kind === 'ask' ? 'asks' : a.kind
     navigate(a.gatheringId ? `/g/${a.gatheringId}?tab=${tab}` : '/chat')
   }
   const where = (a: Activity) =>
-    a.kind === 'join' || a.kind === 'react' ? '' : a.kind === 'comment' ? ' · Gallery' : a.gatheringId ? ` · ${gatherings[a.gatheringId] ?? 'a get-together'}` : a.kind === 'photo' ? ' · Gallery' : ' · Family chat'
+    a.kind === 'bday' ? ' · Today' : a.kind === 'join' || a.kind === 'react' ? '' : a.kind === 'comment' ? ' · Gallery' : a.gatheringId ? ` · ${gatherings[a.gatheringId] ?? 'a get-together'}` : a.kind === 'photo' ? ' · Gallery' : ' · Family chat'
 
   return (
     <div className="bell-wrap" ref={box}>
@@ -205,8 +218,8 @@ export default function ActivityBell() {
                 <li key={a.key}>
                   <button className={a.at > seen ? 'new' : ''} onClick={() => go(a)}>
                     <span className="bell-head">
-                      <Avatar p={who} size={18} className="inline" /><b>{nameOf(who)}</b>
-                      <span className="muted">{where(a)} · {when(a.at)}</span>
+                      <Avatar p={who} size={18} className="inline" /><b>{a.name ?? nameOf(who)}</b>
+                      <span className="muted">{a.kind === 'bday' ? where(a) : `${where(a)} · ${when(a.at)}`}</span>
                     </span>
                     <span className="bell-body">
                       <Icon size={13} className="bell-kind" aria-hidden="true" />
