@@ -91,6 +91,20 @@ To peek at another month, pick it under **Family → Season theme** (that device
 current month), or add `?month=7` to the address before the `#`. People who've asked their phone to reduce motion
 get the decorations without the movement.
 
+## Seasonal art
+
+Each month also has two painted pictures, made with Codex's image tool: a quiet dark scene behind every page
+(`public/art/bg-<month>.webp`) and a decoration in the corner of the welcome card on Home
+(`public/art/hero-<month>.webp`). Only the current month's two files load (about 50–120 KB together). The prompts
+are in [`art/prompts.mjs`](art/prompts.mjs). To redo one, delete its PNG in `art-src/` (or the whole folder), then:
+
+```sh
+node scripts/make-art.mjs     # Codex makes whatever is missing, 12 at a time (ART_PARALLEL changes that)
+python scripts/art-webp.py    # shrinks art-src/*.png into public/art/*.webp, each under 150 KB
+```
+
+The month emblems and the house app icon stay as drawn SVG (`src/lib/marks.ts`): they need to be crisp at 24 px.
+
 ## Signing in
 
 Sign in with your **cell phone number** and a password. **No texts are sent**, so there's no SMS service to pay for.

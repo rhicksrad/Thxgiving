@@ -249,6 +249,9 @@ export function applyTheme() {
   set('--rush', c.rush); set('--aged', c.aged); set('--dust', c.dust)
   set('--stripe', `linear-gradient(90deg, ${active.stripe.map((s, i) => `${s} ${(i / active.stripe.length) * 100}% ${((i + 1) / active.stripe.length) * 100}%`).join(', ')})`)
   root.dataset.month = active.key
+  // This month's painted art (public/art, made with Codex: scripts/make-art.mjs). Only this month's two files load.
+  const art = (name: string) => `url("${new URL(`art/${name}-${active.key}.webp`, document.baseURI).href}")`
+  set('--art-bg', art('bg')); set('--art-hero', art('hero'))
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', c.bg)
   listeners.forEach((l) => l())
 }
