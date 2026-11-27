@@ -120,9 +120,14 @@ export default function RsvpCard({ gathering }: { gathering: Gathering }) {
       <WhoList label="Maybe" rows={groups.maybe} profiles={profiles} tone="maybe" />
       <WhoList label={past ? 'Missed it' : "Can't make it"} rows={groups.no} profiles={profiles} tone="no" />
       {!past && groups.quiet.length > 0 && (
-        <p className="muted small rsvp-quiet">
-          Haven't said yet: {groups.quiet.map((p) => nameOf(p)).join(', ')}
-        </p>
+        <div className="rsvp-group quiet">
+          <span className="rsvp-label">Haven't said yet · {groups.quiet.length}</span>
+          <div className="rsvp-people">
+            {groups.quiet.map((p) => (
+              <span key={p.id} className="rsvp-person"><Avatar p={p} size={24} /><span>{nameOf(p)}</span></span>
+            ))}
+          </div>
+        </div>
       )}
     </section>
   )

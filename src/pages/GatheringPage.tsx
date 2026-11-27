@@ -125,7 +125,7 @@ export function Board({ gathering }: { gathering: Gathering }) {
 
       <div className="gathering-grid">
         <div className={`gp-section gp-food ${tab === 'food' ? 'active' : ''}`}>
-          <List gatheringId={id} kind="food" />
+          <List gatheringId={id} kind="food" past={past} />
         </div>
         <div className={`gp-section gp-asks ${tab === 'asks' ? 'active' : ''}`}>
           <List gatheringId={id} kind="ask" />
