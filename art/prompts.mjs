@@ -245,6 +245,34 @@ DAYS.push(
     motif: 'a crackling fireplace corner, a mug of cocoa, a knit blanket, a lantern and snowflakes.' },
 )
 
+// Persian holidays: warm and accurate, no text or calligraphy, no detailed faces.
+const PERSIAN = ' No text, no script, no calligraphy, no detailed faces.'
+DAYS.push(
+  { key: 'nowruz', colors: C('#0e1a12', '#f2c45a', '#ff9ab0', '#4fb87a', '#f6f1e2'),
+    scene: 'Persian New Year at the spring equinox: a garden courtyard with a turquoise-tiled fountain and blossoming trees at dusk, a haft-sin table glowing with candles inside an open doorway.' + PERSIAN,
+    motif: 'a haft-sin spread: sprouted wheat sabzeh tied with a red ribbon, a goldfish in a round glass bowl, painted eggs, a purple hyacinth, a mirror, candles, red apples, garlic and a few gold coins, in spring green and gold.' + PERSIAN },
+  { key: 'chaharshanbe-suri', colors: C('#0c0b1c', '#ff9a3a', '#ffd27a', '#e0473a', '#f6e6d8'),
+    scene: 'the festival of fire at dusk: a row of small bonfires along a neighborhood lane, silhouettes leaping over the flames, sparklers and sparks rising into an indigo sky.' + PERSIAN,
+    motif: 'small bonfires with rising sparks, sparklers and a bowl of mixed nuts and dried fruit (ajil), in ember orange against indigo.' + PERSIAN },
+  { key: 'sizdah-bedar', colors: C('#0c1a10', '#f2d36b', '#9fd0ff', '#5fbf6a', '#f2f8e8'),
+    scene: 'nature day: a family picnic outdoors on a sunny spring day, a picnic blanket by a clear stream under trees, a tea samovar, kites in the sky, small silhouettes.' + PERSIAN,
+    motif: 'a picnic blanket with a brass tea samovar and glass tea cups, a kite, and knotted green sabzeh being set afloat on a stream, fresh greens.' + PERSIAN },
+  { key: 'tirgan', colors: C('#061a22', '#5fd6e8', '#f2d36b', '#2f7fc8', '#e8f8fb'),
+    scene: 'the midsummer water festival in the mountains: splashing water in a garden pool, rainbow-colored thread wristbands, snowy peaks beyond, turquoise and blue.' + PERSIAN,
+    motif: 'splashing water from a pitcher, rainbow thread wristbands, a traditional archer\'s bow and arrow, and blue summer flowers in turquoise and blue.' + PERSIAN },
+  { key: 'mehregan', colors: C('#160c18', '#e9b84a', '#c8324a', '#7a4fa8', '#f6ecdc'),
+    scene: 'the autumn harvest festival in a Persian garden at sunset: a spread table with fruit, a mirror and a rosewater flask, marigolds, golden trees, purple and gold light.' + PERSIAN,
+    motif: 'pomegranates, apples and grapes, orange marigolds, a small mirror and a glass rosewater flask on a spread cloth, in purple, gold and pomegranate red.' + PERSIAN },
+  { key: 'yalda', colors: C('#0e0a1a', '#e9b25a', '#d62f4a', '#7a1f3a', '#fbe8e2'),
+    scene: 'Yalda, the longest night: a cozy room around a korsi (a low table covered by a big red blanket), candles glowing, a window showing a deep night-blue starry winter sky.' + PERSIAN,
+    motif: 'split-open pomegranates with jewel-like seeds, a slice of watermelon, a bowl of nuts, candles and an open poetry book with blank pages, in deep red and night blue.' + PERSIAN },
+  { key: 'sadeh', colors: C('#0a1224', '#f2b44a', '#ffd88a', '#4f7fc8', '#eef4fc'),
+    scene: 'the midwinter fire festival: one large bonfire blazing on a snowy plain under a sky full of stars, small silhouettes gathered around it at a distance.' + PERSIAN,
+    motif: 'a bonfire with golden flames and sparks on snow, stars, and a few winter pine sprigs, in fire gold and winter blue.' + PERSIAN },
+  { key: 'sepandarmazgan', colors: C('#140c14', '#f29ab0', '#3fc8c8', '#c84a7a', '#fbecef'),
+    scene: 'the Persian day of love and the earth in late winter: a garden at dusk with early blossoms, lanterns and turquoise Persian tiles on a low wall.' + PERSIAN,
+    motif: 'roses and flowers, a small wrapped gift, and heart shapes decorated with turquoise Persian tile patterns, in rose and turquoise.' + PERSIAN },
+)
 const ANNIVERSARY = { key: 'anniversary', colors: C('#1a0b12', '#e7b9a0', '#f4d4c8', '#8a1f3a', '#fbeee8'),
   scene: 'a romantic candlelit table for two by a window at night, roses in a vase, soft rose gold glow and deep wine red tones.',
   motif: 'two champagne glasses clinking, a pair of gold wedding rings, red roses and a lit candle, rose gold and deep wine red.' }
