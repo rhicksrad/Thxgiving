@@ -55,47 +55,8 @@ create table if not exists gatherings (
 );
 create index if not exists gatherings_starts_idx on gatherings (starts_at);
 
--- The starter lists every new gathering gets. Edit these to change the defaults.
-create table if not exists list_template (
-  kind  text not null check (kind in ('food', 'ask')),
-  label text not null unique,
-  sort  integer not null default 0
-);
-
-insert or ignore into list_template (kind, label, sort) values
-  ('food', 'Turkey',                                10),
-  ('food', 'Ham',                                   20),
-  ('food', 'Stuffing / dressing',                   30),
-  ('food', 'Mashed potatoes',                       40),
-  ('food', 'Gravy',                                 50),
-  ('food', 'Sweet potato casserole',                60),
-  ('food', 'Green bean casserole',                  70),
-  ('food', 'Mac & cheese',                          80),
-  ('food', 'Corn',                                  90),
-  ('food', 'Cranberry sauce',                      100),
-  ('food', 'Rolls & butter',                       110),
-  ('food', 'Salad',                                120),
-  ('food', 'Deviled eggs',                         130),
-  ('food', 'Appetizers / veggie tray',             140),
-  ('food', 'Pumpkin pie',                          150),
-  ('food', 'Pecan pie',                            160),
-  ('food', 'Another dessert',                      170),
-  ('food', 'Whipped cream',                        180),
-  ('food', 'Drinks (pop, juice, tea)',             190),
-  ('food', 'Wine / beer',                          200),
-  ('food', 'Coffee & creamer',                     210),
-  ('ask',  'Who''s hosting?',                       10),
-  ('ask',  'Who''s carving the turkey?',            20),
-  ('ask',  'Enough tables & chairs?',               30),
-  ('ask',  'Kids'' table set up?',                  40),
-  ('ask',  'Plates, cups, napkins, silverware?',    50),
-  ('ask',  'Serving spoons & dishes?',              60),
-  ('ask',  'Ice & coolers?',                        70),
-  ('ask',  'Leftover containers / foil?',           80),
-  ('ask',  'Football on the TV?',                   90),
-  ('ask',  'Who''s saying grace?',                 100),
-  ('ask',  'Family photo: who''s taking it?',      110),
-  ('ask',  'Cleanup crew?',                        120);
+-- New gatherings start blank. (They used to be given a starter food and help list; that table is gone.)
+drop table if exists list_template;
 
 -- Each gathering's two lists: the food (kind 'food') and supplies & help (kind 'ask').
 create table if not exists list_items (
@@ -226,21 +187,14 @@ create table if not exists event_ends (
   end_day  text not null check (end_day glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]')
 );
 
--- Hilton Head, July 17-24, 2027 (asked for by Ryan, 2026-11-26).
-insert or ignore into events (id, title, day, time, yearly, note, created_by, created_at)
-values ('hilton-head-2027', 'Hilton Head', '2027-07-17', null, 0, null,
-  coalesce((select id from users where display_name like 'Ryan%' order by created_at limit 1), 'family'), '2026-11-27T00:05:00.000Z');
-insert or ignore into event_ends (event_id, end_day) values ('hilton-head-2027', '2027-07-24');
+-- Hilton Head, July 17-24, 2027 (asked for by Ryan). It began as a calendar entry and is now a get-together
+-- with its own page (see the end of this file), so the calendar entry goes.
+delete from event_ends where event_id = 'hilton-head-2027';
+delete from events where id = 'hilton-head-2027';
 
 -- Thanksgiving 2026: Thursday, November 26, time to be decided (noon Eastern until someone sets it).
--- Its starter lists are copied from list_template, once.
 insert or ignore into gatherings (id, title, starts_at, time_tbd, created_at)
 values ('thanksgiving-2026', 'Thanksgiving 2026', '2026-11-26T17:00:00.000Z', 1, '2026-10-30T00:00:00.000Z');
-
-insert into list_items (id, gathering_id, kind, label, sort, created_at)
-select lower(hex(randomblob(16))), 'thanksgiving-2026', t.kind, t.label, t.sort, '2026-10-30T00:00:00.000Z'
-from list_template t
-where not exists (select 1 from list_items where gathering_id = 'thanksgiving-2026');
 
 -- The archive: get-togethers moved off Home's "Coming up" into its Archive section.
 -- (A separate table, not a column, so this file stays safe to re-run.)
@@ -251,14 +205,9 @@ create table if not exists archived_gatherings (
 insert or ignore into archived_gatherings (gathering_id, archived_at)
 values ('thanksgiving-2026', '2026-11-26T23:45:00.000Z');
 
--- Family Christmas: Saturday, January 2, 2027, time to be decided. Starter lists copied once.
+-- Family Christmas: Saturday, January 2, 2027, time to be decided.
 insert or ignore into gatherings (id, title, starts_at, time_tbd, created_at)
 values ('christmas-2026', 'Family Christmas', '2027-01-02T17:00:00.000Z', 1, '2026-11-26T23:45:00.000Z');
-
-insert into list_items (id, gathering_id, kind, label, sort, created_at)
-select lower(hex(randomblob(16))), 'christmas-2026', t.kind, t.label, t.sort, '2026-11-26T23:45:00.000Z'
-from list_template t
-where not exists (select 1 from list_items where gathering_id = 'christmas-2026');
 
 -- FIRST RUN: add yourself so you can sign in, then add everyone else from the Family page:
 --   npx wrangler d1 execute thxgiving --remote --command "insert into members (phone, name, created_at) values ('13175550123', 'Your Name', datetime('now'))"
@@ -387,3 +336,23 @@ create table if not exists pickem_meta (
   key   text primary key,
   value text not null
 );
+
+-- ============================================================================
+-- Trips: a get-together that runs over several days, and where each person is staying for it.
+-- ============================================================================
+create table if not exists gathering_trips (
+  gathering_id text primary key references gatherings(id) on delete cascade,
+  end_day      text not null -- last day, 'YYYY-MM-DD'
+);
+create table if not exists stays (
+  gathering_id text not null references gatherings(id) on delete cascade,
+  user_id      text not null references users(id) on delete cascade,
+  place        text not null check (length(place) between 1 and 120), -- "Condo 214", "Sea Pines, unit B"
+  updated_at   text not null,
+  primary key (gathering_id, user_id)
+);
+
+-- Hilton Head, July 17-24, 2027.
+insert or ignore into gatherings (id, title, starts_at, time_tbd, created_at)
+values ('hilton-head-2027', 'Hilton Head', '2027-07-17T16:00:00.000Z', 1, '2026-11-27T18:00:00.000Z');
+insert or ignore into gathering_trips (gathering_id, end_day) values ('hilton-head-2027', '2027-07-24');

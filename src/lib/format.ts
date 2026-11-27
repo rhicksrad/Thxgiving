@@ -14,8 +14,13 @@ const ymdFmt = fmt({ year: 'numeric', month: '2-digit', day: '2-digit' })
 const isoDayFmt = new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' })
 const isoTimeFmt = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
 
-export const gatheringDay = (g: Gathering, long = false) => (long ? longDayFmt : dayFmt).format(new Date(g.starts_at))
-export const gatheringTime = (g: Gathering) => (g.time_tbd ? 'Time TBD' : timeFmt.format(new Date(g.starts_at)))
+const noon = (day: string) => new Date(`${day}T12:00:00Z`) // a plain date, safely inside that day in the family's zone
+/** "Thu, Nov 26", or for a trip "Sat, Jul 17 to Sat, Jul 24". */
+export const gatheringDay = (g: Gathering, long = false) => {
+  const f = long ? longDayFmt : dayFmt
+  return g.ends_on ? `${f.format(new Date(g.starts_at))} to ${f.format(noon(g.ends_on))}` : f.format(new Date(g.starts_at))
+}
+export const gatheringTime = (g: Gathering) => (g.ends_on ? `${Math.round((noon(g.ends_on).getTime() - noon(isoDayFmt.format(new Date(g.starts_at))).getTime()) / 86400000)} nights` : g.time_tbd ? 'Time TBD' : timeFmt.format(new Date(g.starts_at)))
 export const clock = (iso: string) => timeFmt.format(new Date(iso))
 export const ymd = (d: Date) => ymdFmt.format(d) // MM/DD/YYYY in the family's zone, good for same-day checks
 export const fullDay = (iso: string) => fullDayFmt.format(new Date(iso)) // "Thursday, November 26, 2026"
@@ -31,10 +36,11 @@ export function when(iso: string) {
 
 // A gathering stays "current" through the end of its day.
 export function gatheringEnd(g: Gathering) {
+  if (g.ends_on) return noon(g.ends_on).getTime() + 18 * 3600_000 // a trip: through its last day
   return new Date(g.starts_at).getTime() + (g.time_tbd ? 30 : 12) * 3600_000
 }
 export const isPast = (g: Gathering) => gatheringEnd(g) < Date.now()
-export const isToday = (g: Gathering) => !isPast(g) && ymd(new Date(g.starts_at)) === ymd(new Date())
+export const isToday = (g: Gathering) => !isPast(g) && (g.ends_on ? new Date(g.starts_at).getTime() <= Date.now() || ymd(new Date(g.starts_at)) === ymd(new Date()) : ymd(new Date(g.starts_at)) === ymd(new Date()))
 
 /** The date and time inputs' values ("2026-11-26", "14:00") for a moment, in the family's zone. */
 export const dateInput = (iso: string) => isoDayFmt.format(new Date(iso))

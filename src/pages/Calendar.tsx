@@ -59,7 +59,7 @@ export default function Calendar() {
     const out: Item[] = holidays(y).filter((h) => h.day === k).map((h) => ({ kind: 'holiday', key: `h:${h.day}`, title: h.name }))
     for (const g of gamesOn(k)) out.push({ kind: 'game', key: `p:${g.id}`, title: gameTitle(g), game: g })
     for (const g of gatherings) {
-      if (dateInput(g.starts_at) === k) out.push({ kind: 'gathering', key: `g:${g.id}`, title: g.title, time: gatheringTime(g), id: g.id })
+      if (dateInput(g.starts_at) === k || (g.ends_on && k > dateInput(g.starts_at) && k <= g.ends_on)) out.push({ kind: 'gathering', key: `g:${g.id}`, title: g.title, time: gatheringTime(g), id: g.id })
     }
     for (const ev of events ?? []) {
       const start = parse(ev.day)

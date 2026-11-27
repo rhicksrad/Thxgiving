@@ -188,7 +188,6 @@ The domain is registered on Cloudflare.
 
 | Want to… | Do this |
 |---|---|
-| Change the starter food or help list for new get-togethers | Edit `list_template` (D1 console), or the insert in `worker/schema.sql` |
 | Change the database | Edit `worker/schema.sql` (keep it safe to re-run) and push; the deploy runs it |
 | Change a month's look | Edit its entry in `src/lib/theme.ts` (colors, tagline, chat questions) or its emblem in `src/lib/marks.ts` |
 | Change the time zone | `TZ` in `src/lib/format.ts` |

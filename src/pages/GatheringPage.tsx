@@ -12,6 +12,7 @@ import type { Gathering, GatheringStats, Photo } from '../lib/types'
 import List from '../components/Lists'
 import Chat from '../components/Chat'
 import RsvpCard, { headcount, useRsvps } from '../components/Rsvp'
+import Stays from '../components/Stays'
 import Countdown from '../components/Countdown'
 import { byShot, Lightbox, PhotoGrid, stackDupes, Uploader, useStackKeys } from '../components/Photos'
 import { scroller } from '../lib/scroller'
@@ -106,6 +107,8 @@ export function Board({ gathering }: { gathering: Gathering }) {
       <Hero gathering={gathering} />
 
       <RsvpCard gathering={gathering} />
+
+      {gathering.ends_on && <Stays gatheringId={id} />}
 
       <section className="card gathering-details">
         <div className="grid-2">
