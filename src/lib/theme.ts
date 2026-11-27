@@ -214,18 +214,12 @@ const DEFS: ThemeDef[] = [
 
 export const THEMES: Theme[] = DEFS.map((d, i) => ({ ...d, month: i + 1, mark: MONTH_MARKS[i] }))
 
-// A device can pin a month (Family page) to preview a theme; ?month=1–12 in the address does the same for one visit.
-const PIN_KEY = 'family:theme-month'
-
+// Everyone gets the day's look; there is no chooser. ?month=1–12 in the address peeks at a month for one visit.
 function pinned(): number | null {
   const fromUrl = Number(new URLSearchParams(window.location.search).get('month'))
-  if (fromUrl >= 1 && fromUrl <= 12) return fromUrl
-  try {
-    const n = Number(localStorage.getItem(PIN_KEY))
-    if (n >= 1 && n <= 12) return n
-  } catch { /* private mode */ }
-  return null
+  return fromUrl >= 1 && fromUrl <= 12 ? fromUrl : null
 }
+try { localStorage.removeItem('family:theme-month') } catch { /* private mode */ } // a month once picked in the old chooser
 
 /**
  * The month whose theme shows on a given day, on the visitor's own clock. Christmas doesn't wait for December 1:
@@ -239,9 +233,8 @@ export function seasonMonth(d = new Date()) {
   return d >= christmasStarts ? 12 : 11
 }
 
-/** The month that picks the theme: a pinned one, or the season on the visitor's own clock. */
+/** The month that picks the theme: the season on the visitor's own clock. */
 export const currentMonth = () => pinned() ?? seasonMonth()
-export const pinnedMonth = pinned
 
 const HEX = /^#[0-9a-f]{3,8}$/i
 
@@ -270,7 +263,7 @@ function birthdayTheme(base: Theme, b: Birthday): Theme {
   }
 }
 
-/** Today's look: a birthday or anniversary first, then a holiday or special day, then a Purdue game day, else the month. A pinned month wins over all. */
+/** Today's look: a birthday or anniversary first, then a holiday or special day, then a Purdue game day, else the month.  */
 function pick(): Theme {
   const base = THEMES[currentMonth() - 1]
   const b = previewBirthday() ?? (pinned() ? null : birthdaysOn()[0])
@@ -324,15 +317,6 @@ export function applyTheme() {
   set('--art-bg', art('bg')); set('--art-hero', art('hero'))
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', c.bg)
   listeners.forEach((l) => l())
-}
-
-/** Pin a month on this device (null goes back to automatic). */
-export function pinMonth(month: number | null) {
-  try {
-    if (month) localStorage.setItem(PIN_KEY, String(month))
-    else localStorage.removeItem(PIN_KEY)
-  } catch { /* private mode */ }
-  applyTheme()
 }
 
 // A page left open over midnight picks up the new month, or a birthday, within the hour.
