@@ -1212,3 +1212,21 @@ body::before {
 .team-logo { width: 34px; height: 34px; object-fit: contain; flex: none; }
 .team-logo.sm { width: 18px; height: 18px; }
 .pk-where { display: flex; align-items: center; gap: 8px; }
+
+/* ---------- Pick'em team boxes: one centered column, the same picked or not ---------- */
+.pk-side { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 4px; padding: 26px 8px 12px; text-align: center; min-width: 0; }
+.pk-where { position: absolute; top: 9px; left: 11px; display: block; }
+.pk-check { top: 7px; right: 7px; }
+.pk-side.on .pk-line { margin-right: 0; }
+.pk-side .team-logo { width: 52px; height: 52px; }
+.team-logo.none { display: grid; place-items: center; font-family: var(--display); font-weight: 800; font-size: 20px; color: var(--text); }
+.pk-name { max-width: 100%; font-size: 15px; font-weight: 700; color: var(--text); margin-top: 2px; }
+.pk-score { font-size: 26px; line-height: 1; }
+.pk-line { font-size: 17px; padding: 2px 12px; border-radius: 999px; background: color-mix(in srgb, var(--team) 14%, transparent); }
+.pk-who { justify-content: center; }
+@media (max-width: 560px) { .pk-side { padding: 26px 6px 12px; } .pk-line { font-size: 16px; } }
+.pk-time { display: inline-flex; align-items: center; gap: 5px; font-size: 13.5px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+.pk-time svg.lucide { color: var(--team); }
+.pk-sides { position: relative; }
+.pk-at { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 2; width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%;
+  background: var(--card); border: 1.5px solid var(--line-2); font-size: 10.5px; font-weight: 700; color: var(--muted); pointer-events: none; }
