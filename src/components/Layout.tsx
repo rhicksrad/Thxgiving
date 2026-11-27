@@ -46,24 +46,25 @@ export default function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="app">
       <SeasonSky />
-      <div className="app-scroll">
-        <header className="topbar">
-          <NavLink to="/" className="brand">
-            <Logo size={36} />
-            <span>
-              <span className="brand-name">Hicks Family</span>
-              <span className="brand-tag">{theme.tagline}</span>
-            </span>
+      {/* The top bar sits above the scrolling area, not in it, so iOS's bounce at the top can't drag it down. */}
+      <header className="topbar">
+        <NavLink to="/" className="brand">
+          <Logo size={36} />
+          <span>
+            <span className="brand-name">Hicks Family</span>
+            <span className="brand-tag">{theme.tagline}</span>
+          </span>
+        </NavLink>
+        <ActivityBell />
+        {me && (
+          <NavLink to="/family" className="me-chip" title="Your profile">
+            <Avatar p={me} size={30} />
+            <span className="me-name">{me.display_name}</span>
           </NavLink>
-          <ActivityBell />
-          {me && (
-            <NavLink to="/family" className="me-chip" title="Your profile">
-              <Avatar p={me} size={30} />
-              <span className="me-name">{me.display_name}</span>
-            </NavLink>
-          )}
-          <SiteMenu />
-        </header>
+        )}
+        <SiteMenu />
+      </header>
+      <div className="app-scroll">
         <PullToRefresh />
         <main className="page">{children}</main>
       </div>

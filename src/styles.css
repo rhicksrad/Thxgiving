@@ -111,7 +111,7 @@ html:has(.app), html:has(.app) body { height: var(--app-h, 100%); overflow: hidd
 .page-head p { margin: 0; max-width: 640px; }
 
 .topbar {
-  position: sticky; top: 0; z-index: 20;
+  position: relative; flex: none; z-index: 20;
   height: var(--topbar-h);
   display: flex; align-items: center; gap: 20px;
   padding: env(safe-area-inset-top, 0px) 24px 0;
@@ -288,7 +288,7 @@ select.input { appearance: none; cursor: pointer; background-image: linear-gradi
 .gp-chat { grid-area: chat; }
 .gp-pics { grid-area: pics; display: flex; flex-direction: column; gap: 14px; }
 @media (max-width: 899px) {
-  .tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; padding: 4px; background: color-mix(in srgb, var(--card) 95%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--line); border-radius: 12px; position: sticky; top: calc(var(--topbar-h) + 8px); z-index: 10; }
+  .tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; padding: 4px; background: color-mix(in srgb, var(--card) 95%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--line); border-radius: 12px; position: sticky; top: 8px; z-index: 10; }
   .tabs button { min-height: 50px; padding: 4px 2px; white-space: nowrap; font-size: 11.5px; font-weight: 600; line-height: 1.1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); cursor: pointer; transition: background 0.15s, color 0.15s; }
   .tabs button.on { background: var(--gold-soft); color: var(--gold); }
   /* Phones: the details and who's coming sit on top, then the tabs switch between food, help, chat and photos. */
@@ -410,7 +410,7 @@ select.input { appearance: none; cursor: pointer; background-image: linear-gradi
 .photo-tile.picking:hover img { transform: none; }
 .tile-check { position: absolute; left: 6px; top: 6px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; border: 2px solid #fff; background: rgba(0, 0, 0, 0.35); color: #1a1a1a; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5); }
 .photo-tile.picked .tile-check { background: var(--gold); border-color: var(--gold); }
-.pick-bar { position: sticky; top: calc(var(--topbar-h) + 8px); z-index: 15; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 10px 10px 10px 14px; }
+.pick-bar { position: sticky; top: 8px; z-index: 15; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 10px 10px 10px 14px; }
 .pick-count { flex: 1; font-weight: 600; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pick-bar .btn { flex: none; }
 .pick-bar .error { width: 100%; margin: 0; }
