@@ -272,3 +272,27 @@ create table if not exists birthday_people (
   name     text not null, -- what the family calls them
   theme    text
 );
+
+-- Gift lists. Everyone has one. Each thing on it is shown to the whole family, or only to the people its owner
+-- picks (gift_viewers). A claim ("I'm getting this") is never sent to the list's owner, so surprises stay surprises.
+create table if not exists gifts (
+  id         text primary key,
+  owner_id   text not null references users(id) on delete cascade,
+  title      text not null check (length(title) between 1 and 120),
+  url        text check (length(url) <= 500),
+  note       text check (length(note) <= 500),
+  price      text check (length(price) <= 40),
+  everyone   integer not null default 1,   -- 0 = only the people in gift_viewers
+  created_at text not null
+);
+create index if not exists gifts_owner_idx on gifts (owner_id, created_at);
+create table if not exists gift_viewers (
+  gift_id text not null references gifts(id) on delete cascade,
+  user_id text not null references users(id) on delete cascade,
+  primary key (gift_id, user_id)
+);
+create table if not exists gift_claims (
+  gift_id    text primary key references gifts(id) on delete cascade,
+  user_id    text not null references users(id) on delete cascade,
+  created_at text not null
+);

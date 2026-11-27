@@ -1,6 +1,6 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useLocation } from 'react-router'
-import { CalendarDays, House, Images, LockKeyhole, MessagesSquare, Users } from 'lucide-react'
+import { CalendarDays, Gift, House, Images, LockKeyhole, Menu, MessagesSquare, Users, X } from 'lucide-react'
 import { useAuth } from '../auth'
 import Logo from './Logo'
 import { Avatar, badgeFor, DEFAULT_BADGE } from './Avatar'
@@ -18,8 +18,9 @@ const NAV = [
   { to: '/calendar', label: 'Calendar', Icon: CalendarDays },
   { to: '/chat', label: 'Chat', Icon: MessagesSquare },
   { to: '/gallery', label: 'Photos', Icon: Images },
+  { to: '/gifts', label: 'Gift lists', Icon: Gift },
   { to: '/family', label: 'Family', Icon: Users },
-  { to: '/mine', label: 'Mine', Icon: LockKeyhole },
+  { to: '/mine', label: 'My page', Icon: LockKeyhole },
 ]
 
 export default function Layout({ children }: { children: ReactNode }) {
@@ -53,11 +54,6 @@ export default function Layout({ children }: { children: ReactNode }) {
               <span className="brand-tag">{theme.tagline}</span>
             </span>
           </NavLink>
-          <nav className="topnav">
-            {NAV.map((n) => (
-              <NavLink key={n.to} to={n.to} end={n.end}><n.Icon size={17} strokeWidth={1.9} aria-hidden="true" />{n.label}</NavLink>
-            ))}
-          </nav>
           <ActivityBell />
           {me && (
             <NavLink to="/family" className="me-chip" title="Your profile">
@@ -65,19 +61,44 @@ export default function Layout({ children }: { children: ReactNode }) {
               <span className="me-name">{me.display_name}</span>
             </NavLink>
           )}
+          <SiteMenu />
         </header>
         <PullToRefresh />
         <main className="page">{children}</main>
       </div>
-      <nav className="tabbar">
-        {NAV.map((n) => (
-          <NavLink key={n.to} to={n.to} end={n.end}>
-            <n.Icon size={22} strokeWidth={1.8} aria-hidden="true" />
-            <span>{n.label}</span>
-          </NavLink>
-        ))}
-      </nav>
       {me && !me.onboarded && <Onboard />}
+    </div>
+  )
+}
+
+/** Every page of the site, behind one button. Closes when you pick one, tap outside, or press Escape. */
+function SiteMenu() {
+  const [open, setOpen] = useState(false)
+  const wrap = useRef<HTMLDivElement>(null)
+  const { pathname } = useLocation()
+  useEffect(() => { setOpen(false) }, [pathname])
+  useEffect(() => {
+    if (!open) return
+    const away = (e: PointerEvent) => { if (!wrap.current?.contains(e.target as Node)) setOpen(false) }
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('pointerdown', away)
+    document.addEventListener('keydown', esc)
+    return () => { document.removeEventListener('pointerdown', away); document.removeEventListener('keydown', esc) }
+  }, [open])
+  return (
+    <div className="menu-wrap" ref={wrap}>
+      <button className="bell menu-btn" aria-label="Menu" aria-expanded={open} aria-controls="site-menu" onClick={() => setOpen((o) => !o)}>
+        {open ? <X size={19} aria-hidden="true" /> : <Menu size={19} aria-hidden="true" />}
+      </button>
+      {open && (
+        <nav id="site-menu" className="card menu-pop">
+          {NAV.map((n) => (
+            <NavLink key={n.to} to={n.to} end={n.end} onClick={() => setOpen(false)}>
+              <n.Icon size={19} strokeWidth={1.9} aria-hidden="true" />{n.label}
+            </NavLink>
+          ))}
+        </nav>
+      )}
     </div>
   )
 }
