@@ -234,6 +234,18 @@ async function route(req, env, ctx, url) {
     return json({ ok: true })
   }
 
+  // Gift lists. Nothing here is broadcast: who can see a thing, and who is getting it, is between the people involved.
+  if (at('GET', 'gifts')) return listGifts(db, uid)
+  if (at('POST', 'gifts')) return saveGift(req, db, uid, null)
+  if (at('PATCH', 'gifts', '*')) return saveGift(req, db, uid, b)
+  if (at('DELETE', 'gifts', '*')) {
+    await own(db, 'gifts', 'owner_id', b, uid)
+    await db.batch([['delete from gift_claims where gift_id = ?', b], ['delete from gift_viewers where gift_id = ?', b], ['delete from gifts where id = ?', b]])
+    return json({ ok: true })
+  }
+  if (at('POST', 'gifts', '*', 'claim')) return claimGift(db, uid, b, true)
+  if (at('DELETE', 'gifts', '*', 'claim')) return claimGift(db, uid, b, false)
+
   // Whose birthday is when, and the look for their day. Month and day only: no years leave the server.
   if (at('GET', 'birthdays')) {
     const rows = await db.all(`select b.event_id, substr(e.day, 6) as md, b.user_id, b.name, b.theme
@@ -257,6 +269,79 @@ async function route(req, env, ctx, url) {
   }
 
   return text('Not found', 404)
+}
+
+// ---------------------------------------------------------------------------
+// Gift lists
+// ---------------------------------------------------------------------------
+const CAN_SEE_GIFT = `(g.owner_id = ?1 or g.everyone = 1 or exists (select 1 from gift_viewers v where v.gift_id = g.id and v.user_id = ?1))`
+
+/** Every gift you may see. Your own come with who can see them and never with who's getting them; other people's are the reverse. */
+async function listGifts(db, uid) {
+  const [rows, viewers] = await Promise.all([
+    db.all(`select g.*, c.user_id as claimed_by from gifts g left join gift_claims c on c.gift_id = g.id
+            where ${CAN_SEE_GIFT} order by g.created_at`, uid),
+    db.all('select v.gift_id, v.user_id from gift_viewers v join gifts g on g.id = v.gift_id where g.owner_id = ?', uid),
+  ])
+  return json(rows.map((g) => giftOut(g, uid, viewers.filter((v) => v.gift_id === g.id).map((v) => v.user_id))))
+}
+const giftOut = (g, uid, viewers) => {
+  const mine = g.owner_id === uid
+  return {
+    id: g.id, owner_id: g.owner_id, title: g.title, url: g.url, note: g.note, price: g.price, created_at: g.created_at,
+    everyone: Boolean(g.everyone), viewers: mine ? viewers : null, claimed_by: mine ? null : g.claimed_by ?? null,
+  }
+}
+
+async function saveGift(req, db, uid, id) {
+  const p = await body(req)
+  const cur = id ? await own(db, 'gifts', 'owner_id', id, uid) : null
+  const title = 'title' in p || !cur ? opt(p.title, 120) : cur.title
+  if (!title) fail('What is it? Give it a name.')
+  const url = 'url' in p || !cur ? opt(p.url, 500) : cur.url
+  if (url && !/^https?:\/\/\S+$/i.test(url)) fail('That link doesn\'t look right. It should start with https://')
+  const row = {
+    id: cur?.id ?? uuid(), owner_id: uid, title, url,
+    note: 'note' in p || !cur ? opt(p.note, 500) : cur.note,
+    price: 'price' in p || !cur ? opt(p.price, 40) : cur.price,
+    everyone: 'everyone' in p || !cur ? (p.everyone === false ? 0 : 1) : cur.everyone,
+    created_at: cur?.created_at ?? now(),
+  }
+  // Only real family accounts, never yourself, and none at all when it's open to everyone.
+  let viewers = null
+  if ('viewers' in p || 'everyone' in p || !cur) {
+    const asked = [...new Set(Array.isArray(p.viewers) ? p.viewers.map(str) : [])].filter((v) => v && v !== uid).slice(0, 200)
+    viewers = row.everyone || !asked.length ? [] : (await db.all(`select id from users where id in (${marks(asked)})`, ...asked)).map((u) => u.id)
+    if (!row.everyone && !viewers.length) fail('Pick at least one person who can see it, or show it to everyone.')
+  }
+  const ops = [cur
+    ? ['update gifts set title = ?, url = ?, note = ?, price = ?, everyone = ? where id = ?', row.title, row.url, row.note, row.price, row.everyone, row.id]
+    : db.insertStmt('gifts', row)]
+  if (viewers) {
+    ops.push(['delete from gift_viewers where gift_id = ?', row.id])
+    for (const v of viewers) ops.push(['insert into gift_viewers (gift_id, user_id) values (?, ?)', row.id, v])
+    // Someone who can no longer see it can't still be getting it.
+    if (!row.everyone) ops.push([`delete from gift_claims where gift_id = ? and user_id not in (${marks(viewers)})`, row.id, ...viewers])
+  }
+  await db.batch(ops)
+  const seen = viewers ?? (await db.all('select user_id from gift_viewers where gift_id = ?', row.id)).map((v) => v.user_id)
+  return json(giftOut(row, uid, seen))
+}
+
+/** "I'm getting this", or taking that back. Only for someone else's gift that you can see, and only one person at a time. */
+async function claimGift(db, uid, id, on) {
+  const g = await db.one(`select g.*, c.user_id as claimed_by from gifts g left join gift_claims c on c.gift_id = g.id
+                          where g.id = ?2 and ${CAN_SEE_GIFT}`, uid, id)
+  if (!g) fail('That is gone', 404)
+  if (g.owner_id === uid) fail('That one is on your own list')
+  if (on) {
+    if (g.claimed_by && g.claimed_by !== uid) fail('Someone else is already getting that one')
+    await db.run('insert or ignore into gift_claims (gift_id, user_id, created_at) values (?, ?, ?)', id, uid, now())
+  } else {
+    await db.run('delete from gift_claims where gift_id = ? and user_id = ?', id, uid)
+  }
+  const after = await db.one('select user_id from gift_claims where gift_id = ?', id)
+  return json(giftOut({ ...g, claimed_by: after?.user_id ?? null }, uid, []))
 }
 
 // ---------------------------------------------------------------------------
