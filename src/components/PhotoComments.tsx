@@ -35,8 +35,8 @@ export function usePhotoComments(photoIds: string[]) {
 }
 
 /** The thread in the photo viewer: everyone's comments, each one reactable, and a box to add yours. */
-export function PhotoComments({ photoId, comments, onClose }: {
-  photoId: string; comments: ReturnType<typeof usePhotoComments>; onClose: () => void
+export function PhotoComments({ photoId, comments, onClose, autoFocus }: {
+  photoId: string; comments: ReturnType<typeof usePhotoComments>; onClose: () => void; autoFocus?: boolean
 }) {
   const { me, profiles } = useAuth()
   const { rows, setRows } = comments
@@ -99,7 +99,7 @@ export function PhotoComments({ photoId, comments, onClose }: {
         })}
       </div>
       <form className="chat-input" onSubmit={send}>
-        <textarea className="input" rows={1} placeholder="Add a comment…" value={text} maxLength={1000}
+        <textarea className="input" rows={1} placeholder="Add a comment…" value={text} maxLength={1000} autoFocus={autoFocus}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send() } }} />
         <button className="btn gold icon" disabled={!text.trim()} title="Send" aria-label="Send">

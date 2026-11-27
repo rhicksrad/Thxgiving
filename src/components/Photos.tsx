@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { downloadZip } from 'client-zip'
-import { ChevronLeft, ChevronRight, Download, ImagePlus, Layers, MessageSquare, Play, Trash2, X } from 'lucide-react'
+import { Check, ChevronLeft, ChevronRight, Download, ImagePlus, Layers, MessageSquare, Play, Trash2 } from 'lucide-react'
 import { api, seg } from '../lib/api'
 import { fileHashes, signFiles, uploadFile } from '../lib/storage'
 import { useSignedUrls } from '../lib/signedUrls'
@@ -181,7 +182,10 @@ const fileName = (p: Photo, gathering?: Gathering) => {
   return `${gathering ? gathering.title.toLowerCase().replace(/\W+/g, '-') : 'family'}-${stamp}-${p.id.slice(0, 4)}.${ext}`
 }
 
-export function PhotoGrid({ photos, gatherings, onOpen }: { photos: Shot[]; gatherings: Record<string, Gathering>; onOpen: (i: number) => void }) {
+export function PhotoGrid({ photos, gatherings, onOpen, selected }: {
+  photos: Shot[]; gatherings: Record<string, Gathering>; onOpen: (i: number) => void
+  selected?: Set<string> // picking mode: tiles show a check, and a tap picks instead of opening
+}) {
   const url = useSignedUrls(photos.map((p) => p.thumb_path ?? p.path))
   const commentCounts = useCommentCounts()
   return (
@@ -190,7 +194,8 @@ export function PhotoGrid({ photos, gatherings, onOpen }: { photos: Shot[]; gath
         const src = url(p.thumb_path ?? p.path)
         const talk = p.copies.reduce((n, c) => n + (commentCounts[c.id] ?? 0), 0) // the stack shares one thread
         return (
-          <button key={p.id} className="photo-tile" onClick={() => onOpen(i)} title={p.caption ?? ''}>
+          <button key={p.id} className={`photo-tile${selected ? ' picking' : ''}${selected?.has(p.id) ? ' picked' : ''}`}
+            onClick={() => onOpen(i)} title={p.caption ?? ''} aria-pressed={selected ? selected.has(p.id) : undefined}>
             {src && (isVideo(p) && !p.thumb_path
               ? <LazyVideo src={`${src}#t=0.1`} />
               : <img src={src} alt={p.caption ?? ''} loading="lazy" decoding="async" />)}
@@ -201,7 +206,8 @@ export function PhotoGrid({ photos, gatherings, onOpen }: { photos: Shot[]; gath
                 <Layers size={11} aria-hidden="true" />{p.copies.length}
               </span>
             )}
-            {talk > 0 && (
+            {selected && <span className="tile-check" aria-hidden="true">{selected.has(p.id) && <Check size={14} strokeWidth={3} />}</span>}
+            {talk > 0 && !selected && (
               <span className="tile-talk" title={`${talk} comment${talk === 1 ? '' : 's'}`}>
                 <MessageSquare size={11} aria-hidden="true" />{talk}
               </span>
@@ -256,11 +262,21 @@ export function Lightbox({ photos, index, gatherings, onClose, onIndex, onDelete
   // A swipe is one finger moving sideways at normal zoom. A pinch, or panning around a
   // pinched-in photo, also moves fingers sideways, so those never change the photo.
   const swipe = useRef<{ x: number; y: number; pinched: boolean } | null>(null)
+  // Swipe down to close: the photo follows the finger and the black fades, like the Photos app.
+  const stage = useRef<HTMLDivElement>(null)
+  const drag = (dy: number) => {
+    const el = stage.current
+    if (!el) return
+    el.style.transform = dy ? `translateY(${dy}px) scale(${1 - Math.min(dy, 400) / 2000})` : ''
+    el.style.transition = dy ? 'none' : 'transform 0.2s ease'
+    if (el.parentElement) el.parentElement.style.backgroundColor = dy ? `rgba(0, 0, 0, ${Math.max(0.35, 1 - dy / 400)})` : ''
+  }
   const zoomed = () => (window.visualViewport?.scale ?? 1) > 1.01
   // Reactions and comments belong to the whole stack, whichever copy is on screen.
   const reactions = useReactions('photo', shot ? [shot.id] : [])
   const comments = usePhotoComments(shot ? shot.copies.map((c) => c.id) : [])
   const [talking, setTalking] = useState(false) // the comments panel stays open from one pic to the next
+  const [typing, setTyping] = useState(false) // opened from "Add a comment": the box gets the keyboard
 
   const go = useCallback((d: number) => onIndex((index + d + photos.length) % photos.length), [index, photos.length, onIndex])
   useEffect(() => {
@@ -297,7 +313,8 @@ export function Lightbox({ photos, index, gatherings, onClose, onIndex, onDelete
   // Re-shared copies aren't the exact same file, so each can be looked at (and saved) on its own.
   const switchable = new Set(shot.copies.map((c) => c.content_hash ?? c.path)).size > 1
 
-  return (
+  // On document.body, so nothing on the page (the phone tab bar) can sit on top of it.
+  return createPortal(
     <div className={`lightbox ${talking ? 'talking' : ''}`} onClick={onClose}
       onTouchStart={(e) => {
         if (e.touches.length > 1) { if (swipe.current) swipe.current.pinched = true; return }
@@ -310,10 +327,19 @@ export function Lightbox({ photos, index, gatherings, onClose, onIndex, onDelete
         if (!s || s.pinched || zoomed()) return
         const dx = e.changedTouches[0].clientX - s.x
         const dy = e.changedTouches[0].clientY - s.y
+        drag(0)
+        if (dy > 90 && dy > Math.abs(dx) * 1.2) return onClose()
         if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) go(dx < 0 ? 1 : -1)
       }}
-      onTouchCancel={() => { swipe.current = null }}>
-      <div className="lb-stage" onClick={(e) => e.stopPropagation()}>
+      onTouchMove={(e) => {
+        const s = swipe.current
+        if (!s || s.pinched || e.touches.length > 1) return
+        const dx = e.touches[0].clientX - s.x
+        const dy = e.touches[0].clientY - s.y
+        drag(dy > 0 && dy > Math.abs(dx) ? dy : 0)
+      }}
+      onTouchCancel={() => { swipe.current = null; drag(0) }}>
+      <div className="lb-stage" ref={stage} onClick={(e) => e.stopPropagation()}>
         {isVideo(p) ? (src ? <video key={src} src={src} poster={thumb} controls autoPlay playsInline /> : <div className="loading">Loading…</div>)
           : <>
             {thumb && shown !== src && <img className="lb-preview" src={thumb} alt="" aria-hidden="true" />}
@@ -344,6 +370,16 @@ export function Lightbox({ photos, index, gatherings, onClose, onIndex, onDelete
             {gathering && <> · {gathering.title}</>}
           </div>
           {reactions.ready && <ReactionBar always list={reactions.of(shot.id)} onToggle={(e) => reactions.toggle(shot.id, e)} />}
+          {comments.ready && !talking && (() => {
+            const last = comments.rows?.[comments.rows.length - 1]
+            return (
+              <button className="lb-comment-prompt" onClick={() => { setTyping(true); setTalking(true) }}>
+                {last && <span className="lb-last"><b>{nameOf(profiles[last.author_id])}</b> {last.body}</span>}
+                <span className="lb-add"><MessageSquare size={15} aria-hidden="true" />
+                  {comments.rows && comments.rows.length > 1 ? `Add a comment · see all ${comments.rows.length}` : 'Add a comment…'}</span>
+              </button>
+            )
+          })()}
         </div>
         <div className="row">
           {comments.ready && (
@@ -359,14 +395,17 @@ export function Lightbox({ photos, index, gatherings, onClose, onIndex, onDelete
         <button className="lb-nav prev" aria-label="Previous" onClick={(e) => { e.stopPropagation(); go(-1) }}><ChevronLeft size={22} aria-hidden="true" /></button>
         <button className="lb-nav next" aria-label="Next" onClick={(e) => { e.stopPropagation(); go(1) }}><ChevronRight size={22} aria-hidden="true" /></button>
       </>}
-      <button className="lb-close" aria-label="Close" onClick={onClose}><X size={20} aria-hidden="true" /></button>
+      <button className="lb-close" aria-label="Back to the photos" onClick={(e) => { e.stopPropagation(); onClose() }}>
+        <ChevronLeft size={20} aria-hidden="true" />Back
+      </button>
       {talking && comments.ready && (
         <div className="lb-comments-wrap" onClick={(e) => e.stopPropagation()}
           onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
-          <PhotoComments photoId={shot.id} comments={comments} onClose={() => setTalking(false)} />
+          <PhotoComments photoId={shot.id} comments={comments} autoFocus={typing} onClose={() => { setTalking(false); setTyping(false) }} />
         </div>
       )}
-    </div>
+    </div>,
+    document.body,
   )
 }
 
@@ -462,6 +501,27 @@ export function useBackfillTakenAt(photos: Photo[] | null) {
       }
     })()
   }, [photos, me?.id])
+}
+
+/** The picked files, fetched at full size, ready to hand to the share sheet. */
+export async function photoFiles(photos: Photo[], gatherings: Record<string, Gathering>): Promise<File[]> {
+  const urls = new Map((await signFiles(photos.map((p) => p.path), 600)).map((d) => [d.path, d.url]))
+  const out: File[] = []
+  for (const p of photos) {
+    const u = urls.get(p.path)
+    if (!u) continue
+    const res = await fetch(u)
+    if (!res.ok) continue
+    const blob = await res.blob()
+    out.push(new File([blob], fileName(p, p.gathering_id ? gatherings[p.gathering_id] : undefined), { type: p.mime || blob.type }))
+  }
+  return out
+}
+
+/** Can this device hand files to the share sheet (iPhone, iPad, Android)? Then "Save Image" puts them in Photos. */
+export const canShareFiles = () => {
+  try { return typeof navigator.canShare === 'function' && navigator.canShare({ files: [new File([''], 'x.jpg', { type: 'image/jpeg' })] }) }
+  catch { return false }
 }
 
 /** Zip every file in the current view and save it. */
