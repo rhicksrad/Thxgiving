@@ -2,6 +2,7 @@ import { Lightbulb } from 'lucide-react'
 import Chat from '../components/Chat'
 import { useTheme } from '../lib/theme'
 import Spot from '../components/Spot'
+import ChatSwitch from '../components/ChatSwitch'
 
 export default function FamilyChat() {
   const { prompts } = useTheme() // this month's questions
@@ -11,6 +12,7 @@ export default function FamilyChat() {
       <header className="page-head with-spot">
         <div>
           <h1 className="display">Family chat</h1>
+          <ChatSwitch />
           <p className="muted">Talk about anything, any day. Post a photo or GIF with the image button, or type @ to tag someone (@family tags everybody).</p>
         </div>
         <Spot name="chat" className="page-spot" />

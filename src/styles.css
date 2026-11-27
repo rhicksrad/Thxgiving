@@ -1066,3 +1066,43 @@ body::before {
 .cal-chip.game { background: color-mix(in srgb, #cfb991 20%, transparent); color: #e3d2ae; border-left-color: #cfb991; }
 .cal-dots i.game, .cal-legend i.game { background: #cfb991; }
 .cal-item.game svg { color: #cfb991; }
+
+/* Private messages */
+.chat-switch { align-self: flex-start; margin-top: 4px; }
+.chat-switch a { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; color: var(--text-2); font-weight: 600; font-size: 13.5px; transition: background 0.15s, color 0.15s; }
+.chat-switch a + a { border-left: 1px solid var(--line-2); }
+.chat-switch a:hover { background: var(--card-2); color: var(--text); }
+.chat-switch a.active { background: color-mix(in srgb, var(--gold) 20%, var(--card-2)); color: var(--text); }
+.dm-count { display: inline-grid; place-items: center; min-width: 19px; height: 19px; padding: 0 5px; border-radius: 999px; background: var(--gold); color: var(--ink); font-size: 11.5px; font-weight: 800; line-height: 1; }
+.dm-bar { justify-content: space-between; flex-wrap: wrap; }
+.dm-note { display: inline-flex; align-items: center; gap: 6px; margin: 0; }
+.dm-list { list-style: none; margin: 0; padding: 4px; }
+.dm-list li + li { border-top: 1px solid var(--line); }
+.dm-row { display: flex; align-items: center; gap: 12px; padding: 12px 10px; border-radius: 10px; color: var(--text); }
+.dm-row:hover { background: var(--card-2); color: var(--text); }
+.dm-avs { display: inline-flex; flex: none; }
+.dm-avs .avatar + .avatar { margin-left: -10px; box-shadow: 0 0 0 2px var(--card); }
+.dm-main { display: flex; flex-direction: column; min-width: 0; flex: 1; gap: 2px; }
+.dm-name { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dm-preview { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dm-row.unread .dm-preview { color: var(--text); font-weight: 600; }
+.dm-side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex: none; }
+.dm-empty { padding: 28px 16px; text-align: center; display: block; }
+.dm-people { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.dm-person { display: inline-flex; align-items: center; gap: 8px; padding: 4px 14px 4px 4px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--card-2); color: var(--text); font: inherit; font-weight: 600; cursor: pointer; }
+.dm-person.on { border-color: var(--gold); background: color-mix(in srgb, var(--gold) 22%, var(--card-2)); }
+.dm-thread { display: flex; flex-direction: column; gap: 10px; }
+.dm-head { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.dm-head .dm-name { flex: 1; min-width: 0; }
+.dm-codes summary { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; list-style: none; }
+.dm-codes summary::-webkit-details-marker { display: none; }
+.dm-codes[open] { flex-basis: 100%; }
+.dm-codes[open] > div { margin-top: 8px; padding: 10px 12px; border-radius: 10px; background: var(--card-2); }
+.dm-codes p { margin: 0; }
+.dm-code { display: flex; justify-content: space-between; gap: 12px; }
+.dm-code code { letter-spacing: 0.06em; }
+.dm-warn { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: color-mix(in srgb, var(--warn) 16%, var(--card-2)); border: 1px solid color-mix(in srgb, var(--warn) 45%, transparent); }
+.dm-warn svg { flex: none; color: var(--warn); }
+.dm-warn span { flex: 1; }
+.dm-thread .chat-scroll { height: calc(100vh - 380px); min-height: 320px; }
+@media (max-width: 760px) { .dm-thread .chat-scroll { height: calc(100dvh - var(--topbar-h) - var(--tabbar-h) - env(safe-area-inset-bottom) - 300px); min-height: 240px; } }

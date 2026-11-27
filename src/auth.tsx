@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { api, getToken, setToken, whenSignedOut } from './lib/api'
 import { resetLive, useLiveTable } from './lib/realtime'
+import { signOutDm } from './lib/dm'
 import type { Profile } from './lib/types'
 
 type AuthState = {
@@ -29,6 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null)
     setTok(null); setUser(null); setMember(null); setProfiles({}); setLoading(false)
     resetLive()
+    signOutDm() // the private-message key leaves this device too
   }, [])
   useEffect(() => { whenSignedOut(forget); return () => whenSignedOut(null) }, [forget])
 

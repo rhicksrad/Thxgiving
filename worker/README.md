@@ -7,6 +7,7 @@ Everything behind the site, on Cloudflare's free plan:
 | [`index.js`](index.js) | The API: sign-in, the family list, gatherings, lists, RSVPs, chat, photos, comments, reactions |
 | [`schema.sql`](schema.sql) | The D1 (SQLite) database. Safe to re-run; the deploy workflow runs it every time |
 | [`files.js`](files.js) | Photos and videos in R2: uploads, signed links, deletes |
+| [`dm.js`](dm.js) | Private messages: stores only locked text (see below) |
 | [`live.js`](live.js) | The Durable Object that sends every change to everyone's screen over a WebSocket |
 | [`wrangler.toml`](wrangler.toml) | Which D1 database, R2 bucket and Durable Object it uses |
 
@@ -17,6 +18,12 @@ only upload into your own `<user id>/` folder. Food ratings never leave the Work
 **Sign-in:** passwords are PBKDF2-SHA256 (100,000 rounds, salted). A sign-in gets a random token; the database keeps
 only its SHA-256. A device that hasn't opened the site in six months signs in again. Ten wrong passwords for one
 number in 15 minutes locks it out until the window passes.
+
+**Private messages** are end-to-end encrypted in the browser ([`src/lib/dmcrypto.ts`](../src/lib/dmcrypto.ts)). Each
+person's private key is sealed with their password (PBKDF2, 600,000 rounds) before it is uploaded; each message is
+sealed with a fresh AES-GCM key wrapped for every person in the conversation (ECDH P-256). The database holds only
+sealed text, so nobody with database access can read them. It can see who talks to whom, when, and roughly how much.
+A password reset means messages sent before it can't be opened any more (unless the old password is remembered).
 
 ## Free-plan room
 
@@ -67,6 +74,9 @@ All JSON. "Family" = signed in, and the number is on the family list.
 | `GET/POST /photos`, `PATCH/DELETE /photos/:id` | family (edit, delete: yours) | Photos and videos |
 | `GET/POST /comments`, `GET/DELETE /comments/:id` | family (delete: yours) | Photo comments |
 | `GET/POST /reactions`, `DELETE /reactions/:id` | family (delete: yours) | Emoji reactions |
+| `GET /me/key`, `PUT /me/key` | family | Your sealed private-message key; a new key pair |
+| `GET /dm`, `POST /dm`, `GET /dm/unread`, `GET /dm/keys` | family | Your conversations; start one; unread count; public keys |
+| `GET/POST /dm/:id/messages`, `POST /dm/:id/read`, `DELETE /dm/messages/:id` | people in it (delete: yours) | Private messages (sealed) |
 | `GET /activity` | family | The latest from everyone else, for the bell |
 | `GET /live?token=…` | family | WebSocket of every change: `{ table, op: insert/update/delete, row }` |
 | `POST /sign`, `PUT /o/<path>`, `POST /delete`, `POST /hashes`, `GET /usage` | family (uploads, deletes: your folder) | Files in R2 |

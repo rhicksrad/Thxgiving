@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { api } from '../lib/api'
 import { cleanPhone, formatPhone } from '../lib/phone'
 import type { Profile } from '../lib/types'
+import { unlockQuietly } from '../lib/dm'
 import { useAuth } from '../auth'
 import { artUrl } from '../components/Spot'
 import SeasonSky from '../components/SeasonSky'
@@ -45,7 +46,7 @@ export default function Login() {
     setBusy(true); setErr(null)
     const { data, error } = await api.post<Session>('/auth/login', { phone: digits, password })
     setBusy(false)
-    if (data) return startSession(data.token, data.user)
+    if (data) { startSession(data.token, data.user); unlockQuietly(data.user.id, password); return }
     setErr(error?.status === 401
       ? 'Wrong password. Forgot it? Anyone in the family can hit Reset next to your name on the Family page.'
       : error?.message ?? 'Something went wrong')
@@ -58,7 +59,7 @@ export default function Login() {
     setBusy(true); setErr(null)
     const { data, error } = await api.post<Session>('/auth/signup', { phone: digits, password })
     setBusy(false)
-    if (data) return startSession(data.token, data.user)
+    if (data) { startSession(data.token, data.user); unlockQuietly(data.user.id, password); return }
     setErr(error?.message ?? 'Something went wrong')
   }
 
