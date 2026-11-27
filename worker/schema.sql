@@ -273,6 +273,62 @@ create table if not exists birthday_people (
   theme    text
 );
 
+-- Private messages, end-to-end encrypted in the browser. The server only ever holds locked text: the words are
+-- sealed with a key only the people in the conversation can open, so nobody with the database (whoever runs the
+-- site included) can read them. What the server can see: who talks to whom, when, and roughly how long.
+--
+-- dm_keys: everyone's public "lock" (an ECDH P-256 public key, JWK). A new row each time someone starts fresh
+-- (a password reset), so older messages still name the key they were sealed with.
+create table if not exists dm_keys (
+  id         text primary key,
+  user_id    text not null references users(id) on delete cascade,
+  public_key text not null check (length(public_key) <= 1000),
+  created_at text not null
+);
+create index if not exists dm_keys_user_idx on dm_keys (user_id, created_at);
+
+-- dm_locks: each person's private key, sealed in their browser with their password (PBKDF2 → AES-GCM). Only the
+-- sealed copy is here; signing in on a new phone opens it with the password, which never leaves that check.
+create table if not exists dm_locks (
+  user_id    text primary key references users(id) on delete cascade,
+  key_id     text not null references dm_keys(id) on delete cascade,
+  sealed     text not null check (length(sealed) <= 2000),
+  salt       text not null,
+  iv         text not null,
+  rounds     integer not null,
+  updated_at text not null
+);
+
+-- A conversation: two or more people, fixed when it starts. member_key = their ids, sorted, comma-joined,
+-- so the same people always land in the same conversation.
+create table if not exists dm_conversations (
+  id         text primary key,
+  member_key text not null unique,
+  created_by text not null,
+  created_at text not null
+);
+create table if not exists dm_members (
+  conversation_id text not null references dm_conversations(id) on delete cascade,
+  user_id         text not null references users(id) on delete cascade,
+  last_read_at    text,
+  primary key (conversation_id, user_id)
+);
+create index if not exists dm_members_user_idx on dm_members (user_id);
+
+-- One message. body = AES-GCM ciphertext; keys = JSON { user id: { k: their key id, w: the message key wrapped
+-- for them } }; sender_key = the sender's key id, so readers know whose lock to use.
+create table if not exists dm_messages (
+  id              text primary key,
+  conversation_id text not null references dm_conversations(id) on delete cascade,
+  sender_id       text not null references users(id) on delete cascade,
+  sender_key      text not null,
+  iv              text not null check (length(iv) <= 40),
+  body            text not null check (length(body) between 1 and 12000),
+  keys            text not null check (length(keys) <= 4000),
+  created_at      text not null
+);
+create index if not exists dm_messages_conv_idx on dm_messages (conversation_id, created_at);
+
 -- Gift lists. Everyone has one. Each thing on it is shown to the whole family, or only to the people its owner
 -- picks (gift_viewers). A claim ("I'm getting this") is never sent to the list's owner, so surprises stay surprises.
 create table if not exists gifts (

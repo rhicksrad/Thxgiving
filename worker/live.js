@@ -25,6 +25,15 @@ export class Live extends DurableObject {
     }
   }
 
+  /** Send one change only to these people's connections (private messages). */
+  sendTo(userIds, message) {
+    for (const id of new Set(userIds)) {
+      for (const ws of this.ctx.getWebSockets(id)) {
+        try { ws.send(message) } catch { /* already closing */ }
+      }
+    }
+  }
+
   /** Close someone's connections (they were taken off the family list). */
   kick(userId) {
     for (const ws of this.ctx.getWebSockets(userId)) {

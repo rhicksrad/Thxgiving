@@ -8,6 +8,7 @@
 // sign-in ones and signed file links checks that token and that the number is still on the family list.
 import { CORS, fail, json, text } from './http.js'
 import * as files from './files.js'
+import * as dm from './dm.js'
 import { routePickem } from './pickem.js'
 
 export { Live } from './live.js'
@@ -73,11 +74,25 @@ async function route(req, env, ctx, url) {
   // You
   if (at('PATCH', 'me')) return updateMe(req, db, me, live)
   if (at('POST', 'me', 'password')) {
-    const { password } = await body(req)
-    await db.run('update users set password_hash = ? where id = ?', await hashPassword(checkNewPassword(password)), uid)
+    // The browser re-seals your private-message key with the new password and sends it along, so both change together.
+    const { password, lock } = await body(req)
+    const hash = await hashPassword(checkNewPassword(password))
+    const stmts = [['update users set password_hash = ? where id = ?', hash, uid]]
+    if (lock) {
+      const l = dm.checkLock(lock)
+      stmts.push(['update dm_locks set sealed = ?, salt = ?, iv = ?, rounds = ?, updated_at = ? where user_id = ? and key_id = ?',
+        l.sealed, l.salt, l.iv, l.rounds, now(), uid, str(lock.key_id)])
+    }
+    await db.batch(stmts)
     return json({ ok: true })
   }
 
+  // Private messages (dm.js). Changes go only to the people in the conversation.
+  if (a === 'dm' || (a === 'me' && b === 'key')) {
+    const send = (ids, table, op, row) => ctx.waitUntil(sendTo(env, ids, table, op, row))
+    const res = await dm.route(req, { db, uid, parts, url, send })
+    if (res) return res
+  }
   // ---- Pick'em against the spread (worker/pickem.js) ----
   if (a === 'pickem') return routePickem(req, env, ctx, uid, parts, url)
   // ---- end Pick'em ----
@@ -400,6 +415,12 @@ async function broadcast(env, table, op, row) {
   try {
     await env.LIVE.get(env.LIVE.idFromName('family')).broadcast(JSON.stringify({ table, op, row }))
   } catch (e) { console.error('broadcast failed', e) }
+}
+
+async function sendTo(env, userIds, table, op, row) {
+  try {
+    await env.LIVE.get(env.LIVE.idFromName('family')).sendTo(userIds, JSON.stringify({ table, op, row }))
+  } catch (e) { console.error('send failed', e) }
 }
 
 // ---------------------------------------------------------------------------

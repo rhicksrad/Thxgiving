@@ -8,6 +8,7 @@ import AvatarPicker from '../components/AvatarPicker'
 import Spot from '../components/Spot'
 import { InstallButton } from '../components/Install'
 import { useInstall } from '../lib/install'
+import { resealFor, startDm, useDm } from '../lib/dm'
 
 type Member = { phone: string; name: string | null; created_at: string }
 
@@ -16,6 +17,8 @@ const SITE = `${window.location.origin}${window.location.pathname}`.replace(/\/$
 
 export default function Family() {
   const { me, profiles, saveProfile, signOut } = useAuth()
+  const { state: dmState } = useDm()
+  useEffect(() => { if (me?.id) startDm(me.id) }, [me?.id])
   const { mode: installMode } = useInstall()
   const [name, setName] = useState(me?.display_name ?? '')
   const [badge, setBadge] = useState(badgeFor(me?.emoji)?.key ?? DEFAULT_BADGE)
@@ -150,7 +153,10 @@ export default function Family() {
         <form className="row" onSubmit={async (e) => {
           e.preventDefault()
           if (newPw.length < 6) return setPwNote('At least 6 characters.')
-          const { error } = await api.post('/me/password', { password: newPw })
+          // Private messages are sealed with your password: re-seal them with the new one in the same step.
+          if (dmState === 'locked' && !confirm('Private messages are still locked on this device, so changing your password here would lock you out of your old ones. Unlock them first in Chat → Private. Change it anyway?')) return
+          const lock = await resealFor(newPw)
+          const { error } = await api.post('/me/password', { password: newPw, ...(lock ? { lock } : {}) })
           setPwNote(error ? error.message : 'Password changed.')
           if (!error) setNewPw('')
         }}>

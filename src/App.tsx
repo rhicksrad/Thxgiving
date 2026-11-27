@@ -31,6 +31,7 @@ const Gallery = page(() => import('./pages/Gallery'))
 const Family = page(() => import('./pages/Family'))
 const Calendar = page(() => import('./pages/Calendar'))
 const Mine = page(() => import('./pages/Mine'))
+const Messages = page(() => import('./pages/Messages'))
 const Gifts = page(() => import('./pages/Gifts'))
 const Pickem = page(() => import('./pages/Pickem'))
 
@@ -58,6 +59,8 @@ function Gate() {
           <Route path="/g/:id" element={<GatheringPage />} />
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/chat" element={<FamilyChat />} />
+          <Route path="/chat/private" element={<Messages />} />
+          <Route path="/chat/private/:id" element={<Messages />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/family" element={<Family />} />
           <Route path="/mine" element={<Mine />} />
