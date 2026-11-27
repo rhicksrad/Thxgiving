@@ -1,7 +1,10 @@
-// The prompts behind the site's seasonal art (made with Codex's image_gen; see scripts/make-art.mjs).
-// Two pieces per month:
+// The prompts behind the site's painted art (made with Codex's image_gen; see scripts/make-art.mjs).
+// Per month:
 //   bg-<month>    a dark, quiet scene behind every page (public/art/bg-<month>.webp)
-//   hero-<month>  a decorative accent for the welcome card on Home (public/art/hero-<month>.webp)
+//   hero-<month>  a decorative accent for the welcome card and get-together pages (public/art/hero-<month>.webp)
+// Year-round:
+//   spot-<name>   small painted illustrations for page headers, Home's shortcuts and empty states
+//   welcome       the sign-in page's picture
 // Kept generic on purpose: no people, names, places or text, since the repo is public.
 
 const BG = (palette, scene) => `A wide 3:2 landscape painterly illustration to sit behind a dark website, in soft gouache and watercolor.
@@ -17,6 +20,15 @@ Arrange the decoration along the RIGHT edge and the bottom-right corner only, as
 Rich but soft colors: ${palette.gold}, ${palette.rush}, ${palette.aged}, ${palette.dust}. Gentle, cozy, family-friendly.
 No text, no letters, no numbers, no logos, no people, no faces.
 Decoration: ${motif}`
+
+// Year-round pieces have to sit on any month's colors, so they use a warm neutral palette on near-black, and the
+// site drops the black with a "lighten" blend.
+const SPOT = (subject) => `A square 1:1 small spot illustration in soft gouache and watercolor, like a cozy storybook vignette.
+Background: perfectly flat solid near-black #0b0b0b filling the whole frame, no texture, no vignette, no frame, no shadow on the ground.
+One centered subject, about 60% of the frame, with generous empty margin all around.
+Warm, soft, glowing palette: cream #f3e6cc, honey gold #e9b25a, warm coral #e57a5f, sage green #8db38a, soft sky blue #8fb8e0, with gentle warm highlights.
+Friendly, simple shapes that read well when shown small. No text, no letters, no numbers, no logos, no people, no faces.
+Subject: ${subject}`
 
 export const MONTHS = [
   { key: 'january', colors: { bg: '#0d1520', gold: '#8fc8f0', rush: '#cfe8ff', aged: '#6f8fd8', dust: '#e6f2ff' },
@@ -57,7 +69,24 @@ export const MONTHS = [
     motif: 'evergreen garland with red ornaments, holly berries, a small wrapped present and warm string lights.' },
 ]
 
-export const JOBS = MONTHS.flatMap((m) => [
-  { name: `bg-${m.key}`, prompt: BG(m.colors, m.scene) },
-  { name: `hero-${m.key}`, prompt: HERO(m.colors, m.motif) },
-])
+export const SPOTS = {
+  calendar: 'a small wall calendar page with a red ribbon bookmark and a sprig of leaves, a pencil resting beside it.',
+  chat: 'two steaming coffee mugs side by side with two little speech bubbles floating up like steam.',
+  photos: 'a loose stack of three instant photos (blank warm-toned pictures, no faces) with a small vintage camera.',
+  family: 'a cozy little house with glowing windows, a heart on the door and a curl of chimney smoke, a small tree beside it.',
+  mine: 'an open keepsake journal with a ribbon bookmark, a dried flower pressed inside and a small brass key.',
+  gather: 'a round dinner table seen from above with a pie, a bowl of salad, a pitcher and a candle, cozy and inviting.',
+}
+
+export const JOBS = [
+  ...MONTHS.flatMap((m) => [
+    { name: `bg-${m.key}`, prompt: BG(m.colors, m.scene) },
+    { name: `hero-${m.key}`, prompt: HERO(m.colors, m.motif) },
+  ]),
+  ...Object.entries(SPOTS).map(([name, subject]) => ({ name: `spot-${name}`, prompt: SPOT(subject) })),
+  { name: 'welcome', prompt: `A wide 3:2 painterly storybook illustration in soft gouache and watercolor for the sign-in page of a family website.
+A cozy small house at dusk on a gentle hill, every window glowing warm, a heart shape on the front door, smoke curling from the chimney,
+a winding path with little lanterns leading up to it, a few trees around, a big calm dark blue-violet evening sky with a few stars.
+The house and hill sit in the lower half; the sky above stays dark and calm. Warm cream, honey gold and coral lights against deep blue shadows.
+No text, no letters, no numbers, no logos, no people, no faces.` },
+]

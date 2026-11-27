@@ -767,3 +767,74 @@ body::before {
     -webkit-mask-composite: source-in; mask-composite: intersect;
   }
 }
+/* ---------- Design refresh: softer cards, painted spots, tiles ---------- */
+:root { --radius: 18px; --radius-sm: 12px; }
+/* Cards let a breath of the month's painting through and lift a little off it. */
+.card {
+  background: color-mix(in srgb, var(--card) 90%, transparent);
+  border-color: color-mix(in srgb, var(--line-2) 70%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text) 6%, transparent), 0 14px 34px -22px rgba(0, 0, 0, 0.75);
+}
+
+/* Painted spot illustrations (components/Spot.tsx), with see-through backgrounds (scripts/art-webp.py). */
+.spot { display: block; flex: none; object-fit: contain; user-select: none; filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.45)); }
+
+/* Page headers: the title on the left, the page's painting on the right. */
+.page-head h1 { font-size: clamp(30px, 4.6vw, 44px); }
+.page-head.with-spot { flex-direction: row; align-items: center; justify-content: space-between; gap: 16px; }
+.page-head.with-spot > div { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.page-spot { width: 120px; height: 120px; margin: -10px -6px -10px 0; }
+@media (max-width: 560px) {
+  .page-head.with-spot { align-items: flex-start; }
+  .page-spot { width: 84px; height: 84px; margin: -6px -4px 0 0; }
+}
+
+/* Section titles get a small diamond in the month's accent. */
+.section-title::before { content: ''; flex: none; width: 8px; height: 8px; border-radius: 2px; transform: rotate(45deg); background: var(--gold); box-shadow: 0 0 12px color-mix(in srgb, var(--gold) 55%, transparent); }
+
+/* Home shortcuts: painted tiles, four across (two on phones). */
+.quick-links { grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.quick { flex-direction: column; align-items: flex-start; gap: 4px; padding: 12px 16px 16px; }
+.quick .spot { width: 76px; height: 76px; margin: 0 0 4px -8px; transition: transform 0.2s ease; }
+.quick:hover .spot { transform: translateY(-3px) rotate(-3deg); }
+.quick b { font-size: 15.5px; }
+@media (max-width: 760px) {
+  .quick-links { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .quick { padding: 10px 12px 14px; }
+  .quick .spot { width: 64px; height: 64px; }
+  .quick .muted { font-size: 12.5px; line-height: 1.35; }
+}
+@media (prefers-reduced-motion: reduce) { .quick .spot { transition: none; } .quick:hover .spot { transform: none; } }
+
+/* Empty states use the paintings too. */
+.empty .spot, .chat-empty .spot, .hero-empty .spot { margin: 0 auto 2px; }
+
+/* Get-together heroes (Home's "Coming up" and each get-together's page) wear the month's accent like the welcome card. */
+.hero::after {
+  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: var(--art-hero, none) right bottom / auto 100% no-repeat;
+  mix-blend-mode: lighten; opacity: 0.4;
+  -webkit-mask-image: linear-gradient(to right, transparent 50%, #000 88%);
+  mask-image: linear-gradient(to right, transparent 50%, #000 88%);
+}
+.hero > * { position: relative; z-index: 1; }
+@media (max-width: 560px) {
+  .hero::after {
+    background-size: auto 30%; background-position: right top; opacity: 0.75;
+    -webkit-mask-image: linear-gradient(to left, #000 15%, transparent 60%), linear-gradient(to bottom, #000 18%, transparent 30%);
+    mask-image: linear-gradient(to left, #000 15%, transparent 60%), linear-gradient(to bottom, #000 18%, transparent 30%);
+    -webkit-mask-composite: source-in; mask-composite: intersect;
+  }
+}
+
+/* Sign-in: the painted house up top. */
+.login-art { display: block; width: min(100%, 440px); height: auto; aspect-ratio: 3 / 2; object-fit: cover; border-radius: 22px;
+  box-shadow: 0 26px 60px -24px rgba(0, 0, 0, 0.85), 0 0 0 1px color-mix(in srgb, var(--text) 10%, transparent); }
+.login-hero h1 { font-size: clamp(36px, 9vw, 54px); line-height: 1; }
+
+/* Phone tab bar: the current tab's icon sits in a soft pill. */
+@media (max-width: 760px) {
+  .tabbar a svg.lucide { box-sizing: content-box; padding: 3px 14px; border-radius: 999px; transition: background 0.2s; }
+  .tabbar a.active svg.lucide { background: color-mix(in srgb, var(--gold) 18%, transparent); }
+  .tabbar a.active::before { display: none; }
+}

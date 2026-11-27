@@ -5,6 +5,7 @@ import { cleanPhone, formatPhone } from '../lib/phone'
 import { useAuth } from '../auth'
 import { Avatar, badgeFor, DEFAULT_BADGE } from '../components/Avatar'
 import AvatarPicker from '../components/AvatarPicker'
+import Spot from '../components/Spot'
 import { InstallButton } from '../components/Install'
 import { useInstall } from '../lib/install'
 import { pinMonth, pinnedMonth, seasonMonth, THEMES, useTheme } from '../lib/theme'
@@ -65,8 +66,15 @@ export default function Family() {
 
   return (
     <div className="stack-lg">
+      <header className="page-head with-spot">
+        <div>
+          <h1 className="display">Family</h1>
+          <p className="muted">Your name and picture, everyone on the site, and this device's season theme.</p>
+        </div>
+        <Spot name="family" className="page-spot" />
+      </header>
       <section className="card stack">
-        <h1 className="display">Your profile</h1>
+        <h2 className="display">Your profile</h2>
         <form className="stack" onSubmit={async (e) => {
           e.preventDefault()
           const r = await saveProfile({ display_name: name.trim().slice(0, 30) || 'Family', emoji: badge })

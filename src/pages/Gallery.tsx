@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
-import { CheckSquare, Download, HardDrive, Images, Share, X } from 'lucide-react'
+import { CheckSquare, Download, HardDrive, Share, X } from 'lucide-react'
 import { api } from '../lib/api'
 import { isPast, isToday, plural } from '../lib/format'
 import { useLiveTable, upsertById } from '../lib/realtime'
@@ -9,6 +9,7 @@ import { storageUsage, type Usage } from '../lib/storage'
 import { useAuth } from '../auth'
 import { nameOf } from '../components/Avatar'
 import { byShot, canShareFiles, downloadAll, Lightbox, photoFiles, PhotoGrid, stackDupes, Uploader, useBackfillTakenAt, useStackKeys } from '../components/Photos'
+import Spot from '../components/Spot'
 
 export default function Gallery() {
   const [params, setParams] = useSearchParams()
@@ -125,9 +126,12 @@ export default function Gallery() {
 
   return (
     <div className="stack-lg">
-      <header className="page-head">
-        <h1 className="display">Gallery</h1>
-        <p className="muted">Everyone's photos and videos, kept at full size. Tap Select to pick some and save them to your phone.</p>
+      <header className="page-head with-spot">
+        <div>
+          <h1 className="display">Gallery</h1>
+          <p className="muted">Everyone's photos and videos, kept at full size. Tap Select to pick some and save them to your phone.</p>
+        </div>
+        <Spot name="photos" className="page-spot" />
       </header>
 
       {usage && <StorageMeter usage={usage} />}
@@ -175,7 +179,7 @@ export default function Gallery() {
       {photos === null ? <div className="loading">Loading pics…</div>
         : shown.length ? <PhotoGrid photos={shown} gatherings={gatheringsById} selected={picked ?? undefined}
             onOpen={(i) => (picked ? toggle(shown[i].id) : setOpenId(shown[i].id))} />
-        : <div className="card empty"><Images size={26} aria-hidden="true" />Nothing here yet. Add the first photo above.</div>}
+        : <div className="card empty"><Spot name="photos" size={96} />Nothing here yet. Add the first photo above.</div>}
 
       {open >= 0 && (
         <Lightbox photos={shown} index={open} gatherings={gatheringsById} onClose={close} onIndex={(i) => setOpenId(shown[i].id)}
