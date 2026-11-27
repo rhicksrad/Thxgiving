@@ -16,6 +16,11 @@ type PGame = {
   id: string; team: Sport; starts_at: string
   home: string; away: string; home_abbr: string | null; away_abbr: string | null
   home_logo?: string | null; away_logo?: string | null
+  // Matchup facts from ESPN (worker/pickem.js statsOf); any of them can be missing.
+  home_record?: string | null; away_record?: string | null   // overall, "8-3"
+  home_split?: string | null; away_split?: string | null     // home team at home, away team on the road
+  home_form?: string | null; away_form?: string | null       // last five, most recent first, "WWLWL"
+  home_chance?: number | null; away_chance?: number | null   // ESPN's win chance in percent, before the game
   home_line: number | null; status: 'pre' | 'in' | 'final'
   home_score: number | null; away_score: number | null
   locked: boolean; count: number
@@ -144,6 +149,8 @@ function GameCard({ g, profiles, busy, onPick }: {
         <span className="pk-where">{s === 'home' ? 'Home' : 'Away'}</span>
         <TeamLogo src={s === 'home' ? g.home_logo : g.away_logo} fallback={abbr} />
         <span className="pk-name">{s === 'home' ? g.home : g.away}</span>
+        <TeamStats record={s === 'home' ? g.home_record : g.away_record} split={s === 'home' ? g.home_split : g.away_split}
+          where={s} form={final ? null : s === 'home' ? g.home_form : g.away_form} />
         {final && <span className="pk-score">{s === 'home' ? g.home_score : g.away_score}</span>}
         <span className="pk-line">{l == null ? 'No line yet' : fmt(l)}</span>
         {picked && <span className="pk-check"><Check size={14} aria-hidden="true" /></span>}
@@ -157,6 +164,10 @@ function GameCard({ g, profiles, busy, onPick }: {
     )
   }
   const result = g.mine?.result
+  // One matchup fact for the footer: ESPN's win chance, before the game only.
+  const fav = !final && g.status !== 'in' && g.home_chance != null && g.away_chance != null
+    ? (g.home_chance >= g.away_chance ? { abbr: g.home_abbr ?? g.home, pct: g.home_chance } : { abbr: g.away_abbr ?? g.away, pct: g.away_chance })
+    : null
   return (
     <section className="card pk-game" style={{ ['--team' as string]: team.colors.gold, ['--team-bg' as string]: team.colors.bg }}>
       <div className="pk-top">
@@ -167,6 +178,9 @@ function GameCard({ g, profiles, busy, onPick }: {
         </span>
       </div>
       <div className="pk-sides">{side('away')}<span className="pk-at" aria-hidden="true">at</span>{side('home')}</div>
+      {fav && (
+        <p className="pk-fact small">ESPN gives <b>{fav.abbr}</b> a {Math.round(fav.pct)}% chance to win</p>
+      )}
       <div className="pk-foot small">
         {g.home_line == null && !g.mine ? <span className="muted">Line not posted yet</span>
           : g.mine && g.home_line != null && g.mine.line !== g.home_line && !g.locked
@@ -182,6 +196,29 @@ function GameCard({ g, profiles, busy, onPick }: {
         {!g.mine && g.locked && g.home_line != null && <span className="muted">You didn't pick this one</span>}
       </div>
     </section>
+  )
+}
+
+/** A team's record line under its name ("8-3 · 5-1 home") and its last five as small dots. Nothing if ESPN had nothing. */
+function TeamStats({ record, split, where, form }: { record?: string | null; split?: string | null; where: Side; form?: string | null }) {
+  if (!record && !split && !form) return null
+  const label = form ? `Last ${form.length}: ${form.split('').map((r) => (r === 'W' ? 'win' : r === 'L' ? 'loss' : 'tie')).join(', ')}` : undefined
+  return (
+    <span className="pk-stats">
+      {(record || split) && (
+        <span className="pk-rec-line">
+          {record && <b>{record}</b>}
+          {record && split && ' · '}
+          {split && <>{split} {where === 'home' ? 'home' : 'road'}</>}
+        </span>
+      )}
+      {form && (
+        <span className="pk-form" role="img" aria-label={label} title={label}>
+          {/* Oldest on the left, so it reads like a timeline toward this game. */}
+          {form.split('').reverse().map((r, i) => <i key={i} className={r === 'W' ? 'w' : r === 'L' ? 'l' : 't'} />)}
+        </span>
+      )}
+    </span>
   )
 }
 

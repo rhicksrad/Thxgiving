@@ -102,17 +102,67 @@ export async function syncPickem(env) {
     .bind(soon, since, new Date(Date.now() - 3 * 86400_000).toISOString()).all()).results
   for (const g of need) {
     let line = null
+    let stats = null
     try {
       const s = await espn(`${PICKEM_TEAMS[g.team].sport}/summary?event=${g.id}`)
       const pc = (s.pickcenter ?? []).find((p) => typeof p.spread === 'number') ?? null
       line = pc ? pc.spread : null
+      stats = statsOf(s)
     } catch { continue }
+    // The matchup facts ride along on the same summary. A value ESPN stops sending (the win chance and
+    // recent form disappear once a game is over) keeps the last one on file.
+    if (stats) {
+      await DB.prepare(`insert into pickem_stats (game_id, home_record, away_record, home_split, away_split, home_form, away_form,
+          home_chance, away_chance, checked_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        on conflict (game_id) do update set
+          home_record = coalesce(excluded.home_record, pickem_stats.home_record),
+          away_record = coalesce(excluded.away_record, pickem_stats.away_record),
+          home_split = coalesce(excluded.home_split, pickem_stats.home_split),
+          away_split = coalesce(excluded.away_split, pickem_stats.away_split),
+          home_form = coalesce(excluded.home_form, pickem_stats.home_form),
+          away_form = coalesce(excluded.away_form, pickem_stats.away_form),
+          home_chance = coalesce(excluded.home_chance, pickem_stats.home_chance),
+          away_chance = coalesce(excluded.away_chance, pickem_stats.away_chance),
+          checked_at = excluded.checked_at`)
+        .bind(g.id, stats.home_record, stats.away_record, stats.home_split, stats.away_split, stats.home_form, stats.away_form,
+          stats.home_chance, stats.away_chance, now()).run()
+    }
     // Once a game has started its line no longer moves here: picks already carry their own.
     await DB.prepare(`update pickem_games set line_checked_at = ?,
         home_line = case when status = 'pre' or home_line is null then coalesce(?, home_line) else home_line end,
         line_at = case when ? is not null and (status = 'pre' or home_line is null) then ? else line_at end
       where id = ?`).bind(now(), line, line, now(), g.id).run()
   }
+}
+
+/**
+ * The matchup facts the summary reliably carries, checked against NFL, college football and college basketball:
+ *   header.competitions[0].competitors[].record[]  type 'total' (8-3), and 'home' for the home side / 'road' for the away
+ *   lastFiveGames[].events[].gameResult            W / L / T, most recent first: before the game only
+ *   predictor.homeTeam/awayTeam.gameProjection     ESPN's win chance in percent: before the game only
+ * Not used: againstTheSpread (its records come back empty for every sport) and season series (not in the summary).
+ */
+function statsOf(s) {
+  const comps = s?.header?.competitions?.[0]?.competitors ?? []
+  const side = (h) => comps.find((c) => c.homeAway === h)
+  const rec = (c, type) => {
+    const r = (c?.record ?? []).find((x) => x?.type === type)?.summary
+    return typeof r === 'string' && /^\d+-\d+(-\d+)?$/.test(r) ? r : null
+  }
+  const form = (h) => {
+    const id = side(h)?.team?.id
+    const l5 = (s?.lastFiveGames ?? []).find((x) => x?.team?.id === id)
+    const r = (l5?.events ?? []).map((e) => e?.gameResult).filter((x) => x === 'W' || x === 'L' || x === 'T').join('')
+    return r.length ? r.slice(0, 5) : null
+  }
+  const pct = (v) => { const n = Number(v); return Number.isFinite(n) && n >= 0 && n <= 100 ? Math.round(n * 10) / 10 : null }
+  const out = {
+    home_record: rec(side('home'), 'total'), away_record: rec(side('away'), 'total'),
+    home_split: rec(side('home'), 'home'), away_split: rec(side('away'), 'road'),
+    home_form: form('home'), away_form: form('away'),
+    home_chance: pct(s?.predictor?.homeTeam?.gameProjection), away_chance: pct(s?.predictor?.awayTeam?.gameProjection),
+  }
+  return Object.values(out).some((v) => v != null) ? out : null
 }
 
 /** Did the home side cover a frozen home line? 1 = home, -1 = away, 0 = push. */
@@ -129,7 +179,9 @@ async function board(env, uid, url) {
   const DB = env.DB
   const season = Number(url.searchParams.get('season')) || seasonOf(now())
   const from = new Date(Date.UTC(season, 7, 1)).toISOString(), to = new Date(Date.UTC(season + 1, 7, 1)).toISOString()
-  const games = (await DB.prepare(`select g.*, l.home_logo, l.away_logo from pickem_games g left join pickem_logos l on l.game_id = g.id
+  const games = (await DB.prepare(`select g.*, l.home_logo, l.away_logo,
+        st.home_record, st.away_record, st.home_split, st.away_split, st.home_form, st.away_form, st.home_chance, st.away_chance
+      from pickem_games g left join pickem_logos l on l.game_id = g.id left join pickem_stats st on st.game_id = g.id
       where g.starts_at >= ? and g.starts_at < ? and g.status <> 'off' order by g.starts_at`)
     .bind(from, to).all()).results
   const ids = games.map((g) => g.id)
