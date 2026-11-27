@@ -65,7 +65,7 @@ export const TEAMS: Record<Sport, Team> = {
 }
 const SPORTS = Object.keys(TEAMS) as Sport[]
 /** Teams whose game-day art (public/art/bg-game-<team>-NN.webp, hero-game-<team>-NN.webp) is painted; the rest wear the month's. */
-const PAINTED: Sport[] = ['fb', 'bb']
+const PAINTED: Sport[] = ['fb', 'bb', 'bears', 'colts', 'chiefs']
 
 export type GameLook = { art?: string; name: string; colors: Colors; stripe: string[] }
 export function gameLook(g: Game): GameLook {
