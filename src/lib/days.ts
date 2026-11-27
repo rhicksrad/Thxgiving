@@ -93,6 +93,43 @@ export const DAY_LOOKS: DayLook[] = [
   look('nye', "New Year's Eve", 'Countdown', "Happy New Year's Eve", 'Ten, nine, eight… see you at midnight.',
     c('#0c0c14', '#f7f4ea', '#f2cf6b', '#f8e2a0', '#c9a6f2', '#8a8fa8', '#efe6cc'), 'sparkle', 'twinkle',
     ['Best thing that happened this year?', 'Staying up until midnight?', 'One word for this year?']),
+  // The next tier of holidays.
+  look('mlk', 'Martin Luther King Jr. Day', 'The dream', 'MLK Day', 'A day to remember the dream, and to do something good for somebody.',
+    c('#12121a', '#f4f2ee', '#e8b54a', '#f2cd7e', '#b8a6e8', '#7a6fb5', '#e8e2f2'), 'star', 'twinkle',
+    ['What is one good thing you can do for somebody today?', 'Who inspires you?', 'What is your dream for this family?']),
+  look('groundhog', 'Groundhog Day', 'Six more weeks?', 'Happy Groundhog Day', 'Did he see his shadow? Either way, winter isn\'t done with Indiana.',
+    c('#111a20', '#f0f6f8', '#c9a26b', '#dcc097', '#9fd0e8', '#6f8fa8', '#e2ecf0'), 'snow', 'fall',
+    ['Six more weeks of winter, or early spring?', 'Team snow or team sunshine?', 'What are you most ready for when it warms up?']),
+  look('presidents', "Presidents' Day", 'Hail to the chief', "Presidents' Day", 'A day off for some, a mattress sale for all.',
+    c('#0d1322', '#f3f5fb', '#f3d27a', '#f8e2a8', '#e2574c', '#3f62b5', '#dfe6f5'), 'star', 'twinkle',
+    ['Who would you put on Mount Rushmore?', 'If you were president for a day, what is the first thing you would do?', 'Day off today, or working?']),
+  look('mardigras', 'Mardi Gras', 'Fat Tuesday', 'Happy Mardi Gras', 'Beads, masks and king cake. Let the good times roll.',
+    c('#150c22', '#f8f2ff', '#f2c84a', '#f8dc80', '#4fcf7a', '#8a4fd8', '#eadcf8'), 'confetti', 'fall',
+    ['Who got the baby in the king cake?', 'Purple, green or gold?', 'What are you giving up tomorrow?']),
+  look('spring', 'First day of spring', 'Thaw', 'First day of spring', 'Coats off, windows open, something green coming up.',
+    c('#111b14', '#f3faf2', '#8fd18a', '#b4e3b0', '#ffb8c9', '#f2d46b', '#e3f2dc'), 'petal', 'fall',
+    ['First sign of spring near you?', 'What are you planting?', 'Share a photo of something blooming.']),
+  look('taxday', 'Tax Day', 'Paid in full', 'Tax Day', 'Death and taxes. At least one of them is done for the year.',
+    c('#101a14', '#f1f7f1', '#8fcf8a', '#b4e0b0', '#f2d46b', '#5f8f6a', '#dfecdc'), 'confetti', 'fall',
+    ['Refund or pay up?', 'What would you do with a surprise refund?', 'Who files in January and who files today?']),
+  look('cinco', 'Cinco de Mayo', 'Fiesta', 'Happy Cinco de Mayo', 'Tacos, chips and salsa, and something cold with lime.',
+    c('#1c100c', '#fdf3e6', '#ff8a3c', '#ffad73', '#3fc78a', '#e8384f', '#fbe3c6'), 'confetti', 'fall',
+    ['Tacos: hard shell or soft?', 'Best Mexican restaurant near you?', 'Salsa: mild, medium or hot?']),
+  look('derby', 'Derby Day', 'Run for the roses', 'Derby Day', 'Big hats, red roses and the fastest two minutes in sports.',
+    c('#161a12', '#f8f6ee', '#e8384f', '#f06a7c', '#f2d27a', '#4f9e6a', '#f2e6d0'), 'petal', 'fall',
+    ['Pick your horse by name. Go.', 'Who has the best Derby hat?', 'Ever been to Churchill Downs?']),
+  look('flagday', 'Flag Day', 'Stars and stripes', 'Flag Day', 'Long may she wave.',
+    c('#0c1226', '#f3f5ff', '#ff6b6b', '#ff9696', '#f5f7ff', '#3d6fd8', '#dfe7ff'), 'star', 'twinkle',
+    ['Is there a flag on your porch?', 'Favorite patriotic song?', 'Share a photo with a flag in it.']),
+  look('juneteenth', 'Juneteenth', 'Freedom day', 'Juneteenth', 'Celebrating freedom, with good food and good company.',
+    c('#14100c', '#faf3e8', '#f2c14e', '#f7d684', '#e8384f', '#3f9e5a', '#f2e2c6'), 'star', 'twinkle',
+    ['What does freedom mean to you?', 'What is on the cookout menu today?', 'What is something you learned about history this year?']),
+  look('labor', 'Labor Day', 'Last splash', 'Happy Labor Day', 'Summer\'s last long weekend. Fire up the grill one more time.',
+    c('#0f1820', '#f2f7fb', '#f2a65a', '#f7c48c', '#7fc8e8', '#3f7f9e', '#e0ecf2'), 'bubble', 'rise',
+    ['Last cookout of summer: what is on the grill?', 'Best thing you did this summer?', 'First job you ever had?']),
+  look('winter', 'First day of winter', 'Longest night', 'First day of winter', 'The shortest day of the year. Light a fire and stay in.',
+    c('#0c1320', '#f0f5fc', '#a8d0f2', '#c8e2f8', '#f2e2b0', '#5f7fb5', '#dfe8f5'), 'snow', 'fall',
+    ['Snow: love it or done with it already?', 'Best thing to do on a snow day?', 'Hot chocolate or cider?']),
   // Not on the calendar by rule: the family's beach week and the day of a get-together (see specialDay).
   look('beach', 'Beach week', 'Toes in the sand', 'Beach week!', 'Sunscreen on, chairs out, tide coming in.',
     c('#08191e', '#effbfa', '#ffc46b', '#ffd899', '#ff8f7a', '#3fc7c9', '#fbe9cf'), 'bubble', 'rise',
@@ -104,7 +141,8 @@ export const DAY_LOOKS: DayLook[] = [
 const BY_KEY = Object.fromEntries(DAY_LOOKS.map((l) => [l.key, l]))
 
 /** Looks whose painted art (public/art/bg-day-<key>.webp, hero-day-<key>.webp) exists; any other uses the month's. */
-export const DAY_ART = new Set<string>(DAY_LOOKS.map((l) => l.key))
+const UNPAINTED = ['mlk', 'groundhog', 'presidents', 'mardigras', 'spring', 'taxday', 'cinco', 'derby', 'flagday', 'juneteenth', 'labor', 'winter']
+export const DAY_ART = new Set<string>(DAY_LOOKS.map((l) => l.key).filter((k) => !UNPAINTED.includes(k)))
 
 const pad = (n: number) => String(n).padStart(2, '0')
 export const dayKey = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
@@ -127,7 +165,12 @@ function easter(y: number): [number, number] {
 function calendar(y: number): Record<string, string> {
   const [em, ed] = easter(y)
   const memorial = nth(y, 5, 1, -1), thanks = nth(y, 11, 4, 4), labor = nth(y, 9, 1, 1)
+  const fat = new Date(y, em - 1, ed - 47) // Mardi Gras: 47 days before Easter
+  const mardi: [number, number, string] = [fat.getMonth() + 1, fat.getDate(), 'mardigras']
   const list: [number, number, string][] = [
+    [2, 2, 'groundhog'], [4, 15, 'taxday'], [5, 5, 'cinco'], [6, 14, 'flagday'], [3, 20, 'spring'], [12, 21, 'winter'],
+    [1, nth(y, 1, 1, 3), 'mlk'], [2, nth(y, 2, 1, 3), 'presidents'], [5, nth(y, 5, 6, 1), 'derby'], [6, 19, 'juneteenth'],
+    [9, labor, 'labor'], mardi,
     [3, 14, 'pi'], [4, 22, 'earth'], [6, 21, 'summer'], [9, 22, 'fall'], [4, 1, 'aprilfools'],
     [2, nth(y, 2, 0, 2), 'superbowl'], [5, memorial - 1, 'indy500'], [9, labor + 6, 'grandparents'],
     [11, thanks + 1, 'blackfriday'],

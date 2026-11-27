@@ -10,6 +10,7 @@ import PullToRefresh from './PullToRefresh'
 import { scroller } from '../lib/scroller'
 import { applyTheme, useTheme } from '../lib/theme'
 import { loadBirthdays } from '../lib/birthdays'
+import { loadGames } from '../lib/games'
 import SeasonSky from './SeasonSky'
 
 const NAV = [
@@ -29,7 +30,11 @@ export default function Layout({ children }: { children: ReactNode }) {
   useEffect(() => { scroller().scrollTo(0, 0) }, [pathname])
   // Whose birthday is when: fetched once signed in, so the site can dress up on the day.
   const myId = me?.id
-  useEffect(() => { if (myId) loadBirthdays().then((changed) => { if (changed) applyTheme() }) }, [myId])
+  useEffect(() => {
+    if (!myId) return
+    loadBirthdays().then((changed) => { if (changed) applyTheme() })
+    loadGames().then((changed) => { if (changed) applyTheme() }) // Purdue's schedules, for game days
+  }, [myId])
   // iOS pans the whole document up to show the keyboard and can leave it there once the keyboard closes.
   useEffect(() => {
     const settle = () => setTimeout(() => { if (window.scrollY) window.scrollTo(0, 0) }, 100)

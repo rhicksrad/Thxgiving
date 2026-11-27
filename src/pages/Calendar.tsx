@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router'
-import { CalendarPlus, ChevronLeft, ChevronRight, PartyPopper, Repeat, Star, Trash2, Users } from 'lucide-react'
+import { CalendarPlus, ChevronLeft, ChevronRight, PartyPopper, Repeat, Star, Trash2, Users, Trophy } from 'lucide-react'
 import { api, seg } from '../lib/api'
 import { useAuth } from '../auth'
 import { dateInput, gatheringTime } from '../lib/format'
 import { holidays } from '../lib/holidays'
+import { gamesOn, gameTime, gameTitle, useGames, type Game } from '../lib/games'
 import { useLiveTable, upsertById } from '../lib/realtime'
 import type { FamilyEvent, Gathering } from '../lib/types'
 import Spot from '../components/Spot'
@@ -12,6 +13,7 @@ import Spot from '../components/Spot'
 /** One thing on a day: a holiday, a get-together (from its own page), or something someone added. */
 type Item =
   | { kind: 'holiday'; key: string; title: string }
+  | { kind: 'game'; key: string; title: string; game: Game }
   | { kind: 'gathering'; key: string; title: string; time: string; id: string }
   | { kind: 'event'; key: string; title: string; time: string | null; ev: FamilyEvent; age?: number }
 
@@ -50,10 +52,12 @@ export default function Calendar() {
     onResync: load,
   })
 
+  const games = useGames() // Purdue football and basketball, from the live schedule
   // Everything on a given day, holidays first, then by time.
   const itemsOn = useCallback((k: string): Item[] => {
     const { y } = parse(k)
     const out: Item[] = holidays(y).filter((h) => h.day === k).map((h) => ({ kind: 'holiday', key: `h:${h.day}`, title: h.name }))
+    for (const g of gamesOn(k)) out.push({ kind: 'game', key: `p:${g.id}`, title: gameTitle(g), game: g })
     for (const g of gatherings) {
       if (dateInput(g.starts_at) === k) out.push({ kind: 'gathering', key: `g:${g.id}`, title: g.title, time: gatheringTime(g), id: g.id })
     }
@@ -65,7 +69,7 @@ export default function Calendar() {
     }
     const t = (i: Item) => (i.kind === 'holiday' ? '' : i.kind === 'event' ? i.time ?? '' : '')
     return out.sort((a, b) => t(a).localeCompare(t(b)))
-  }, [events, gatherings])
+  }, [events, gatherings, games])
 
   // The month grid: whole weeks, Sunday first.
   const cells = useMemo(() => {
@@ -86,6 +90,7 @@ export default function Calendar() {
       const k = dateInput(new Date(Date.UTC(y, m - 1, d + i, 12)).toISOString())
       for (const item of itemsOn(k)) {
         const id = item.kind === 'event' ? item.ev.id : item.key
+        if (item.kind === 'game' && out.filter((o) => o.item.kind === 'game').length >= 2) continue // games don't crowd out the family's own
         if (out.length < 8 && !seen.has(id)) { seen.add(id); out.push({ day: k, item }) }
       }
     }
@@ -132,7 +137,7 @@ export default function Calendar() {
             })}
           </div>
           <div className="cal-legend" aria-hidden="true">
-            <span><i className="holiday" />Holiday</span><span><i className="gathering" />Get-together</span><span><i className="event" />Family event</span>
+            <span><i className="holiday" />Holiday</span><span><i className="gathering" />Get-together</span><span><i className="event" />Family event</span><span><i className="game" />Purdue game</span>
           </div>
         </section>
 
@@ -158,12 +163,13 @@ export default function Calendar() {
 }
 
 function ItemLine({ item }: { item: Item }) {
-  const Icon = item.kind === 'holiday' ? Star : item.kind === 'gathering' ? Users : item.ev.yearly ? Repeat : PartyPopper
+  const Icon = item.kind === 'holiday' ? Star : item.kind === 'game' ? Trophy : item.kind === 'gathering' ? Users : item.ev.yearly ? Repeat : PartyPopper
   return (
     <span className={`cal-item ${item.kind}`}>
       <Icon size={15} aria-hidden="true" />
       <span className="cal-item-title">{item.title}{item.kind === 'event' && item.age ? ` (${item.age} yrs)` : ''}</span>
       {item.kind === 'gathering' && <span className="muted small">{item.time}</span>}
+      {item.kind === 'game' && <span className="muted small">{item.game.result ?? gameTime(item.game)}</span>}
       {item.kind === 'event' && item.time && <span className="muted small">{clock(item.time)}</span>}
     </span>
   )

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { AtSign, Bell, Cake, Camera, PartyPopper, HandHelping, Image, MessageCircle, MessageSquare, SmilePlus, UserPlus, UtensilsCrossed, type LucideIcon } from 'lucide-react'
+import { AtSign, Bell, Cake, Camera, PartyPopper, Trophy, HandHelping, Image, MessageCircle, MessageSquare, SmilePlus, UserPlus, UtensilsCrossed, type LucideIcon } from 'lucide-react'
 import { api, seg } from '../lib/api'
 import { useLiveTable } from '../lib/realtime'
 import { mentionsMe, plainMentions } from '../lib/mentions'
@@ -9,6 +9,8 @@ import type { ListItem, Message, Photo, PhotoComment, Profile, Reaction } from '
 import { useAuth } from '../auth'
 import { birthdaysOn, useBirthdays } from '../lib/birthdays'
 import { isAnniversary, useTheme } from '../lib/theme'
+import { gamesOn, gameTime, gameTitle, useGames } from '../lib/games'
+import { dayKey } from '../lib/days'
 import { Avatar, nameOf } from './Avatar'
 
 type Post = Pick<Message, 'id' | 'gathering_id' | 'author_id' | 'body' | 'created_at'>
@@ -17,7 +19,7 @@ type Pic = Pick<Photo, 'id' | 'gathering_id' | 'uploader_id' | 'created_at'>
 type Reacted = Pick<Reaction, 'id' | 'target_type' | 'target_id' | 'user_id' | 'emoji' | 'created_at'>
 type Comment = Pick<PhotoComment, 'id' | 'photo_id' | 'author_id' | 'body' | 'created_at'>
 
-type Kind = 'bday' | 'day' | 'join' | 'tag' | 'chat' | 'food' | 'ask' | 'photo' | 'react' | 'comment'
+type Kind = 'bday' | 'day' | 'game' | 'join' | 'tag' | 'chat' | 'food' | 'ask' | 'photo' | 'react' | 'comment'
 type Activity = {
   key: string; kind: Kind; at: string; who: string; name?: string; gatheringId: string | null; text: string
   target?: { type: Reaction['target_type']; id: string } // reactions and comments: the thing to open
@@ -27,7 +29,7 @@ const KEEP = 30 // per source, and the most the bell lists
 const PHOTO_BURST = 10 * 60_000 // photos one person adds to one place within 10 minutes show as one line
 
 const ICONS: Record<Kind, LucideIcon> = {
-  bday: Cake, day: PartyPopper, join: UserPlus, tag: AtSign, chat: MessageCircle, food: UtensilsCrossed, ask: HandHelping, photo: Camera,
+  bday: Cake, day: PartyPopper, game: Trophy, join: UserPlus, tag: AtSign, chat: MessageCircle, food: UtensilsCrossed, ask: HandHelping, photo: Camera,
   react: SmilePlus, comment: MessageSquare,
 }
 const THING: Record<Reaction['target_type'], string> = { photo: 'your pic', message: 'your message', comment: 'your comment' }
@@ -68,6 +70,7 @@ export default function ActivityBell() {
   const myId = me?.id
   const birthdays = useBirthdays()
   const special = useTheme().day
+  const games = useGames()
 
   useEffect(() => {
     if (!myId) return
@@ -136,6 +139,12 @@ export default function ActivityBell() {
         name: 'Hicks Family', text: `${special.tagline.replace(/!$/, '')}! ${special.greeting}`,
       })
     }
+    for (const g of gamesOn(dayKey(day))) {
+      out.push({
+        key: `game:${g.id}`, kind: 'game', at: day.toISOString(), who: '', gatheringId: null, name: 'Boiler up!',
+        text: `${gameTitle(g)} today${g.result ? `. Final: ${g.result}` : `, ${gameTime(g)}`}.`,
+      })
+    }
     for (const m of posts) {
       const tag = mentionsMe(m.body, myId)
       out.push({
@@ -174,7 +183,7 @@ export default function ActivityBell() {
       })
     }
     return out.sort((a, b) => b.at.localeCompare(a.at)).slice(0, KEEP)
-  }, [profiles, posts, added, pics, reacts, comments, myId, birthdays, special])
+  }, [profiles, posts, added, pics, reacts, comments, myId, birthdays, special, games])
 
   useEffect(() => {
     if (!open) return
@@ -205,14 +214,14 @@ export default function ActivityBell() {
       if (!data) return
       return navigate(data.gathering_id ? `/g/${data.gathering_id}?tab=chat` : '/chat')
     }
-    if (a.kind === 'bday' || a.kind === 'day') return navigate('/chat')
+    if (a.kind === 'bday' || a.kind === 'day' || a.kind === 'game') return navigate('/chat')
     if (a.kind === 'join') return navigate('/family')
     if (a.kind === 'photo') return navigate(a.gatheringId ? `/g/${a.gatheringId}?tab=pics` : '/gallery')
     const tab = a.kind === 'tag' ? 'chat' : a.kind === 'ask' ? 'asks' : a.kind
     navigate(a.gatheringId ? `/g/${a.gatheringId}?tab=${tab}` : '/chat')
   }
   const where = (a: Activity) =>
-    a.kind === 'bday' || a.kind === 'day' ? ' · Today' : a.kind === 'join' || a.kind === 'react' ? '' : a.kind === 'comment' ? ' · Gallery' : a.gatheringId ? ` · ${gatherings[a.gatheringId] ?? 'a get-together'}` : a.kind === 'photo' ? ' · Gallery' : ' · Family chat'
+    a.kind === 'bday' || a.kind === 'day' || a.kind === 'game' ? ' · Today' : a.kind === 'join' || a.kind === 'react' ? '' : a.kind === 'comment' ? ' · Gallery' : a.gatheringId ? ` · ${gatherings[a.gatheringId] ?? 'a get-together'}` : a.kind === 'photo' ? ' · Gallery' : ' · Family chat'
 
   return (
     <div className="bell-wrap" ref={box}>
@@ -234,7 +243,7 @@ export default function ActivityBell() {
                   <button className={a.at > seen ? 'new' : ''} onClick={() => go(a)}>
                     <span className="bell-head">
                       <Avatar p={who} size={18} className="inline" /><b>{a.name ?? nameOf(who)}</b>
-                      <span className="muted">{a.kind === 'bday' || a.kind === 'day' ? where(a) : `${where(a)} · ${when(a.at)}`}</span>
+                      <span className="muted">{a.kind === 'bday' || a.kind === 'day' || a.kind === 'game' ? where(a) : `${where(a)} · ${when(a.at)}`}</span>
                     </span>
                     <span className="bell-body">
                       <Icon size={13} className="bell-kind" aria-hidden="true" />

@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import { BIRTHDAY_MARK, MONTH_MARKS, PARTICLES, type ParticleKind } from './marks'
+import { gameLook, gameTime, gameTitle, gameToday, SPORT_NAME, type Game } from './games'
 import { DAY_ART, specialDay, type DayLook } from './days'
 import { birthdaysOn, PARTY, previewBirthday, type Birthday } from './birthdays'
 
@@ -29,6 +30,7 @@ export type Theme = {
   motion: 'fall' | 'rise' | 'twinkle' | 'sway'
   prompts: string[]        // the family chat's question of the day
   mark: string             // emblem SVG (64×64 grid)
+  game?: Game              // set on a Purdue game day
   day?: DayLook            // set on a holiday or special day: its own look for the day
   birthday?: Birthday      // set on someone's birthday: the site wears their look for the day
   art?: string             // the painted art's file key, when it isn't the month's own
@@ -268,12 +270,27 @@ function birthdayTheme(base: Theme, b: Birthday): Theme {
   }
 }
 
-/** Today's look: a birthday or anniversary first, then a holiday or special day, else the month. A pinned month wins over all. */
+/** Today's look: a birthday or anniversary first, then a holiday or special day, then a Purdue game day, else the month. A pinned month wins over all. */
 function pick(): Theme {
   const base = THEMES[currentMonth() - 1]
   const b = previewBirthday() ?? (pinned() ? null : birthdaysOn()[0])
   if (b) return birthdayTheme(base, b)
   const day = pinned() ? null : specialDay()
+  const game = pinned() || day ? null : gameToday()
+  if (game) {
+    const g = gameLook(game)
+    return {
+      ...base, name: g.name, tagline: 'Boiler up!', colors: g.colors,
+      greeting: `${gameTitle(game)} today${game.result ? `. Final: ${game.result}` : game.timed ? ` at ${gameTime(game)}` : ''}.`,
+      stripe: ['#cfb991', '#000000', g.colors.rush, '#000000'], particle: 'star', motion: 'twinkle',
+      prompts: [
+        `It's game day: ${gameTitle(game)}. Score predictions?`,
+        `Where is everybody watching Purdue ${SPORT_NAME[game.sport]} today?`,
+        'Best Purdue game you ever saw?',
+      ],
+      game, art: g.art,
+    }
+  }
   if (!day) return base
   const cs = day.colors
   return {
@@ -282,7 +299,7 @@ function pick(): Theme {
     day, art: DAY_ART.has(day.key) ? `day-${day.key}` : undefined,
   }
 }
-const sig = (t: Theme) => `${t.month}:${t.day?.key ?? ''}:${t.day?.title ?? ''}:${t.birthday ? JSON.stringify(t.birthday) : ''}`
+const sig = (t: Theme) => `${t.month}:${t.game ? t.game.id + (t.game.result ?? '') : ''}:${t.day?.key ?? ''}:${t.day?.title ?? ''}:${t.birthday ? JSON.stringify(t.birthday) : ''}`
 
 let active: Theme = pick()
 const listeners = new Set<() => void>()
@@ -298,6 +315,7 @@ export function applyTheme() {
   set('--stripe', `linear-gradient(90deg, ${active.stripe.map((s, i) => `${s} ${(i / active.stripe.length) * 100}% ${((i + 1) / active.stripe.length) * 100}%`).join(', ')})`)
   root.dataset.month = active.key
   if (active.birthday) root.dataset.birthday = 'true'; else delete root.dataset.birthday
+  if (active.game) root.dataset.game = active.game.sport; else delete root.dataset.game
   if (active.day) root.dataset.day = active.day.key; else delete root.dataset.day
   // The painted art (public/art, made with Codex: scripts/make-art.mjs): this month's, or the birthday's own.
   // A birthday look with no painting of its own yet goes without, so Christmas trees don't crash a July party.
