@@ -111,6 +111,18 @@ export const BIRTHDAYS = [
   { key: 'grandma', colors: { bg: '#1c120d', gold: '#e9b25a', rush: '#e58a8f', aged: '#b5673a', dust: '#f6e8d2' },
     scene: 'the coziest grandma\'s house at evening seen through a warm window: a rocking chair with a patchwork quilt, a pie and cookies cooling on the sill, a knitting basket with yarn, a teapot, flowers in a vase and framed family photos on the wall (no faces in detail). Rich, warm and loving.',
     motif: 'all the grandma goodness: a lattice-top cherry pie and a plate of cookies, a flowered teapot and teacup, a knitting basket with yarn and needles, a patchwork quilt corner, roses in a vase and a little framed photo (no faces in detail).' },
+  { key: 'dogs-plants', colors: { bg: '#10170e', gold: '#f2c45a', rush: '#e08a5a', aged: '#5fa65a', dust: '#f4ecd8' },
+    scene: 'a cozy family living room at evening full of houseplants in terracotta pots, two happy dogs lounging on a rug by the couch, warm lamp light, framed family photos on the wall (no faces in detail).',
+    motif: 'two happy dogs curled up together among potted houseplants in terracotta pots (monstera, pothos, snake plant), a dog bone and a little framed photo (no faces in detail).' },
+  { key: 'storm-chaser', colors: { bg: '#0b0f22', gold: '#f5d64a', rush: '#8fc0ef', aged: '#4a4fa8', dust: '#e6ecf8' },
+    scene: 'a dramatic rotating supercell thunderstorm over open plains at dusk, a fork of lightning, a storm-chase pickup truck parked on a straight country road with a small weather dish on its roof. No readable text.',
+    motif: 'a fork of yellow lightning out of a dark storm cloud, a weather vane, a small radar dish, a windsock and a storm-chase pickup truck. No readable text.' },
+  { key: 'newsroom-dogs', colors: { bg: '#0a1124', gold: '#f2c35a', rush: '#e5414a', aged: '#3a5fb8', dust: '#eef1f8' },
+    scene: 'a TV news studio after hours: studio cameras, a glowing anchor desk, a wall of monitors showing only abstract colored shapes, a red on-air light with no lettering, and two happy dogs lounging by the desk. No readable text, no logos.',
+    motif: 'a studio TV camera, a desk microphone, a red on-air light with no lettering, a clipboard with blank pages, and a happy dog wearing headphones. No readable text, no logos.' },
+  { key: 'gamer-youtuber', colors: { bg: '#120a1f', gold: '#5ff28a', rush: '#ff5fb8', aged: '#8a4fe0', dust: '#f1e8ff' },
+    scene: 'a gamer and video creator setup in a dark room: an RGB-lit desk glowing violet, green and pink, a monitor with abstract shapes, a game controller, a headset, a streaming microphone on an arm and a ring light. No brand logos, no text.',
+    motif: 'a game controller, a gaming headset, a streaming microphone, a ring light, a generic rounded play-button shape and a thumbs-up shape, with neon glow. No brand logos, no text.' },
 ]
 
 export const JOBS = [
