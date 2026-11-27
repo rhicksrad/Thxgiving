@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useLocation } from 'react-router'
-import { CalendarDays, Gift, House, Images, LockKeyhole, Menu, MessagesSquare, Users, X } from 'lucide-react'
+import { CalendarDays, Gift, House, Images, LockKeyhole, Menu, MessagesSquare, Trophy, Users, X } from 'lucide-react'
 import { useAuth } from '../auth'
 import Logo from './Logo'
 import { Avatar, badgeFor, DEFAULT_BADGE } from './Avatar'
@@ -19,6 +19,7 @@ const NAV = [
   { to: '/chat', label: 'Chat', Icon: MessagesSquare },
   { to: '/gallery', label: 'Photos', Icon: Images },
   { to: '/gifts', label: 'Gift lists', Icon: Gift },
+  { to: '/pickem', label: "Pick'em", Icon: Trophy },
   { to: '/family', label: 'Family', Icon: Users },
   { to: '/mine', label: 'My page', Icon: LockKeyhole },
 ]

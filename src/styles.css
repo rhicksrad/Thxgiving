@@ -1085,3 +1085,50 @@ body::before {
 .chip.on svg.lucide { color: var(--ink); }
 .quick .quick-icon { display: grid; place-items: center; color: var(--gold); }
 @media (min-width: 761px) { .quick-links { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); } }
+/* ---------- Pick'em ---------- */
+.pk-summary { display: flex; flex-wrap: wrap; gap: 8px; }
+.pk-summary .chip b { color: var(--text); }
+.pk-open { color: var(--gold); border-color: var(--gold-line); background: var(--gold-soft); }
+.pk-tabs { display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; max-width: 420px; border-radius: 12px; }
+.pk-tabs button { justify-content: center; padding: 9px 8px; font-size: 13.5px; }
+.pk-tabs button.on { background: var(--gold); color: var(--ink); }
+.pk-day { margin-top: 6px; }
+.pk-game { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-top: 3px solid var(--team); }
+.pk-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.pk-top .muted { display: inline-flex; align-items: center; gap: 4px; }
+.pk-tag { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-2); }
+.pk-tag i { width: 10px; height: 10px; border-radius: 50%; background: var(--team); box-shadow: 0 0 0 3px color-mix(in srgb, var(--team) 25%, transparent); }
+.pk-sides { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pk-side { position: relative; display: grid; grid-template-columns: 1fr auto; grid-template-areas: 'where where' 'team line' 'name score' 'who who';
+  align-items: baseline; gap: 2px 8px; padding: 10px 12px; text-align: left; font: inherit; color: var(--text); cursor: pointer;
+  background: var(--card-2); border: 1.5px solid var(--line-2); border-radius: 14px; transition: border-color 0.15s, background 0.15s, transform 0.1s; }
+.pk-side:hover:not(:disabled) { border-color: var(--team); }
+.pk-side:active:not(:disabled) { transform: scale(0.98); }
+.pk-side:disabled { cursor: default; }
+.pk-side.on { border-color: var(--team); background: color-mix(in srgb, var(--team) 16%, var(--card-2)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--team) 18%, transparent); }
+.pk-where { grid-area: where; font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.pk-team { grid-area: team; font-family: var(--display); font-size: 22px; font-weight: 800; line-height: 1.1; }
+.pk-line { grid-area: line; font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--team); }
+.pk-name { grid-area: name; font-size: 12.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pk-score { grid-area: score; font-family: var(--display); font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.pk-check { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--team); color: var(--ink); }
+.pk-side.on .pk-line { margin-right: 26px; }
+.pk-who { grid-area: who; display: flex; flex-wrap: wrap; align-items: center; gap: 3px; margin-top: 6px; }
+.pk-foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 12px; }
+.pk-result { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-weight: 700; font-size: 12.5px; }
+.pk-result.win { background: var(--ok-soft); color: var(--ok); }
+.pk-result.loss { background: var(--bad-soft); color: var(--bad); }
+.pk-result.push { background: var(--warn-soft); color: var(--warn); }
+.pk-standings ol { list-style: none; margin: 0 0 10px; padding: 0; display: flex; flex-direction: column; }
+.pk-standings li { display: flex; align-items: center; gap: 10px; padding: 9px 4px; border-bottom: 1px solid var(--line); }
+.pk-standings li:last-child { border-bottom: 0; }
+.pk-standings li.me { background: var(--gold-soft); border-radius: 10px; }
+.pk-rank { width: 22px; text-align: center; font-family: var(--display); font-weight: 800; color: var(--gold); }
+.pk-who-name { font-weight: 600; }
+.pk-rec { font-weight: 800; font-variant-numeric: tabular-nums; }
+.pk-pct { width: 40px; text-align: right; }
+@media (max-width: 560px) {
+  .pk-side { padding: 9px 10px; }
+  .pk-team { font-size: 19px; }
+  .pk-line { font-size: 16px; }
+}

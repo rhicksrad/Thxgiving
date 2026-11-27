@@ -8,6 +8,7 @@
 // sign-in ones and signed file links checks that token and that the number is still on the family list.
 import { CORS, fail, json, text } from './http.js'
 import * as files from './files.js'
+import { routePickem } from './pickem.js'
 
 export { Live } from './live.js'
 
@@ -76,6 +77,10 @@ async function route(req, env, ctx, url) {
     await db.run('update users set password_hash = ? where id = ?', await hashPassword(checkNewPassword(password)), uid)
     return json({ ok: true })
   }
+
+  // ---- Pick'em against the spread (worker/pickem.js) ----
+  if (a === 'pickem') return routePickem(req, env, ctx, uid, parts, url)
+  // ---- end Pick'em ----
 
   // Your private page. Only ever your own row, and never broadcast: nobody else's screen hears about it.
   if (at('GET', 'me', 'page')) {
