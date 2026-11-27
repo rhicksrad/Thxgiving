@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Check, Lock, Minus, Trophy, X } from 'lucide-react'
+import { Check, Clock, Lock, Minus, Trophy, X } from 'lucide-react'
 import { api, seg } from '../lib/api'
 import { useAuth } from '../auth'
 import { Avatar, nameOf } from '../components/Avatar'
@@ -141,11 +141,11 @@ function GameCard({ g, profiles, busy, onPick }: {
     return (
       <button type="button" className={`pk-side ${picked ? 'on' : ''}`} disabled={g.locked || g.home_line == null || busy}
         aria-pressed={picked} onClick={() => onPick(g, picked ? null : s)}>
-        <span className="pk-where"><TeamLogo src={s === 'home' ? g.home_logo : g.away_logo} />{s === 'home' ? 'Home' : 'Away'}</span>
-        <span className="pk-team">{abbr}</span>
-        <span className="pk-line">{l == null ? '—' : fmt(l)}</span>
+        <span className="pk-where">{s === 'home' ? 'Home' : 'Away'}</span>
+        <TeamLogo src={s === 'home' ? g.home_logo : g.away_logo} fallback={abbr} />
         <span className="pk-name">{s === 'home' ? g.home : g.away}</span>
         {final && <span className="pk-score">{s === 'home' ? g.home_score : g.away_score}</span>}
+        <span className="pk-line">{l == null ? 'No line yet' : fmt(l)}</span>
         {picked && <span className="pk-check"><Check size={14} aria-hidden="true" /></span>}
         {g.locked && who.length > 0 && (
           <span className="pk-who" aria-label={`Picked by ${who.map((p) => nameOf(profiles[p.user_id])).join(', ')}`}>
@@ -161,12 +161,12 @@ function GameCard({ g, profiles, busy, onPick }: {
     <section className="card pk-game" style={{ ['--team' as string]: team.colors.gold, ['--team-bg' as string]: team.colors.bg }}>
       <div className="pk-top">
         <span className="pk-tag"><i />{team.what}</span>
-        <span className="muted small">
-          {g.status === 'in' ? 'In progress' : final ? 'Final' : timeFmt.format(new Date(g.starts_at))}
+        <span className="pk-time">
+          {g.status === 'in' ? 'In progress' : final ? 'Final' : <><Clock size={13} aria-hidden="true" />{timeFmt.format(new Date(g.starts_at))}</>}
           {g.locked && !final && <><Lock size={12} aria-hidden="true" /> locked</>}
         </span>
       </div>
-      <div className="pk-sides">{side('away')}{side('home')}</div>
+      <div className="pk-sides">{side('away')}<span className="pk-at" aria-hidden="true">at</span>{side('home')}</div>
       <div className="pk-foot small">
         {g.home_line == null && !g.mine ? <span className="muted">Line not posted yet</span>
           : g.mine && g.home_line != null && g.mine.line !== g.home_line && !g.locked
@@ -185,11 +185,11 @@ function GameCard({ g, profiles, busy, onPick }: {
   )
 }
 
-/** A team's logo; it steps aside quietly if the picture doesn't load. */
-function TeamLogo({ src }: { src?: string | null }) {
+/** A team's logo, or its short letters in the same space when there's no picture to show. */
+function TeamLogo({ src, fallback }: { src?: string | null; fallback: string }) {
   const [bad, setBad] = useState(false)
-  if (!src || bad) return null
-  return <img className="team-logo" src={src} alt="" width={34} height={34} loading="lazy" decoding="async" onError={() => setBad(true)} />
+  if (!src || bad) return <span className="team-logo none">{fallback}</span>
+  return <img className="team-logo" src={src} alt="" width={52} height={52} loading="lazy" decoding="async" onError={() => setBad(true)} />
 }
 
 function Standings({ rows, profiles, meId }: { rows: Standing[]; profiles: ReturnType<typeof useAuth>['profiles']; meId?: string }) {
