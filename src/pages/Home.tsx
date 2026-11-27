@@ -64,7 +64,7 @@ export default function Home() {
       <section className="card welcome">
         <Logo size={84} className="welcome-mark" />
         <div className="welcome-text">
-          <span className="badge">{bday ? (anniv ? 'Anniversary' : 'Birthday') : theme.day ? theme.day.title : monthName} · {theme.name}</span>
+          <span className="badge">{bday ? (anniv ? 'Anniversary' : 'Birthday') : theme.day ? theme.day.title : theme.game ? 'Game day' : monthName} · {theme.name}</span>
           <h1 className="display">
             {bday ? (anniv ? `Happy anniversary, ${bday.name}!` : mine ? `Happy birthday, ${first ?? bday.name}!` : `It's ${bday.name}'s birthday!`)
               : first ? `Welcome home, ${first}` : 'Welcome home'}

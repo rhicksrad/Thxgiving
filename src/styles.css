@@ -1061,3 +1061,8 @@ body::before {
 /* ---------- April Fools' (theme.ts sets data-day): the name in the top bar reads backwards, the emblem hangs upside down ---------- */
 :root[data-day="aprilfools"] .brand-name { display: inline-block; transform: scaleX(-1); }
 :root[data-day="aprilfools"] .brand .logo { transform: rotate(180deg); }
+
+/* ---------- Purdue games on the calendar: old gold, whatever the month ---------- */
+.cal-chip.game { background: color-mix(in srgb, #cfb991 20%, transparent); color: #e3d2ae; border-left-color: #cfb991; }
+.cal-dots i.game, .cal-legend i.game { background: #cfb991; }
+.cal-item.game svg { color: #cfb991; }
