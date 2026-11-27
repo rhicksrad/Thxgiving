@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
-import { Download, HardDrive, Images } from 'lucide-react'
+import { CheckSquare, Download, HardDrive, Images, Share, X } from 'lucide-react'
 import { api } from '../lib/api'
 import { isPast, isToday, plural } from '../lib/format'
 import { useLiveTable, upsertById } from '../lib/realtime'
@@ -8,7 +8,7 @@ import type { Gathering, Photo } from '../lib/types'
 import { storageUsage, type Usage } from '../lib/storage'
 import { useAuth } from '../auth'
 import { nameOf } from '../components/Avatar'
-import { byShot, downloadAll, Lightbox, PhotoGrid, stackDupes, Uploader, useBackfillTakenAt, useStackKeys } from '../components/Photos'
+import { byShot, canShareFiles, downloadAll, Lightbox, photoFiles, PhotoGrid, stackDupes, Uploader, useBackfillTakenAt, useStackKeys } from '../components/Photos'
 
 export default function Gallery() {
   const [params, setParams] = useSearchParams()
@@ -28,7 +28,12 @@ export default function Gallery() {
     setOpenId(null)
     if (wantPhoto) setParams({ ...(filter !== 'all' ? { gathering: filter } : {}), ...(by !== 'all' ? { by } : {}) }, { replace: true })
   }
-  const [zipping, setZipping] = useState(false)
+  // Picking pics to save: the ids picked (null = not picking), and the files once they're fetched.
+  const [picked, setPicked] = useState<Set<string> | null>(null)
+  const [ready, setReady] = useState<File[] | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [saveErr, setSaveErr] = useState<string | null>(null)
+  const share = useMemo(canShareFiles, [])
   const [usage, setUsage] = useState<Usage | null>(null)
 
   const loadPhotos = useCallback(() => {
@@ -85,6 +90,35 @@ export default function Gallery() {
     : (gatherings.find(isToday) ?? gatherings.find(isPast) ?? gatherings[gatherings.length - 1])?.id ?? null
   const uploadable = gatherings.filter((g) => new Date(g.starts_at).getTime() < Date.now() + 86400000)
 
+  const stopPicking = () => { setPicked(null); setReady(null); setSaveErr(null) }
+  const toggle = (id: string) => {
+    setReady(null); setSaveErr(null)
+    setPicked((cur) => { const next = new Set(cur); if (next.has(id)) next.delete(id); else next.add(id); return next })
+  }
+  const pickedShots = shown.filter((p) => picked?.has(p.id))
+  // iPhone: the share sheet, where "Save N Images" adds them to Photos. A computer: download them.
+  const offer = async (files: File[]) => {
+    try {
+      await navigator.share({ files })
+      stopPicking()
+    } catch (e) {
+      const name = (e as Error)?.name
+      if (name === 'AbortError') return // they closed the sheet; keep the pick
+      if (name === 'NotAllowedError') { setReady(files); return } // getting them took too long for iOS: one more tap
+      setSaveErr('Couldn\'t open the save sheet. Try fewer at a time.')
+    }
+  }
+  const save = async () => {
+    if (ready) return offer(ready)
+    setSaving(true); setSaveErr(null)
+    try {
+      if (!share) { await downloadAll(pickedShots, gatheringsById, zipName); stopPicking(); return }
+      const files = await photoFiles(pickedShots, gatheringsById)
+      if (!files.length) { setSaveErr('Couldn\'t get those pics. Try again.'); return }
+      await offer(files)
+    } finally { setSaving(false) }
+  }
+
   const slug = (t: string) => t.toLowerCase().replace(/\W+/g, '-')
   const zipName = `family-${filter === 'all' ? 'all' : filter === 'none' ? 'other' : slug(gatheringsById[filter]?.title ?? 'gathering')}${
     by === 'all' ? '' : `-${slug(nameOf(profiles[by]))}`}.zip`
@@ -93,7 +127,7 @@ export default function Gallery() {
     <div className="stack-lg">
       <header className="page-head">
         <h1 className="display">Gallery</h1>
-        <p className="muted">Everyone's photos and videos, kept at full size. Download one, or a whole get-together at once.</p>
+        <p className="muted">Everyone's photos and videos, kept at full size. Tap Select to pick some and save them to your phone.</p>
       </header>
 
       {usage && <StorageMeter usage={usage} />}
@@ -116,15 +150,31 @@ export default function Gallery() {
           {people.map(([id, n]) => <option key={id} value={id}>{nameOf(profiles[id])} ({n})</option>)}
           {by !== 'all' && !people.some(([id]) => id === by) && <option value={by}>{nameOf(profiles[by])} (0)</option>}
         </select>
-        <button className="btn ghost" disabled={!shown.length || zipping}
-          onClick={async () => { setZipping(true); try { await downloadAll(shown, gatheringsById, zipName) } finally { setZipping(false) } }}>
-          <Download size={16} aria-hidden="true" />
-          {zipping ? 'Zipping…' : `Download ${plural(shown.length, 'file')}`}
-        </button>
+        {!picked && (
+          <button className="btn ghost" disabled={!shown.length} onClick={() => setPicked(new Set())}>
+            <CheckSquare size={16} aria-hidden="true" />Select
+          </button>
+        )}
       </div>
 
+      {picked && (
+        <div className="pick-bar card">
+          <span className="pick-count">{picked.size ? `${plural(picked.size, 'pic')} picked` : 'Tap pics to pick them'}</span>
+          <button className="btn ghost sm" onClick={() => { setReady(null); setPicked(picked.size === shown.length ? new Set() : new Set(shown.map((p) => p.id))) }}>
+            {picked.size === shown.length ? 'None' : 'All'}
+          </button>
+          <button className="btn gold sm" disabled={!picked.size || saving} onClick={save}>
+            {share ? <Share size={15} aria-hidden="true" /> : <Download size={15} aria-hidden="true" />}
+            {saving ? 'Getting them ready…' : ready ? 'Ready: tap to save' : share ? 'Save to Photos' : 'Download'}
+          </button>
+          <button className="btn ghost sm icon" aria-label="Stop picking" title="Stop picking" onClick={stopPicking}><X size={16} aria-hidden="true" /></button>
+          {saveErr && <p className="error small">{saveErr}</p>}
+        </div>
+      )}
+
       {photos === null ? <div className="loading">Loading pics…</div>
-        : shown.length ? <PhotoGrid photos={shown} gatherings={gatheringsById} onOpen={(i) => setOpenId(shown[i].id)} />
+        : shown.length ? <PhotoGrid photos={shown} gatherings={gatheringsById} selected={picked ?? undefined}
+            onOpen={(i) => (picked ? toggle(shown[i].id) : setOpenId(shown[i].id))} />
         : <div className="card empty"><Images size={26} aria-hidden="true" />Nothing here yet. Add the first photo above.</div>}
 
       {open >= 0 && (
