@@ -45,7 +45,10 @@
   --tabbar-h: 0px; /* the phone tab bar is gone (the menu button replaced it); kept so the chat heights still add up */
   --topbar-row: 64px;
   /* On an iPhone home-screen app the page runs under the clock and notch, so the top bar grows by that much. */
-  --topbar-h: calc(var(--topbar-row) + env(safe-area-inset-top, 0px));
+  /* iOS softens (blurs) whatever sits just under the clock in a home-screen app, to about 24px past the notch
+     area. --topbar-clear keeps the bar's name and buttons below that band; it is only set for that case (below). */
+  --topbar-clear: 0px;
+  --topbar-h: calc(var(--topbar-row) + var(--topbar-clear) + env(safe-area-inset-top, 0px));
   --shadow-pop: 0 16px 40px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.45);
   color-scheme: dark;
 }
@@ -118,10 +121,8 @@ html:has(.app) body { position: fixed; inset: 0; width: 100%; }
   position: relative; flex: none; z-index: 20;
   height: var(--topbar-h);
   display: flex; align-items: center; gap: 20px;
-  padding: env(safe-area-inset-top, 0px) 24px 0;
-  background: color-mix(in srgb, var(--bg) 90%, transparent);
-  backdrop-filter: saturate(140%) blur(12px);
-  -webkit-backdrop-filter: saturate(140%) blur(12px);
+  padding: calc(env(safe-area-inset-top, 0px) + var(--topbar-clear)) 24px 0;
+  background: var(--bg); /* solid: nothing scrolls behind it any more, so no blur of its own */
   border-bottom: 1px solid var(--line);
 }
 .topbar::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--stripe); background-size: 96px 100%; opacity: 0.75; }
@@ -144,7 +145,7 @@ html:has(.app) body { position: fixed; inset: 0; width: 100%; }
 
 @media (max-width: 760px) {
   :root { --topbar-row: 56px; }
-  .topbar { padding: env(safe-area-inset-top, 0px) 16px 0; }
+  .topbar { padding: calc(env(safe-area-inset-top, 0px) + var(--topbar-clear)) 16px 0; }
   .brand-name { font-size: 19px; }
   .me-chip { display: none; }
   .topbar { gap: 10px; }
@@ -1201,3 +1202,8 @@ body::before {
 .hero.looked .next-stats { color: color-mix(in srgb, var(--text) 80%, transparent); }
 .hero.looked .cd-cell { background: color-mix(in srgb, var(--look-bg) 82%, transparent); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
 .coming-stack { display: flex; flex-direction: column; gap: 14px; }
+
+/* iPhone home-screen app only (iOS, installed, with a notch): move the top bar's contents clear of iOS's blur under the clock. */
+@supports (-webkit-touch-callout: none) {
+  @media (display-mode: standalone) { :root { --topbar-clear: 22px; } }
+}
