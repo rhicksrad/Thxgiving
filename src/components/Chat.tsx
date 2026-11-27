@@ -1,5 +1,5 @@
 import { Fragment, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { ImagePlus, Megaphone, MessageCircle, SendHorizontal, X } from 'lucide-react'
+import { ImagePlus, Megaphone, SendHorizontal, X } from 'lucide-react'
 import { api, seg } from '../lib/api'
 import { uploadFile } from '../lib/storage'
 import { useLiveTable } from '../lib/realtime'
@@ -12,6 +12,7 @@ import { Avatar, nameOf } from './Avatar'
 import { useSignedUrls } from '../lib/signedUrls'
 import { useReactions, type Reactions } from '../lib/reactions'
 import { ReactButton, ReactionBar } from './Reactions'
+import Spot from './Spot'
 
 const PAGE = 100
 const MAX_IMAGE_MB = 15
@@ -194,7 +195,7 @@ export default function Chat({ gatheringId, placeholder, readOnlyNote }: { gathe
       <div className="chat-scroll" ref={scroller} onScroll={onScroll}>
         {msgs === null && <div className="loading">Loading chat…</div>}
         {hasMore && <button className="btn ghost sm older" onClick={loadOlder}>Load older messages</button>}
-        {msgs?.length === 0 && <div className="chat-empty"><MessageCircle size={26} aria-hidden="true" />No messages yet. Start it off.</div>}
+        {msgs?.length === 0 && <div className="chat-empty"><Spot name="chat" size={88} />No messages yet. Start it off.</div>}
         {msgs && <MessageList msgs={msgs} me={me} profiles={profiles} reactions={reactions} onRemove={remove} onImageLoad={onImageLoad} />}
       </div>
       {readOnlyNote && <div className="chat-note muted small">{readOnlyNote}</div>}

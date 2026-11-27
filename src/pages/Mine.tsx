@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { LockKeyhole } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAuth } from '../auth'
+import Spot from '../components/Spot'
 
 // Everyone's own private page. It starts blank: you type what you want it to be, and the next time the site is
 // updated, your page gets built from that (see `npm run pages` in worker/). Only you can open it.
@@ -105,7 +106,10 @@ export default function Mine() {
         </>
       ) : (
         <section className="card stack">
-          <h1 className="display">Your page</h1>
+          <div className="page-head with-spot">
+            <h1 className="display">Your page</h1>
+            <Spot name="mine" className="page-spot" />
+          </div>
           <p className="mine-private muted small"><LockKeyhole size={14} aria-hidden="true" />
             Only you can see this page. Nobody else in the family can open it.</p>
           <p>It's blank for now. Type what you want it to be, and the next time the site gets updated, it'll be made

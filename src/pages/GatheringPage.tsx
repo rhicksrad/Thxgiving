@@ -15,6 +15,7 @@ import RsvpCard, { headcount, useRsvps } from '../components/Rsvp'
 import Countdown from '../components/Countdown'
 import { byShot, Lightbox, PhotoGrid, stackDupes, Uploader, useStackKeys } from '../components/Photos'
 import { scroller } from '../lib/scroller'
+import Spot from '../components/Spot'
 
 type Tab = 'food' | 'asks' | 'chat' | 'pics'
 
@@ -141,7 +142,7 @@ export function Board({ gathering }: { gathering: Gathering }) {
           <Uploader gatherings={[gathering]} defaultGatheringId={id}
             onUploaded={(p) => setPhotos((cur) => (cur.some((x) => x.id === p.id) ? cur : [p, ...cur]))} />
           {photos.length ? <PhotoGrid photos={shots} gatherings={byId} onOpen={(i) => setOpenId(shots[i].id)} />
-            : <div className="empty"><Camera size={22} aria-hidden="true" />No photos yet. Add the first one!</div>}
+            : <div className="empty"><Spot name="photos" size={80} />No photos yet. Add the first one!</div>}
         </section>
       </div>
 

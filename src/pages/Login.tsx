@@ -3,7 +3,7 @@ import { api } from '../lib/api'
 import { cleanPhone, formatPhone } from '../lib/phone'
 import type { Profile } from '../lib/types'
 import { useAuth } from '../auth'
-import Logo from '../components/Logo'
+import { artUrl } from '../components/Spot'
 import SeasonSky from '../components/SeasonSky'
 import { useTheme } from '../lib/theme'
 
@@ -68,8 +68,8 @@ export default function Login() {
     <div className="login">
       <SeasonSky />
       <div className="login-hero">
-        <Logo size={96} />
-        <h1 className="display huge">Hicks<br />Family</h1>
+        <img className="login-art" src={artUrl('welcome')} width={1536} height={1024} alt="" aria-hidden="true" decoding="async" />
+        <h1 className="display huge">Hicks Family</h1>
         <p className="tagline">{theme.tagline}. Get-togethers, the family chat, and all the pictures, all year.</p>
       </div>
       <div className="card narrow login-card">

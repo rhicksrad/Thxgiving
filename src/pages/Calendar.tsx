@@ -7,6 +7,7 @@ import { dateInput, gatheringTime } from '../lib/format'
 import { holidays } from '../lib/holidays'
 import { useLiveTable, upsertById } from '../lib/realtime'
 import type { FamilyEvent, Gathering } from '../lib/types'
+import Spot from '../components/Spot'
 
 /** One thing on a day: a holiday, a get-together (from its own page), or something someone added. */
 type Item =
@@ -96,9 +97,12 @@ export default function Calendar() {
 
   return (
     <div className="stack-lg">
-      <header className="page-head">
-        <h1 className="display">Family calendar</h1>
-        <p className="muted">Birthdays, games, trips, anything. Everyone can add to it, and get-togethers and the big holidays are already on it.</p>
+      <header className="page-head with-spot">
+        <div>
+          <h1 className="display">Family calendar</h1>
+          <p className="muted">Birthdays, games, trips, anything. Everyone can add to it, and get-togethers and the big holidays are already on it.</p>
+        </div>
+        <Spot name="calendar" className="page-spot" />
       </header>
 
       <div className="cal-layout">

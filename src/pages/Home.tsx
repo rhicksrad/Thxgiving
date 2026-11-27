@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router'
-import { ArrowRight, CalendarDays, Camera, ChevronRight, Images, MapPin, MessageCircle, MessagesSquare, Plus, Users } from 'lucide-react'
+import { ArrowRight, Camera, ChevronRight, MapPin, MessageCircle, Plus, Users } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAuth } from '../auth'
 import { useTheme } from '../lib/theme'
@@ -10,6 +10,7 @@ import type { Gathering, GatheringStats } from '../lib/types'
 import { InstallBanner } from '../components/Install'
 import Logo from '../components/Logo'
 import Countdown from '../components/Countdown'
+import Spot from '../components/Spot'
 
 const byDate = (a: Gathering, b: Gathering) => a.starts_at.localeCompare(b.starts_at)
 
@@ -63,6 +64,7 @@ export default function Home() {
         <h2 className="section-title">Coming up</h2>
         {!gatherings ? <div className="loading">Loading…</div> : next ? <NextUp gathering={next} stats={stats[next.id]} /> : (
           <div className="card hero-empty">
+            <Spot name="gather" size={110} />
             <h3 className="display">Nothing on the calendar</h3>
             <p className="muted">Plan the next get-together below and everyone can sign up.</p>
           </div>
@@ -70,10 +72,10 @@ export default function Home() {
       </section>
 
       <nav className="quick-links">
-        <Link to="/calendar" className="card quick"><CalendarDays size={22} aria-hidden="true" /><span><b>Calendar</b><span className="muted small">Birthdays, plans and holidays</span></span></Link>
-        <Link to="/chat" className="card quick"><MessagesSquare size={22} aria-hidden="true" /><span><b>Family chat</b><span className="muted small">Talk about anything, any day</span></span></Link>
-        <Link to="/gallery" className="card quick"><Images size={22} aria-hidden="true" /><span><b>Photos</b><span className="muted small">Every get-together's pictures</span></span></Link>
-        <Link to="/family" className="card quick"><Users size={22} aria-hidden="true" /><span><b>Family</b><span className="muted small">Who's here, and your profile</span></span></Link>
+        <Link to="/calendar" className="card quick"><Spot name="calendar" size={72} /><span><b>Calendar</b><span className="muted small">Birthdays, plans and holidays</span></span></Link>
+        <Link to="/chat" className="card quick"><Spot name="chat" size={72} /><span><b>Family chat</b><span className="muted small">Talk about anything, any day</span></span></Link>
+        <Link to="/gallery" className="card quick"><Spot name="photos" size={72} /><span><b>Photos</b><span className="muted small">Every get-together's pictures</span></span></Link>
+        <Link to="/family" className="card quick"><Spot name="family" size={72} /><span><b>Family</b><span className="muted small">Who's here, and your profile</span></span></Link>
       </nav>
 
       {upcoming.length > 0 && (
