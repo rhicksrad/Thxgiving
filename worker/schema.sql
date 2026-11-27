@@ -296,3 +296,38 @@ create table if not exists gift_claims (
   user_id    text not null references users(id) on delete cascade,
   created_at text not null
 );
+-- ============================================================================
+-- Pick'em against the spread (worker/pickem.js). Games, lines and finals come from ESPN through the Worker.
+-- ============================================================================
+create table if not exists pickem_games (
+  id              text primary key,   -- ESPN event id
+  team            text not null,      -- fb | bb | bears | colts | chiefs
+  starts_at       text not null,
+  home            text not null,
+  away            text not null,
+  home_abbr       text,
+  away_abbr       text,
+  home_line       real,               -- the spread from the home side (-3 = home gives 3); null until posted
+  line_at         text,
+  line_checked_at text,
+  status          text not null default 'pre' check (status in ('pre', 'in', 'final', 'off')),
+  home_score      integer,
+  away_score      integer,
+  checked_at      text
+);
+create index if not exists pickem_games_starts_idx on pickem_games (starts_at);
+
+-- One pick per person per game. `line` is the home line when the pick was made: it never moves after.
+create table if not exists pickem_picks (
+  game_id   text not null references pickem_games(id) on delete cascade,
+  user_id   text not null references users(id) on delete cascade,
+  side      text not null check (side in ('home', 'away')),
+  line      real not null,
+  picked_at text not null,
+  primary key (game_id, user_id)
+);
+
+create table if not exists pickem_meta (
+  key   text primary key,
+  value text not null
+);

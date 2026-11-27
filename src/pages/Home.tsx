@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router'
-import { ArrowRight, Camera, ChevronRight, Gift, MapPin, MessageCircle, Plus, Users } from 'lucide-react'
+import { ArrowRight, Camera, ChevronRight, Gift, MapPin, MessageCircle, Plus, Trophy, Users } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAuth } from '../auth'
 import { applyTheme, isAnniversary, useTheme } from '../lib/theme'
@@ -96,6 +96,7 @@ export default function Home() {
         <Link to="/gallery" className="card quick"><Spot name="photos" size={72} /><span><b>Photos</b><span className="muted small">Every get-together's pictures</span></span></Link>
         <Link to="/family" className="card quick"><Spot name="family" size={72} /><span><b>Family</b><span className="muted small">Who's here, and your profile</span></span></Link>
         <Link to="/gifts" className="card quick"><span className="spot quick-icon"><Gift size={38} strokeWidth={1.6} aria-hidden="true" /></span><span><b>Gift lists</b><span className="muted small">What everyone's hoping for</span></span></Link>
+        <Link to="/pickem" className="card quick"><span className="spot quick-icon"><Trophy size={38} strokeWidth={1.6} aria-hidden="true" /></span><span><b>Pick'em</b><span className="muted small">Every game against the spread</span></span></Link>
       </nav>
 
       {upcoming.length > 0 && (

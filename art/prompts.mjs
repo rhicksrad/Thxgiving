@@ -76,6 +76,7 @@ export const SPOTS = {
   family: 'a cozy little house with glowing windows, a heart on the door and a curl of chimney smoke, a small tree beside it.',
   mine: 'an open keepsake journal with a ribbon bookmark, a dried flower pressed inside and a small brass key.',
   gather: 'a round dinner table seen from above with a pie, a bowl of salad, a pitcher and a candle, cozy and inviting.',
+  pickem: 'a football and a basketball side by side with a little clipboard of checkmarks (no letters or numbers) and a pencil, playful.',
 }
 
 // Birthday looks (src/lib/birthdays.ts `art`): keyed by theme, never by person, since the repo is public.
