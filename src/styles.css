@@ -1207,3 +1207,8 @@ body::before {
 @supports (-webkit-touch-callout: none) {
   @media (display-mode: standalone) { :root { --topbar-clear: 22px; } }
 }
+
+/* ---------- team logos (ESPN's) ---------- */
+.team-logo { width: 34px; height: 34px; object-fit: contain; flex: none; }
+.team-logo.sm { width: 18px; height: 18px; }
+.pk-where { display: flex; align-items: center; gap: 8px; }

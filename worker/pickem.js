@@ -38,6 +38,17 @@ const scoreOf = (c) => {
   return v === undefined || v === null || v === '' || Number.isNaN(n) ? null : n
 }
 
+/** A team's logo from ESPN: the one drawn for dark backgrounds if the feed has it, else ESPN's standard address for it. */
+function logoOf(sport, c) {
+  const t = c?.team
+  if (!t) return null
+  const logos = Array.isArray(t.logos) ? t.logos : []
+  const dark = logos.find((l) => Array.isArray(l?.rel) && l.rel.includes('dark') && !l.rel.includes('scoreboard'))?.href
+  if (dark || t.logo || logos[0]?.href) return dark || t.logo || logos[0].href
+  if (sport.endsWith('/nfl')) return t.abbreviation ? `https://a.espncdn.com/i/teamlogos/nfl/500/${String(t.abbreviation).toLowerCase()}.png` : null
+  return t.id ? `https://a.espncdn.com/i/teamlogos/ncaa/500/${t.id}.png` : null
+}
+
 /** One schedule event as a row (no line: that comes from the summary). */
 function gameRow(team, e) {
   const comp = e.competitions?.[0] ?? {}
@@ -50,6 +61,7 @@ function gameRow(team, e) {
     home: nameOf(home), away: nameOf(away),
     home_abbr: home?.team?.abbreviation ?? null, away_abbr: away?.team?.abbreviation ?? null,
     status, home_score: status === 'final' ? scoreOf(home) : null, away_score: status === 'final' ? scoreOf(away) : null,
+    home_logo: logoOf(PICKEM_TEAMS[team].sport, home), away_logo: logoOf(PICKEM_TEAMS[team].sport, away),
   }
 }
 
@@ -74,6 +86,9 @@ export async function syncPickem(env) {
             home_score = coalesce(excluded.home_score, pickem_games.home_score),
             away_score = coalesce(excluded.away_score, pickem_games.away_score), checked_at = excluded.checked_at`)
           .bind(r.id, r.team, r.starts_at, r.home, r.away, r.home_abbr, r.away_abbr, r.status, r.home_score, r.away_score, now())))
+        await DB.batch(rows.map((r) => DB.prepare(`insert into pickem_logos (game_id, home_logo, away_logo) values (?, ?, ?)
+          on conflict (game_id) do update set home_logo = excluded.home_logo, away_logo = excluded.away_logo`)
+          .bind(r.id, r.home_logo, r.away_logo)))
       }
     }
   }
@@ -114,7 +129,8 @@ async function board(env, uid, url) {
   const DB = env.DB
   const season = Number(url.searchParams.get('season')) || seasonOf(now())
   const from = new Date(Date.UTC(season, 7, 1)).toISOString(), to = new Date(Date.UTC(season + 1, 7, 1)).toISOString()
-  const games = (await DB.prepare(`select * from pickem_games where starts_at >= ? and starts_at < ? and status <> 'off' order by starts_at`)
+  const games = (await DB.prepare(`select g.*, l.home_logo, l.away_logo from pickem_games g left join pickem_logos l on l.game_id = g.id
+      where g.starts_at >= ? and g.starts_at < ? and g.status <> 'off' order by g.starts_at`)
     .bind(from, to).all()).results
   const ids = games.map((g) => g.id)
   const picks = ids.length

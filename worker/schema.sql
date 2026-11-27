@@ -356,3 +356,10 @@ create table if not exists stays (
 insert or ignore into gatherings (id, title, starts_at, time_tbd, created_at)
 values ('hilton-head-2027', 'Hilton Head', '2027-07-17T16:00:00.000Z', 1, '2026-11-27T18:00:00.000Z');
 insert or ignore into gathering_trips (gathering_id, end_day) values ('hilton-head-2027', '2027-07-24');
+
+-- Team logos for Pick'em games (addresses on ESPN's image server). A side table so this file stays safe to re-run.
+create table if not exists pickem_logos (
+  game_id   text primary key references pickem_games(id) on delete cascade,
+  home_logo text,
+  away_logo text
+);

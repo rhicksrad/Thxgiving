@@ -15,6 +15,7 @@ export type Game = {
   day: string         // the visitor's own calendar day, YYYY-MM-DD
   timed: boolean      // false while the time is still to be announced
   opponent: string
+  logo?: string | null  // the opponent's logo (ESPN's image server)
   where: 'home' | 'away' | 'neutral'
   result: string | null // "W 31-24", once it's over
   n: number           // its place in that sport's season, from 0
@@ -83,7 +84,7 @@ export const gameTitle = (g: Game) => `${TEAMS[g.sport].name} ${g.where === 'awa
 export const gameTime = (g: Game) =>
   g.timed ? new Date(g.at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : 'Time to be announced'
 
-const KEY = 'family:games'
+const KEY = 'family:games:2' // :2 adds the logos
 const FRESH = 12 * 3600_000
 let games: Game[] = read().games
 const listeners = new Set<() => void>()
@@ -108,7 +109,12 @@ function parse(sport: Sport, feed: any): Omit<Game, 'n'>[] {
     if (!us || !them || Number.isNaN(at.getTime())) continue
     const done = Boolean(comp?.status?.type?.completed)
     const pts = (s: any) => s?.score?.displayValue ?? (typeof s?.score === 'string' ? s.score : null)
+    const logos: any[] = Array.isArray(them.team?.logos) ? them.team.logos : []
+    const logo = logos.find((l) => Array.isArray(l?.rel) && l.rel.includes('dark') && !l.rel.includes('scoreboard'))?.href ?? them.team?.logo ?? logos[0]?.href
+      ?? (TEAMS[sport].feed.includes('/nfl/') ? (them.team?.abbreviation ? `https://a.espncdn.com/i/teamlogos/nfl/500/${String(them.team.abbreviation).toLowerCase()}.png` : null)
+        : them.team?.id ? `https://a.espncdn.com/i/teamlogos/ncaa/500/${them.team.id}.png` : null)
     out.push({
+      logo,
       id: `${sport}:${e.id}`, sport, at: at.toISOString(), day: dayKey(at), timed: comp?.timeValid !== false,
       opponent: them.team?.shortDisplayName ?? them.team?.displayName ?? 'TBD',
       where: comp?.neutralSite ? 'neutral' : us.homeAway === 'home' ? 'home' : 'away',

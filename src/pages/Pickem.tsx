@@ -15,6 +15,7 @@ type Side = 'home' | 'away'
 type PGame = {
   id: string; team: Sport; starts_at: string
   home: string; away: string; home_abbr: string | null; away_abbr: string | null
+  home_logo?: string | null; away_logo?: string | null
   home_line: number | null; status: 'pre' | 'in' | 'final'
   home_score: number | null; away_score: number | null
   locked: boolean; count: number
@@ -140,7 +141,7 @@ function GameCard({ g, profiles, busy, onPick }: {
     return (
       <button type="button" className={`pk-side ${picked ? 'on' : ''}`} disabled={g.locked || g.home_line == null || busy}
         aria-pressed={picked} onClick={() => onPick(g, picked ? null : s)}>
-        <span className="pk-where">{s === 'home' ? 'Home' : 'Away'}</span>
+        <span className="pk-where"><TeamLogo src={s === 'home' ? g.home_logo : g.away_logo} />{s === 'home' ? 'Home' : 'Away'}</span>
         <span className="pk-team">{abbr}</span>
         <span className="pk-line">{l == null ? '—' : fmt(l)}</span>
         <span className="pk-name">{s === 'home' ? g.home : g.away}</span>
@@ -182,6 +183,13 @@ function GameCard({ g, profiles, busy, onPick }: {
       </div>
     </section>
   )
+}
+
+/** A team's logo; it steps aside quietly if the picture doesn't load. */
+function TeamLogo({ src }: { src?: string | null }) {
+  const [bad, setBad] = useState(false)
+  if (!src || bad) return null
+  return <img className="team-logo" src={src} alt="" width={34} height={34} loading="lazy" decoding="async" onError={() => setBad(true)} />
 }
 
 function Standings({ rows, profiles, meId }: { rows: Standing[]; profiles: ReturnType<typeof useAuth>['profiles']; meId?: string }) {
