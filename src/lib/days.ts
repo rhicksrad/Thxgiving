@@ -243,3 +243,23 @@ export function specialDay(d = new Date()): DayLook | null {
   const trip = TRIPS.find((t) => k >= t.from && k <= t.to)
   return trip ? BY_KEY[trip.key] : null
 }
+
+// A get-together's own look, read from its name, for its card on Home and the top of its page.
+const GATHERING_LOOKS: [RegExp, string][] = [
+  [/christmas|xmas/i, 'christmas'],
+  [/hilton head|beach|island|ocean|shore/i, 'beach'],
+]
+export function gatheringLook(title: string): DayLook | null {
+  const key = GATHERING_LOOKS.find(([re]) => re.test(title))?.[1]
+  return (key && BY_KEY[key]) || null
+}
+/** The look as CSS variables for one card (class "looked"): its colors, and its painting as the backdrop. */
+export function lookStyle(look: DayLook | null): Record<string, string> | undefined {
+  if (!look) return undefined
+  const c = look.colors
+  return {
+    '--gold': c.gold, '--gold-hi': c.goldHi, '--text': c.text, '--rush': c.rush, '--look-bg': c.bg,
+    '--look-art': `url("${new URL(`art/bg-day-${look.key}.webp`, document.baseURI).href}")`,
+    '--art-hero': `url("${new URL(`art/hero-day-${look.key}.webp`, document.baseURI).href}")`,
+  }
+}

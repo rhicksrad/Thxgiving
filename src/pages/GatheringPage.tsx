@@ -17,6 +17,7 @@ import Countdown from '../components/Countdown'
 import { byShot, Lightbox, PhotoGrid, stackDupes, Uploader, useStackKeys } from '../components/Photos'
 import { scroller } from '../lib/scroller'
 import Spot from '../components/Spot'
+import { gatheringLook, lookStyle } from '../lib/days'
 
 type Tab = 'food' | 'asks' | 'chat' | 'pics'
 
@@ -168,8 +169,9 @@ function Hero({ gathering }: { gathering: Gathering }) {
   // The totals come from the lists, so recount whenever something on them changes.
   useLiveTable<{ id: string }>('list_items', `gathering_id=eq.${gathering.id}`, { onUpsert: loadStats, onDelete: loadStats, onResync: loadStats })
   const past = isPast(gathering)
+  const look = gatheringLook(gathering.title)
   return (
-    <section className="hero card">
+    <section className={`hero card ${look ? 'looked' : ''}`} style={lookStyle(look)}>
       <div className="hero-kicker">
         {isToday(gathering) && !gathering.archived ? <span className="badge live">Today!</span> : past || gathering.archived ? <span className="badge">In the archive</span> : <span className="badge">Save the date</span>}
       </div>

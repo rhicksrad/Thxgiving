@@ -4,7 +4,7 @@ import { ArrowRight, Camera, ChevronRight, Gift, MapPin, MessageCircle, Plus, Tr
 import { api } from '../lib/api'
 import { useAuth } from '../auth'
 import { applyTheme, isAnniversary, useTheme } from '../lib/theme'
-import { dayKey, rememberGatherings } from '../lib/days'
+import { dayKey, gatheringLook, lookStyle, rememberGatherings } from '../lib/days'
 import { fromInputs, gatheringDay, gatheringTime, isPast, isToday } from '../lib/format'
 import { useLiveTable, upsertById } from '../lib/realtime'
 import type { Gathering, GatheringStats } from '../lib/types'
@@ -38,11 +38,13 @@ export default function Home() {
   })
 
   // The next one coming up gets the spotlight; the rest are split into what's ahead and the archive (past or archived).
-  const { next, upcoming, past } = useMemo(() => {
+  const { next, trips, upcoming, past } = useMemo(() => {
     const list = gatherings ?? []
     const done = (g: Gathering) => g.archived || isPast(g)
     const ahead = list.filter((g) => !done(g))
-    return { next: ahead[0], upcoming: ahead.slice(1), past: list.filter(done).reverse() }
+    // A trip gets a full card of its own under the next one, however far off it is.
+    const trips = ahead.slice(1).filter((g) => g.ends_on)
+    return { next: ahead[0], trips, upcoming: ahead.slice(1).filter((g) => !g.ends_on), past: list.filter(done).reverse() }
   }, [gatherings])
 
   // The days of the get-togethers still on, so the site wears its get-together look on the day.
@@ -79,7 +81,10 @@ export default function Home() {
 
       <section className="stack">
         <h2 className="section-title">Coming up</h2>
-        {!gatherings ? <div className="loading">Loading…</div> : next ? <NextUp gathering={next} stats={stats[next.id]} /> : (
+        {!gatherings ? <div className="loading">Loading…</div> : next ? <>
+          <NextUp gathering={next} stats={stats[next.id]} />
+          {trips.map((g) => <NextUp key={g.id} gathering={g} stats={stats[g.id]} />)}
+        </> : (
           <div className="card hero-empty">
             <Spot name="gather" size={110} />
             <h3 className="display">Nothing on the calendar</h3>
@@ -124,8 +129,9 @@ export default function Home() {
 
 /** The next get-together, in short: when, where, the countdown, and the way into its board. */
 function NextUp({ gathering, stats }: { gathering: Gathering; stats?: GatheringStats }) {
+  const look = gatheringLook(gathering.title)
   return (
-    <Link to={`/g/${gathering.id}`} className="card next-up hero">
+    <Link to={`/g/${gathering.id}`} className={`card next-up hero ${look ? 'looked' : ''}`} style={lookStyle(look)}>
       <div className="hero-kicker">{isToday(gathering) ? <span className="badge live">Today!</span> : <span className="badge">Save the date</span>}</div>
       <h3 className="display next-title">{gathering.title}</h3>
       <div className="hero-when">
@@ -137,10 +143,10 @@ function NextUp({ gathering, stats }: { gathering: Gathering; stats?: GatheringS
       <Countdown gathering={gathering} />
       {stats && (
         <div className="muted small next-stats">
-          {stats.coming} coming · {stats.food_claimed}/{stats.food_total} dishes covered
+          {stats.coming} coming{stats.food_total > 0 && ` · ${stats.food_claimed}/${stats.food_total} dishes covered`}
         </div>
       )}
-      <span className="btn gold">Open the sign-up board<ArrowRight size={16} aria-hidden="true" /></span>
+      <span className="btn gold">{gathering.ends_on ? 'Open the trip page' : 'Open the sign-up board'}<ArrowRight size={16} aria-hidden="true" /></span>
     </Link>
   )
 }

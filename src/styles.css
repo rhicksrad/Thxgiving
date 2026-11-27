@@ -1181,3 +1181,23 @@ body::before {
 .stays { display: flex; flex-direction: column; gap: 10px; }
 .stay { display: flex; align-items: center; gap: 10px; min-height: 40px; }
 .stay .grow { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+
+/* ---------- a get-together card in its own look (Christmas, the beach): lib/days.ts gatheringLook ---------- */
+.hero.looked {
+  border-color: color-mix(in srgb, var(--gold) 45%, var(--line));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--look-bg) 25%, transparent), color-mix(in srgb, var(--look-bg) 70%, transparent) 75%),
+    var(--look-art) center bottom / cover no-repeat, var(--look-bg);
+}
+/* Its own painting (the --art-hero set on the card), bright, on the right; a mirrored one on the left where there's room. */
+.hero.looked::after { mix-blend-mode: normal; opacity: 1; -webkit-mask-image: linear-gradient(to right, transparent 55%, #000 80%); mask-image: linear-gradient(to right, transparent 55%, #000 80%); }
+@media (max-width: 560px) {
+  .hero.looked::after { background-size: auto 24%; background-position: right -22px top; opacity: 0.95;
+    -webkit-mask-image: linear-gradient(to left, #000 10%, transparent 48%); mask-image: linear-gradient(to left, #000 10%, transparent 48%); }
+}
+.hero.looked::before { background: linear-gradient(90deg, var(--gold), var(--rush), var(--gold)); }
+.hero.looked .next-title, .hero.looked .huge { text-shadow: 0 2px 18px color-mix(in srgb, var(--look-bg) 80%, transparent); }
+.hero.looked .hero-when, .hero.looked .next-stats { text-shadow: 0 1px 8px var(--look-bg); }
+.hero.looked .next-stats { color: color-mix(in srgb, var(--text) 80%, transparent); }
+.hero.looked .cd-cell { background: color-mix(in srgb, var(--look-bg) 82%, transparent); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+.coming-stack { display: flex; flex-direction: column; gap: 14px; }
