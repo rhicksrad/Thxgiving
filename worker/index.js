@@ -117,23 +117,28 @@ async function route(req, env, ctx, url) {
   if (at('GET', 'stats', '*')) return json(await db.one(`${STATS} where g.id = ?`, b))
 
   // The family calendar
-  if (at('GET', 'events')) return json((await db.all('select * from events order by day, time')).map(event))
+  if (at('GET', 'events')) return json((await db.all(`${EVENTS} order by e.day, e.time`)).map(event))
   if (at('POST', 'events')) {
-    const row = { id: uuid(), ...eventFields(await body(req)), created_by: uid, created_at: now() }
+    const { end_day, ...fields } = eventFields(await body(req))
+    const row = { id: uuid(), ...fields, created_by: uid, created_at: now() }
     await db.insert('events', row)
-    live('events', 'insert', event(row))
-    return json(event(row))
+    if (end_day) await db.run('insert into event_ends (event_id, end_day) values (?, ?)', row.id, end_day)
+    live('events', 'insert', event({ ...row, end_day }))
+    return json(event({ ...row, end_day }))
   }
   if (at('PATCH', 'events', '*')) {
-    const cur = await db.one('select * from events where id = ?', b)
+    const cur = await db.one(`${EVENTS} where e.id = ?`, b)
     if (!cur) fail('That is gone', 404)
     const next = { ...cur, ...eventFields({ ...event(cur), ...(await body(req)) }) }
     await db.run('update events set title = ?, day = ?, time = ?, yearly = ?, note = ? where id = ?',
       next.title, next.day, next.time, next.yearly, next.note, b)
+    if (next.end_day) await db.run('insert or replace into event_ends (event_id, end_day) values (?, ?)', b, next.end_day)
+    else await db.run('delete from event_ends where event_id = ?', b)
     live('events', 'update', event(next))
     return json(event(next))
   }
   if (at('DELETE', 'events', '*')) {
+    await db.run('delete from event_ends where event_id = ?', b)
     await db.run('delete from events where id = ?', b)
     live('events', 'delete', { id: b })
     return json({ ok: true })
@@ -490,7 +495,9 @@ async function removeMember(env, db, me, raw, ctx) {
 // ---------------------------------------------------------------------------
 // The family calendar
 // ---------------------------------------------------------------------------
-const event = (r) => ({ ...r, yearly: Boolean(r.yearly) })
+const event = (r) => ({ ...r, yearly: Boolean(r.yearly), end_day: r.end_day ?? null })
+// Every event with its last day (multi-day trips), if it has one.
+const EVENTS = 'select e.*, x.end_day from events e left join event_ends x on x.event_id = e.id'
 
 function eventFields(p) {
   const title = opt(p.title, 80)
@@ -499,7 +506,10 @@ function eventFields(p) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || Number.isNaN(Date.parse(`${day}T00:00:00Z`))) fail('Pick a date')
   const time = opt(p.time, 5)
   if (time && !/^\d{2}:\d{2}$/.test(time)) fail('That time doesn\'t look right')
-  return { title, day, time, yearly: p.yearly ? 1 : 0, note: opt(p.note, 500) }
+  const end_day = opt(p.end_day, 10)
+  if (end_day && (!/^\d{4}-\d{2}-\d{2}$/.test(end_day) || Number.isNaN(Date.parse(`${end_day}T00:00:00Z`)))) fail('Pick a last day')
+  if (end_day && end_day < day) fail('The last day is before the first day')
+  return { title, day, time, yearly: p.yearly ? 1 : 0, note: opt(p.note, 500), end_day: end_day && end_day !== day ? end_day : null }
 }
 
 // ---------------------------------------------------------------------------

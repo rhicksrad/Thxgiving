@@ -58,7 +58,8 @@ export default function Calendar() {
     }
     for (const ev of events ?? []) {
       const start = parse(ev.day)
-      const hit = ev.day === k || (ev.yearly && ev.day.slice(5) === k.slice(5) && y > start.y)
+      const end = ev.end_day ?? ev.day
+      const hit = (k >= ev.day && k <= end) || (ev.yearly && y > start.y && k.slice(5) >= ev.day.slice(5) && k.slice(5) <= end.slice(5))
       if (hit) out.push({ kind: 'event', key: `e:${ev.id}:${k}`, title: ev.title, time: ev.time, ev, age: ev.yearly && y > start.y ? y - start.y : undefined })
     }
     const t = (i: Item) => (i.kind === 'holiday' ? '' : i.kind === 'event' ? i.time ?? '' : '')
@@ -78,10 +79,14 @@ export default function Calendar() {
   // The next few things from today on, a year out.
   const upcoming = useMemo(() => {
     const out: { day: string; item: Item }[] = []
+    const seen = new Set<string>() // a trip shows once, on its first day (or today, if it's under way)
     const { y, m, d } = parse(today)
     for (let i = 0; i < 366 && out.length < 8; i++) {
       const k = dateInput(new Date(Date.UTC(y, m - 1, d + i, 12)).toISOString())
-      for (const item of itemsOn(k)) if (out.length < 8) out.push({ day: k, item })
+      for (const item of itemsOn(k)) {
+        const id = item.kind === 'event' ? item.ev.id : item.key
+        if (out.length < 8 && !seen.has(id)) { seen.add(id); out.push({ day: k, item }) }
+      }
     }
     return out
   }, [itemsOn, today])
@@ -174,7 +179,7 @@ function DayPanel({ day, items }: { day: string; items: Item[] }) {
                 <div className="cal-ev-meta">
                   {it.ev.note && <p className="small">{it.ev.note}</p>}
                   <span className="muted small">
-                    {it.ev.yearly ? 'Every year · ' : ''}Added by {profiles[it.ev.created_by]?.display_name ?? 'family'}
+                    {it.ev.end_day ? `${shortDay(it.ev.day)} to ${shortDay(it.ev.end_day)} · ` : ''}{it.ev.yearly ? 'Every year · ' : ''}Added by {profiles[it.ev.created_by]?.display_name ?? 'family'}
                   </span>
                   <button className="btn ghost sm icon danger" aria-label={`Delete ${it.title}`} title="Delete" onClick={async () => {
                     if (!confirm(`Take "${it.title}" off the calendar${it.ev.yearly ? ' (every year)' : ''}?`)) return
@@ -199,6 +204,7 @@ function AddEvent({ day, onDone }: { day: string; onDone: () => void }) {
   const [date, setDate] = useState(day)
   const [time, setTime] = useState('')
   const [yearly, setYearly] = useState(false)
+  const [end, setEnd] = useState('')
   const [note, setNote] = useState('')
   const [err, setErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -206,7 +212,7 @@ function AddEvent({ day, onDone }: { day: string; onDone: () => void }) {
     <form className="stack cal-add" onSubmit={async (e) => {
       e.preventDefault()
       setBusy(true); setErr(null)
-      const { error } = await api.post('/events', { title: title.trim(), day: date, time: time || null, yearly, note: note.trim() || null })
+      const { error } = await api.post('/events', { title: title.trim(), day: date, end_day: end || null, time: time || null, yearly, note: note.trim() || null })
       setBusy(false)
       if (error) return setErr(error.message)
       onDone()
@@ -217,6 +223,9 @@ function AddEvent({ day, onDone }: { day: string; onDone: () => void }) {
         <input className="input" required type="date" value={date} onChange={(e) => setDate(e.target.value)} aria-label="Date" />
         <input className="input" type="time" value={time} onChange={(e) => setTime(e.target.value)} aria-label="Time (blank for all day)" title="Leave blank for all day" />
       </div>
+      <label className="cal-field small muted">Last day, for trips (optional)
+        <input className="input" type="date" min={date} value={end} onChange={(e) => setEnd(e.target.value)} />
+      </label>
       <textarea className="input" rows={2} maxLength={500} placeholder="Notes (optional)" value={note} onChange={(e) => setNote(e.target.value)} aria-label="Notes" />
       <label className="cal-check"><input type="checkbox" checked={yearly} onChange={(e) => setYearly(e.target.checked)} />Every year (birthdays, anniversaries)</label>
       {err && <p className="error">{err}</p>}

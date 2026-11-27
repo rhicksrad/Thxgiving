@@ -108,6 +108,7 @@ export type FamilyEvent = {
   day: string          // YYYY-MM-DD, the family's local day
   time: string | null  // HH:MM, or null for all day
   yearly: boolean      // repeats every year (birthdays, anniversaries)
+  end_day: string | null      // last day of a multi-day event (trips), or null
   note: string | null
   created_by: string
   created_at: string

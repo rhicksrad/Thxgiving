@@ -220,6 +220,18 @@ create table if not exists events (
 );
 create index if not exists events_day_idx on events (day);
 
+-- The last day of a multi-day event (trips). A separate table, not a column, so this file stays safe to re-run.
+create table if not exists event_ends (
+  event_id text primary key references events(id) on delete cascade,
+  end_day  text not null check (end_day glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]')
+);
+
+-- Hilton Head, July 17-24, 2027 (asked for by Ryan, 2026-11-26).
+insert or ignore into events (id, title, day, time, yearly, note, created_by, created_at)
+values ('hilton-head-2027', 'Hilton Head', '2027-07-17', null, 0, null,
+  coalesce((select id from users where display_name like 'Ryan%' order by created_at limit 1), 'family'), '2026-11-27T00:05:00.000Z');
+insert or ignore into event_ends (event_id, end_day) values ('hilton-head-2027', '2027-07-24');
+
 -- Thanksgiving 2026: Thursday, November 26, time to be decided (noon Eastern until someone sets it).
 -- Its starter lists are copied from list_template, once.
 insert or ignore into gatherings (id, title, starts_at, time_tbd, created_at)
