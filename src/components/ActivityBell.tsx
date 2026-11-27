@@ -9,7 +9,7 @@ import type { ListItem, Message, Photo, PhotoComment, Profile, Reaction } from '
 import { useAuth } from '../auth'
 import { birthdaysOn, useBirthdays } from '../lib/birthdays'
 import { isAnniversary, useTheme } from '../lib/theme'
-import { gamesOn, gameTime, gameTitle, useGames } from '../lib/games'
+import { gamesOn, gameTime, gameTitle, TEAMS, useGames } from '../lib/games'
 import { dayKey } from '../lib/days'
 import { Avatar, nameOf } from './Avatar'
 
@@ -139,10 +139,13 @@ export default function ActivityBell() {
         name: 'Hicks Family', text: `${special.tagline.replace(/!$/, '')}! ${special.greeting}`,
       })
     }
-    for (const g of gamesOn(dayKey(day))) {
+    // Today's games fold into one line, however many of the family's teams play.
+    const playing = gamesOn(dayKey(day))
+    if (playing.length) {
       out.push({
-        key: `game:${g.id}`, kind: 'game', at: day.toISOString(), who: '', gatheringId: null, name: 'Boiler up!',
-        text: `${gameTitle(g)} today${g.result ? `. Final: ${g.result}` : `, ${gameTime(g)}`}.`,
+        key: `game:${dayKey(day)}`, kind: 'game', at: day.toISOString(), who: '', gatheringId: null,
+        name: playing.length === 1 ? TEAMS[playing[0].sport].cheer : 'Game day',
+        text: playing.map((g) => `${gameTitle(g)}${g.result ? ` (${g.result})` : `, ${gameTime(g)}`}`).join(' · '),
       })
     }
     for (const m of posts) {
