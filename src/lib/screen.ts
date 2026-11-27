@@ -10,8 +10,8 @@ export function fitInstalledApp() {
     const portrait = matchMedia('(orientation: portrait)').matches
     const full = portrait ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height)
     const short = full - window.innerHeight
-    // A small shortfall is the bug. A big one is the keyboard (or something else): leave the layout alone.
-    if (short > 0 && short <= 80) root.style.setProperty('--app-h', `${full}px`)
+    // A shortfall up to about the status bar plus home indicator (~100pt) is the bug. A big one is the keyboard (or something else): leave the layout alone.
+    if (short > 0 && short <= 140) root.style.setProperty('--app-h', `${full}px`)
     else root.style.removeProperty('--app-h')
   }
   fit()
