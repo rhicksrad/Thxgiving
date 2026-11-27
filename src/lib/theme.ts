@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import { BIRTHDAY_MARK, MONTH_MARKS, PARTICLES, type ParticleKind } from './marks'
-import { gameLook, gameTime, gameTitle, gameToday, SPORT_NAME, type Game } from './games'
+import { gameLook, gameTime, gameTitle, gameToday, TEAMS, type Game } from './games'
 import { DAY_ART, specialDay, type DayLook } from './days'
 import { birthdaysOn, PARTY, previewBirthday, type Birthday } from './birthdays'
 
@@ -280,13 +280,13 @@ function pick(): Theme {
   if (game) {
     const g = gameLook(game)
     return {
-      ...base, name: g.name, tagline: 'Boiler up!', colors: g.colors,
+      ...base, name: g.name, tagline: TEAMS[game.sport].cheer, colors: g.colors,
       greeting: `${gameTitle(game)} today${game.result ? `. Final: ${game.result}` : game.timed ? ` at ${gameTime(game)}` : ''}.`,
-      stripe: ['#cfb991', '#000000', g.colors.rush, '#000000'], particle: 'star', motion: 'twinkle',
+      stripe: g.stripe, particle: 'star', motion: 'twinkle',
       prompts: [
         `It's game day: ${gameTitle(game)}. Score predictions?`,
-        `Where is everybody watching Purdue ${SPORT_NAME[game.sport]} today?`,
-        'Best Purdue game you ever saw?',
+        `Where is everybody watching the ${TEAMS[game.sport].what} game today?`,
+        `Best ${TEAMS[game.sport].name} game you ever saw?`,
       ],
       game, art: g.art,
     }

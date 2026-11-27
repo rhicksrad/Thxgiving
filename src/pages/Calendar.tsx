@@ -52,7 +52,7 @@ export default function Calendar() {
     onResync: load,
   })
 
-  const games = useGames() // Purdue football and basketball, from the live schedule
+  const games = useGames() // Purdue, Bears, Colts and Chiefs, from the live schedules
   // Everything on a given day, holidays first, then by time.
   const itemsOn = useCallback((k: string): Item[] => {
     const { y } = parse(k)
@@ -137,7 +137,7 @@ export default function Calendar() {
             })}
           </div>
           <div className="cal-legend" aria-hidden="true">
-            <span><i className="holiday" />Holiday</span><span><i className="gathering" />Get-together</span><span><i className="event" />Family event</span><span><i className="game" />Purdue game</span>
+            <span><i className="holiday" />Holiday</span><span><i className="gathering" />Get-together</span><span><i className="event" />Family event</span><span><i className="game" />Game</span>
           </div>
         </section>
 
