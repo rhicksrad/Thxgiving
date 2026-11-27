@@ -113,3 +113,17 @@ export type FamilyEvent = {
   created_by: string
   created_at: string
 }
+
+/** One thing on someone's gift list. On your own you get `viewers` and never who's getting it; on other people's, the reverse. */
+export type Gift = {
+  id: string
+  owner_id: string
+  title: string
+  url: string | null
+  note: string | null
+  price: string | null
+  everyone: boolean          // the whole family can see it
+  viewers: string[] | null   // when not everyone: who can (your own list only)
+  claimed_by: string | null  // who said they're getting it (never sent for your own list)
+  created_at: string
+}

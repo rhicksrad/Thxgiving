@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router'
-import { ArrowRight, Camera, ChevronRight, MapPin, MessageCircle, Plus, Users } from 'lucide-react'
+import { ArrowRight, Camera, ChevronRight, Gift, MapPin, MessageCircle, Plus, Trophy, Users } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAuth } from '../auth'
 import { applyTheme, isAnniversary, useTheme } from '../lib/theme'
@@ -12,6 +12,7 @@ import { InstallBanner } from '../components/Install'
 import Logo from '../components/Logo'
 import Countdown from '../components/Countdown'
 import Spot from '../components/Spot'
+import OnThisDay from '../components/OnThisDay'
 
 const byDate = (a: Gathering, b: Gathering) => a.starts_at.localeCompare(b.starts_at)
 
@@ -87,11 +88,15 @@ export default function Home() {
         )}
       </section>
 
+      <OnThisDay />
+
       <nav className="quick-links">
         <Link to="/calendar" className="card quick"><Spot name="calendar" size={72} /><span><b>Calendar</b><span className="muted small">Birthdays, plans and holidays</span></span></Link>
         <Link to="/chat" className="card quick"><Spot name="chat" size={72} /><span><b>Family chat</b><span className="muted small">Talk about anything, any day</span></span></Link>
         <Link to="/gallery" className="card quick"><Spot name="photos" size={72} /><span><b>Photos</b><span className="muted small">Every get-together's pictures</span></span></Link>
         <Link to="/family" className="card quick"><Spot name="family" size={72} /><span><b>Family</b><span className="muted small">Who's here, and your profile</span></span></Link>
+        <Link to="/gifts" className="card quick"><span className="spot quick-icon"><Gift size={38} strokeWidth={1.6} aria-hidden="true" /></span><span><b>Gift lists</b><span className="muted small">What everyone's hoping for</span></span></Link>
+        <Link to="/pickem" className="card quick"><span className="spot quick-icon"><Trophy size={38} strokeWidth={1.6} aria-hidden="true" /></span><span><b>Pick'em</b><span className="muted small">Every game against the spread</span></span></Link>
       </nav>
 
       {upcoming.length > 0 && (

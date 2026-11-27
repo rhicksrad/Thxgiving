@@ -32,6 +32,8 @@ const Family = page(() => import('./pages/Family'))
 const Calendar = page(() => import('./pages/Calendar'))
 const Mine = page(() => import('./pages/Mine'))
 const Messages = page(() => import('./pages/Messages'))
+const Gifts = page(() => import('./pages/Gifts'))
+const Pickem = page(() => import('./pages/Pickem'))
 
 export default function App() {
   if (!isConfigured) return <SetupNeeded />
@@ -62,6 +64,8 @@ function Gate() {
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/family" element={<Family />} />
           <Route path="/mine" element={<Mine />} />
+          <Route path="/gifts" element={<Gifts />} />
+          <Route path="/pickem" element={<Pickem />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

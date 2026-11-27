@@ -328,3 +328,62 @@ create table if not exists dm_messages (
   created_at      text not null
 );
 create index if not exists dm_messages_conv_idx on dm_messages (conversation_id, created_at);
+
+-- Gift lists. Everyone has one. Each thing on it is shown to the whole family, or only to the people its owner
+-- picks (gift_viewers). A claim ("I'm getting this") is never sent to the list's owner, so surprises stay surprises.
+create table if not exists gifts (
+  id         text primary key,
+  owner_id   text not null references users(id) on delete cascade,
+  title      text not null check (length(title) between 1 and 120),
+  url        text check (length(url) <= 500),
+  note       text check (length(note) <= 500),
+  price      text check (length(price) <= 40),
+  everyone   integer not null default 1,   -- 0 = only the people in gift_viewers
+  created_at text not null
+);
+create index if not exists gifts_owner_idx on gifts (owner_id, created_at);
+create table if not exists gift_viewers (
+  gift_id text not null references gifts(id) on delete cascade,
+  user_id text not null references users(id) on delete cascade,
+  primary key (gift_id, user_id)
+);
+create table if not exists gift_claims (
+  gift_id    text primary key references gifts(id) on delete cascade,
+  user_id    text not null references users(id) on delete cascade,
+  created_at text not null
+);
+-- ============================================================================
+-- Pick'em against the spread (worker/pickem.js). Games, lines and finals come from ESPN through the Worker.
+-- ============================================================================
+create table if not exists pickem_games (
+  id              text primary key,   -- ESPN event id
+  team            text not null,      -- fb | bb | bears | colts | chiefs
+  starts_at       text not null,
+  home            text not null,
+  away            text not null,
+  home_abbr       text,
+  away_abbr       text,
+  home_line       real,               -- the spread from the home side (-3 = home gives 3); null until posted
+  line_at         text,
+  line_checked_at text,
+  status          text not null default 'pre' check (status in ('pre', 'in', 'final', 'off')),
+  home_score      integer,
+  away_score      integer,
+  checked_at      text
+);
+create index if not exists pickem_games_starts_idx on pickem_games (starts_at);
+
+-- One pick per person per game. `line` is the home line when the pick was made: it never moves after.
+create table if not exists pickem_picks (
+  game_id   text not null references pickem_games(id) on delete cascade,
+  user_id   text not null references users(id) on delete cascade,
+  side      text not null check (side in ('home', 'away')),
+  line      real not null,
+  picked_at text not null,
+  primary key (game_id, user_id)
+);
+
+create table if not exists pickem_meta (
+  key   text primary key,
+  value text not null
+);
