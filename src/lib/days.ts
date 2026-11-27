@@ -130,6 +130,31 @@ export const DAY_LOOKS: DayLook[] = [
   look('winter', 'First day of winter', 'Longest night', 'First day of winter', 'The shortest day of the year. Light a fire and stay in.',
     c('#0c1320', '#f0f5fc', '#a8d0f2', '#c8e2f8', '#f2e2b0', '#5f7fb5', '#dfe8f5'), 'snow', 'fall',
     ['Snow: love it or done with it already?', 'Best thing to do on a snow day?', 'Hot chocolate or cider?']),
+  // Persian holidays, reckoned from Nowruz (the first day of spring on the Persian calendar).
+  look('sadeh', 'Sadeh', 'Midwinter fire', 'Sadeh Mobarak', 'A great fire against the cold: fifty days and fifty nights until Nowruz.',
+    c('#0c1222', '#f3f5fb', '#ffb347', '#ffcc80', '#ff6b4a', '#4f6fc0', '#e0e6f5'), 'sparkle', 'rise',
+    ['What keeps you warm in the middle of winter?', 'Best bonfire you ever sat around?', 'What are you looking forward to this spring?']),
+  look('sepandarmazgan', 'Sepandarmazgan', 'Day of love', 'Happy Sepandarmazgan', 'The Persian day of love, for the earth and for the women who hold this family together.',
+    c('#1c0f18', '#fff2f6', '#ff8fa8', '#ffb6c6', '#4fd0c9', '#c8507a', '#ffe0e8'), 'heart', 'rise',
+    ['Tell someone here what you love about them.', 'Who is a woman in this family you look up to?', 'Favorite flower?']),
+  look('chaharshanbe-suri', 'Chaharshanbe Suri', 'Festival of fire', 'Chaharshanbe Suri', 'Jump the fire: give it your pale, take its glow.',
+    c('#150d1f', '#fbf2f0', '#ff8a3c', '#ffad73', '#ffd24a', '#7a4fd8', '#f5e0d6'), 'sparkle', 'rise',
+    ['What are you leaving behind with the old year?', 'Did anyone jump the fire tonight?', 'Favorite memory of this night?']),
+  look('nowruz', 'Nowruz', 'New day', 'Nowruz Mobarak!', 'A new year and a new spring. Sabzeh on the table, goldfish in the bowl.',
+    c('#0e1a14', '#f4faf2', '#7fd18a', '#a8e3b0', '#f2c94a', '#e8566a', '#e3f2dc'), 'flower', 'sway',
+    ['Share a photo of your haft-sin.', 'What is your wish for the new year?', 'Which of the seven S\'s is your favorite?']),
+  look('sizdah-bedar', 'Sizdah Bedar', 'Nature day', 'Happy Sizdah Bedar', 'Thirteenth day of the new year: get outside, picnic, and send the sabzeh down the stream.',
+    c('#0d1a12', '#f2faf0', '#8fd16a', '#b4e398', '#7cc4f0', '#3f9e6a', '#e0f2d8'), 'leaf', 'sway',
+    ['Where is the picnic today?', 'Did you tie a knot in the sabzeh and make a wish?', 'Best picnic food?']),
+  look('tirgan', 'Tirgan', 'Water festival', 'Happy Tirgan', 'The midsummer water festival: splash somebody you love.',
+    c('#081a22', '#effafc', '#3fc7e0', '#7fdcee', '#f2d46b', '#2f7fc0', '#d6f0f5'), 'drop', 'fall',
+    ['Who is getting splashed today?', 'Pool, lake or sprinkler?', 'What wish would you tie to your wrist?']),
+  look('mehregan', 'Mehregan', 'Autumn thanks', 'Mehregan Mobarak', 'The autumn festival of friendship and thanks, with pomegranates on the table.',
+    c('#1a0f16', '#fbf2ee', '#e8a83c', '#f2c478', '#d8384f', '#8a4fa8', '#f5e2d0'), 'leaf', 'fall',
+    ['What friendship are you thankful for?', 'Pomegranate: worth the mess?', 'What is the best part of fall?']),
+  look('yalda', 'Yalda Night', 'Longest night', 'Yalda Mobarak', 'The longest night of the year: pomegranates, watermelon, poetry and staying up together.',
+    c('#150a14', '#fdf2f0', '#e8384f', '#f0707f', '#f2c94a', '#3f4fa8', '#f5dcd8'), 'sparkle', 'twinkle',
+    ['Pomegranate or watermelon tonight?', 'Read a line of a favorite poem here.', 'Who is staying up the latest?']),
   // Not on the calendar by rule: the family's beach week and the day of a get-together (see specialDay).
   look('beach', 'Beach week', 'Toes in the sand', 'Beach week!', 'Sunscreen on, chairs out, tide coming in.',
     c('#08191e', '#effbfa', '#ffc46b', '#ffd899', '#ff8f7a', '#3fc7c9', '#fbe9cf'), 'bubble', 'rise',
@@ -141,7 +166,8 @@ export const DAY_LOOKS: DayLook[] = [
 const BY_KEY = Object.fromEntries(DAY_LOOKS.map((l) => [l.key, l]))
 
 /** Looks whose painted art (public/art/bg-day-<key>.webp, hero-day-<key>.webp) exists; any other uses the month's. */
-export const DAY_ART = new Set<string>(DAY_LOOKS.map((l) => l.key))
+const UNPAINTED = ['sadeh', 'sepandarmazgan', 'chaharshanbe-suri', 'nowruz', 'sizdah-bedar', 'tirgan', 'mehregan', 'yalda']
+export const DAY_ART = new Set<string>(DAY_LOOKS.map((l) => l.key).filter((k) => !UNPAINTED.includes(k)))
 
 const pad = (n: number) => String(n).padStart(2, '0')
 export const dayKey = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
@@ -166,10 +192,19 @@ function calendar(y: number): Record<string, string> {
   const memorial = nth(y, 5, 1, -1), thanks = nth(y, 11, 4, 4), labor = nth(y, 9, 1, 1)
   const fat = new Date(y, em - 1, ed - 47) // Mardi Gras: 47 days before Easter
   const mardi: [number, number, string] = [fat.getMonth() + 1, fat.getDate(), 'mardigras']
+  // Nowruz (1 Farvardin) falls on March 20 or 21; the other Persian days are counted from it.
+  const n1 = (y < 2029 ? y % 4 === 0 : y % 4 <= 1) ? 20 : 21
+  const persian = (offset: number, key: string): [number, number, string] => {
+    const d = new Date(y, 2, n1 + offset)
+    return [d.getMonth() + 1, d.getDate(), key]
+  }
+  const nowruz = new Date(y, 2, n1)
+  const fire = persian(-(((nowruz.getDay() - 2 + 7) % 7) || 7), 'chaharshanbe-suri') // the last Tuesday night before Nowruz
   const list: [number, number, string][] = [
     [2, 2, 'groundhog'], [4, 15, 'taxday'], [5, 5, 'cinco'], [6, 14, 'flagday'], [3, 20, 'spring'], [12, 21, 'winter'],
     [1, nth(y, 1, 1, 3), 'mlk'], [2, nth(y, 2, 1, 3), 'presidents'], [5, nth(y, 5, 6, 1), 'derby'], [6, 19, 'juneteenth'],
     [9, labor, 'labor'], mardi,
+    persian(105, 'tirgan'), persian(195, 'mehregan'), [1, 30, 'sadeh'], [2, 24, 'sepandarmazgan'], persian(12, 'sizdah-bedar'),
     [3, 14, 'pi'], [4, 22, 'earth'], [6, 21, 'summer'], [9, 22, 'fall'], [4, 1, 'aprilfools'],
     [2, nth(y, 2, 0, 2), 'superbowl'], [5, memorial - 1, 'indy500'], [9, labor + 6, 'grandparents'],
     [11, thanks + 1, 'blackfriday'],
@@ -177,6 +212,7 @@ function calendar(y: number): Record<string, string> {
     [5, nth(y, 5, 0, 2), 'mothers'], [5, memorial, 'memorial'], [6, nth(y, 6, 0, 3), 'fathers'], [7, 4, 'july4'],
     [10, 31, 'halloween'], [11, 11, 'veterans'], [11, thanks, 'thanksgiving'],
     [12, 24, 'xmas-eve'], [12, 25, 'christmas'], [12, 31, 'nye'],
+    fire, persian(0, 'nowruz'), persian(275, 'yalda'),
   ]
   return Object.fromEntries(list.map(([m, d, k]) => [`${m}-${d}`, k]))
 }
