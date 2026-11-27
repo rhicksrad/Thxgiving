@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Camera, Trash2 } from 'lucide-react'
+import { Camera, ChevronDown, Trash2 } from 'lucide-react'
 import { removeFiles, uploadFile } from '../lib/storage'
 import { useAuth } from '../auth'
 import { Avatar, BADGES, Badge, badgeFor } from './Avatar'
@@ -28,6 +28,8 @@ export default function AvatarPicker({ badge, onPick }: { badge: string; onPick:
   const input = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+  // The ~50 badges stay folded away until asked for, so the profile card stays short.
+  const [showBadges, setShowBadges] = useState(false)
   if (!me) return null
   const hasPhoto = Boolean(me.avatar_path)
 
@@ -80,15 +82,18 @@ export default function AvatarPicker({ badge, onPick }: { badge: string; onPick:
         </div>
       </div>
       {err && <p className="error">{err}</p>}
-      <div className="av-grid-label muted small">{hasPhoto ? 'Badge (shows if you remove your photo)' : 'Or pick a badge'}</div>
-      <div className="av-grid" role="radiogroup" aria-label="Avatar badge">
+      <button type="button" className={`av-grid-toggle link-btn ${showBadges ? 'on' : ''}`} aria-expanded={showBadges} onClick={() => setShowBadges((v) => !v)}>
+        {showBadges ? 'Hide the badges' : hasPhoto ? 'Pick a backup badge' : 'Pick a different badge'}
+        <ChevronDown size={15} aria-hidden="true" />
+      </button>
+      {showBadges && <div className="av-grid" role="radiogroup" aria-label="Avatar badge">
         {BADGES.map((b) => (
           <button type="button" key={b.key} role="radio" aria-checked={b.key === badge} aria-label={b.label} title={b.label}
             className={b.key === badge ? 'on' : ''} onClick={() => onPick(b.key)}>
             <Badge value={b.key} size={40} />
           </button>
         ))}
-      </div>
+      </div>}
     </div>
   )
 }
