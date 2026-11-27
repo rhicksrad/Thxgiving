@@ -166,7 +166,9 @@ function ItemLine({ item }: { item: Item }) {
   const Icon = item.kind === 'holiday' ? Star : item.kind === 'game' ? Trophy : item.kind === 'gathering' ? Users : item.ev.yearly ? Repeat : PartyPopper
   return (
     <span className={`cal-item ${item.kind}`}>
-      <Icon size={15} aria-hidden="true" />
+      {item.kind === 'game' && item.game.logo
+        ? <img className="team-logo sm" src={item.game.logo} alt="" width={18} height={18} loading="lazy" onError={(e) => { e.currentTarget.style.display = 'none' }} />
+        : <Icon size={15} aria-hidden="true" />}
       <span className="cal-item-title">{item.title}{item.kind === 'event' && item.age ? ` (${item.age} yrs)` : ''}</span>
       {item.kind === 'gathering' && <span className="muted small">{item.time}</span>}
       {item.kind === 'game' && <span className="muted small">{item.game.result ?? gameTime(item.game)}</span>}
