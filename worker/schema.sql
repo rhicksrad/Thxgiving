@@ -363,3 +363,19 @@ create table if not exists pickem_logos (
   home_logo text,
   away_logo text
 );
+
+-- Pick'em matchup facts per game (worker/pickem.js statsOf), filled by the same ESPN summary call as the line.
+-- Records like '8-3'; home_split = the home team's home record, away_split = the away team's road record;
+-- form = last five results, most recent first ('WWLWL'); chance = ESPN's win chance in percent, before the game.
+create table if not exists pickem_stats (
+  game_id     text primary key references pickem_games(id) on delete cascade,
+  home_record text,
+  away_record text,
+  home_split  text,
+  away_split  text,
+  home_form   text,
+  away_form   text,
+  home_chance real,
+  away_chance real,
+  checked_at  text
+);
