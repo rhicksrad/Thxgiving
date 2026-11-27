@@ -838,3 +838,79 @@ body::before {
   .tabbar a.active svg.lucide { background: color-mix(in srgb, var(--gold) 18%, transparent); }
   .tabbar a.active::before { display: none; }
 }
+
+/* ---------- Gallery: pictures first ---------- */
+.gal-top { display: flex; flex-direction: column; gap: 12px; margin-top: -8px; }
+.uploader.compact { display: flex; flex-direction: column; gap: 6px; }
+.uploader-main { display: flex; gap: 8px; }
+.uploader-main > .btn.gold { flex: 1; max-width: 340px; }
+.uploader-main .btn.ghost.on { border-color: var(--gold-line); color: var(--gold); background: var(--gold-soft); }
+.uploader-to { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; padding: 2px 0; background: none; border: 0; color: var(--muted); font-size: 13px; cursor: pointer; text-align: left; }
+.uploader-to b { color: var(--text-2); font-weight: 600; }
+.uploader-to:hover { color: var(--text-2); }
+.uploader-to svg { transition: transform 0.15s; } .uploader-to svg.flip { transform: rotate(180deg); }
+.uploader-opts { display: grid; gap: 8px; grid-template-columns: 1fr 1.4fr; max-width: 640px; }
+.gal-filters { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.chips { flex: 1; min-width: 0; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px 0; -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent); }
+.chips::-webkit-scrollbar { display: none; }
+.chip { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 13px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--card-2); color: var(--text-2); font-size: 13.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.chip span { font-weight: 500; color: var(--muted); font-variant-numeric: tabular-nums; }
+.chip:hover { border-color: var(--line-3); }
+.chip.on { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+.chip.on span { color: color-mix(in srgb, var(--ink) 70%, transparent); }
+.chips .chip:last-child { margin-right: 20px; }
+.gal-by { flex: none; width: auto; max-width: 150px; min-height: 34px; height: 34px; padding: 0 30px 0 12px; border-radius: 999px; font-size: 13.5px; background-position: calc(100% - 17px) 14px, calc(100% - 12px) 14px; }
+.storage-meter { justify-content: center; opacity: 0.8; }
+@media (max-width: 760px) {
+  .uploader-main > .btn.gold { max-width: none; }
+  .uploader-opts { grid-template-columns: 1fr; }
+  .gal-top ~ .photo-grid { margin: 0 -12px; }
+}
+
+/* ---------- Calendar: a lighter month, where what's on it stands out ---------- */
+.cal { padding: 18px 18px 14px; }
+.cal-head { gap: 6px; margin-bottom: 14px; }
+.cal-head h2 { text-align: left; justify-content: flex-start; order: -2; font-size: 26px; }
+.cal-head .cal-today { order: 0; margin-left: 4px; }
+.cal-head .btn { border-radius: 999px; }
+.cal-grid { gap: 0; border-top: 1px solid var(--line); }
+.cal-wd { border-bottom: 1px solid var(--line); padding: 8px 0; font-size: 10.5px; color: var(--muted-2); }
+.cal-cell { min-height: 96px; background: transparent; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding: 6px 4px 8px; position: relative; }
+.cal-cell.empty { border-bottom: 1px solid var(--line); }
+.cal-cell:hover:not(.empty) { background: color-mix(in srgb, var(--text) 4%, transparent); }
+.cal-cell.on { background: var(--gold-soft); border-bottom-color: var(--line); box-shadow: inset 0 0 0 1.5px var(--gold-line); border-radius: 8px; }
+.cal-num { font-size: 13.5px; font-weight: 600; width: 26px; height: 26px; color: var(--text); }
+.cal-cell.wkend .cal-num { color: var(--muted); }
+.cal-cell.past .cal-num { color: var(--steel); }
+.cal-cell.today .cal-num { background: var(--gold); color: var(--ink); font-weight: 800; box-shadow: 0 0 0 3px var(--gold-soft); }
+.cal-chip { border-radius: 4px; padding: 2px 6px 2px 7px; font-size: 11.5px; border-left: 3px solid; background: color-mix(in srgb, var(--text) 6%, transparent) !important; color: var(--text) !important; }
+.cal-chip.holiday { border-left-color: var(--gold); } .cal-chip.gathering { border-left-color: var(--aged); } .cal-chip.event { border-left-color: var(--rush); }
+.cal-cell.past .cal-chip { opacity: 0.6; }
+.cal-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; padding-top: 12px; font-size: 12px; color: var(--muted); }
+.cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.cal-legend i { width: 8px; height: 8px; border-radius: 50%; }
+.cal-legend i.holiday { background: var(--gold); } .cal-legend i.gathering { background: var(--aged); } .cal-legend i.event { background: var(--rush); }
+@media (max-width: 640px) {
+  .cal { padding: 14px 10px 12px; }
+  .cal-head h2 { font-size: 22px; padding-left: 4px; }
+  .cal-cell { min-height: 50px; padding: 5px 0 6px; gap: 4px; }
+  .cal-num { width: 30px; height: 30px; font-size: 15px; }
+  .cal-dots i { width: 5px; height: 5px; }
+  .cal-legend { justify-content: center; }
+}
+.cal-day-items li { border: 0; background: color-mix(in srgb, var(--text) 5%, transparent); }
+
+/* ---------- Home on phones: a short welcome, so what's coming up is on the first screen ---------- */
+@media (max-width: 560px) {
+  .welcome { flex-direction: row; text-align: left; gap: 14px; padding: 18px 16px 16px; align-items: center; }
+  .welcome-text { align-items: flex-start; gap: 5px; }
+  .welcome-text h1 { font-size: 25px; }
+  .welcome-greet { font-size: 14.5px; }
+  .welcome-text .muted.small { display: none; }
+  .welcome .welcome-mark { width: 54px; height: 54px; flex: none; }
+  .welcome::after { background-size: auto 100%; background-position: right center; opacity: 0.55;
+    -webkit-mask-image: linear-gradient(to right, transparent 55%, #000 100%); mask-image: linear-gradient(to right, transparent 55%, #000 100%);
+    -webkit-mask-composite: source-over; mask-composite: add; }
+  .hero { padding: 22px 16px; gap: 14px; }
+}
+@media (max-width: 760px) { .gal-top ~ .photo-grid .tile-tag { display: none; } }

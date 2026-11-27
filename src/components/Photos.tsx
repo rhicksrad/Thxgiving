@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { downloadZip } from 'client-zip'
-import { Check, ChevronLeft, ChevronRight, Download, ImagePlus, Layers, MessageSquare, Play, Trash2 } from 'lucide-react'
+import { Check, ChevronDown, ChevronLeft, ChevronRight, Download, ImagePlus, Layers, MessageSquare, Play, Trash2 } from 'lucide-react'
 import { api, seg } from '../lib/api'
 import { fileHashes, signFiles, uploadFile } from '../lib/storage'
 import { useSignedUrls } from '../lib/signedUrls'
@@ -410,7 +410,12 @@ export function Lightbox({ photos, index, gatherings, onClose, onIndex, onDelete
 }
 
 /** Pick files, tag a gathering, upload originals plus a small preview for the grid. */
-export function Uploader({ gatherings, defaultGatheringId, onUploaded }: { gatherings: Gathering[]; defaultGatheringId: string | null; onUploaded: (p: Photo) => void }) {
+export function Uploader({ gatherings, defaultGatheringId, onUploaded, compact, children }: {
+  gatherings: Gathering[]; defaultGatheringId: string | null; onUploaded: (p: Photo) => void
+  compact?: boolean // the Gallery: one big Add button, with where-it-goes and the caption tucked behind a line of text
+  children?: React.ReactNode // extra buttons that sit beside Add (compact only)
+}) {
+  const [opts, setOpts] = useState(false)
   const { me } = useAuth()
   const [gatheringId, setGatheringId] = useState<string>(defaultGatheringId ?? '')
   const [caption, setCaption] = useState('')
@@ -454,21 +459,39 @@ export function Uploader({ gatherings, defaultGatheringId, onUploaded }: { gathe
     if (input.current) input.current.value = ''
   }
 
+  const add = (
+    <label className={`btn gold ${progress ? 'disabled' : ''}`}>
+      <ImagePlus size={17} aria-hidden="true" />
+      {progress ? `Uploading ${progress.done}/${progress.total}…` : 'Add photos or videos'}
+      <input ref={input} type="file" accept="image/*,video/*" multiple hidden disabled={Boolean(progress)}
+        onChange={(e) => upload(e.target.files)} />
+    </label>
+  )
+  const where = (
+    <select className="input" value={gatheringId} onChange={(e) => setGatheringId(e.target.value)} aria-label="Which get-together they're from">
+      <option value="">Not from a get-together</option>
+      {gatherings.map((g) => <option key={g.id} value={g.id}>{g.title}</option>)}
+    </select>
+  )
+  const words = <input className="input" placeholder="Caption (optional)" maxLength={300} value={caption} onChange={(e) => setCaption(e.target.value)} />
+
+  if (compact) {
+    const to = gatherings.find((g) => g.id === gatheringId)?.title
+    return (
+      <div className="uploader compact">
+        <div className="uploader-main">{add}{children}</div>
+        <button type="button" className="uploader-to" aria-expanded={opts} onClick={() => setOpts((o) => !o)}>
+          <span>New pics go to <b>{to ?? 'no get-together'}</b>{caption ? ', with a caption' : ''}</span>
+          <ChevronDown size={14} aria-hidden="true" className={opts ? 'flip' : ''} />
+        </button>
+        {opts && <div className="uploader-opts">{where}{words}</div>}
+        {err && <p className="error">{err}</p>}
+      </div>
+    )
+  }
   return (
     <div className="uploader card">
-      <div className="grid-3">
-        <select className="input" value={gatheringId} onChange={(e) => setGatheringId(e.target.value)}>
-          <option value="">Not from a get-together</option>
-          {gatherings.map((g) => <option key={g.id} value={g.id}>{g.title}</option>)}
-        </select>
-        <input className="input" placeholder="Caption (optional)" maxLength={300} value={caption} onChange={(e) => setCaption(e.target.value)} />
-        <label className={`btn gold ${progress ? 'disabled' : ''}`}>
-          <ImagePlus size={17} aria-hidden="true" />
-          {progress ? `Uploading ${progress.done}/${progress.total}…` : 'Add photos or videos'}
-          <input ref={input} type="file" accept="image/*,video/*" multiple hidden disabled={Boolean(progress)}
-            onChange={(e) => upload(e.target.files)} />
-        </label>
-      </div>
+      <div className="grid-3">{where}{words}{add}</div>
       {err && <p className="error">{err}</p>}
     </div>
   )
