@@ -105,14 +105,14 @@ export function Board({ gathering }: { gathering: Gathering }) {
     <div className="stack-lg gathering-page">
       <Hero gathering={gathering} />
 
+      <RsvpCard gathering={gathering} />
+
       <section className="card gathering-details">
         <div className="grid-2">
           <EditableField gathering={gathering} field="place" Icon={MapPin} label="Where" placeholder="Whose house? Add the address" />
           <EditableField gathering={gathering} field="notes" Icon={StickyNote} label="Notes" placeholder="Parking, bring a chair, kids' table, anything else" />
         </div>
       </section>
-
-      <RsvpCard gathering={gathering} />
 
       <div className="tabs" ref={tabsRef}>
         {TABS.map((t) => (
