@@ -3,9 +3,11 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
 import { applyTheme } from './lib/theme'
+import { fitInstalledApp } from './lib/screen'
 import './styles.css'
 
 applyTheme() // this month's colors, before anything draws
+fitInstalledApp() // no blank strip under the tab bar on iPhone home-screen apps
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
