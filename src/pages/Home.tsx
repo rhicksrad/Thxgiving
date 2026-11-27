@@ -44,6 +44,8 @@ export default function Home() {
   }, [gatherings])
 
   const first = me?.display_name?.split(' ')[0]
+  const bday = theme.birthday
+  const mine = Boolean(bday?.user_id && bday.user_id === me?.id)
   const monthName = new Date(2000, theme.month - 1, 1).toLocaleString('en-US', { month: 'long' })
 
   return (
@@ -53,10 +55,15 @@ export default function Home() {
       <section className="card welcome">
         <Logo size={84} className="welcome-mark" />
         <div className="welcome-text">
-          <span className="badge">{monthName} · {theme.name}</span>
-          <h1 className="display">{first ? `Welcome home, ${first}` : 'Welcome home'}</h1>
+          <span className="badge">{bday ? 'Birthday' : monthName} · {theme.name}</span>
+          <h1 className="display">
+            {bday ? (mine ? `Happy birthday, ${first ?? bday.name}!` : `It's ${bday.name}'s birthday!`)
+              : first ? `Welcome home, ${first}` : 'Welcome home'}
+          </h1>
           <p className="welcome-greet">{theme.greeting}</p>
-          <p className="muted small">This month: {theme.highlights}</p>
+          {bday
+            ? <p className="muted small">{mine ? 'The whole site is dressed up for you today.' : <>The site is dressed up for the day. <Link to="/chat">Say happy birthday in the chat</Link>.</>}</p>
+            : <p className="muted small">This month: {theme.highlights}</p>}
         </div>
       </section>
 

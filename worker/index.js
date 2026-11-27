@@ -234,6 +234,13 @@ async function route(req, env, ctx, url) {
     return json({ ok: true })
   }
 
+  // Whose birthday is when, and the look for their day. Month and day only: no years leave the server.
+  if (at('GET', 'birthdays')) {
+    const rows = await db.all(`select b.event_id, substr(e.day, 6) as md, b.user_id, b.name, b.theme
+      from birthday_people b join events e on e.id = b.event_id order by md`)
+    return json(rows.map((r) => ({ ...r, theme: parse(r.theme) })))
+  }
+
   // What's new (the bell): the latest from everyone else.
   if (at('GET', 'activity')) {
     const [posts, added, pics, reacts, comments] = await Promise.all([
@@ -270,6 +277,7 @@ class Db {
   insert(table, row) { const [sql, ...args] = this.insertStmt(table, row); return this.run(sql, ...args) }
 }
 
+const parse = (s) => { try { return s ? JSON.parse(s) : null } catch { return null } }
 const marks = (list) => list.map(() => '?').join(', ')
 const now = () => new Date().toISOString()
 const uuid = () => crypto.randomUUID()

@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react'
-import { MONTH_MARKS, type ParticleKind } from './marks'
+import { BIRTHDAY_MARK, MONTH_MARKS, PARTICLES, type ParticleKind } from './marks'
+import { birthdaysOn, PARTY, previewBirthday, type Birthday } from './birthdays'
 
 /**
  * One theme per calendar month, picked from the visitor's own date. Each sets the page colors (styles.css
@@ -27,6 +28,8 @@ export type Theme = {
   motion: 'fall' | 'rise' | 'twinkle' | 'sway'
   prompts: string[]        // the family chat's question of the day
   mark: string             // emblem SVG (64×64 grid)
+  birthday?: Birthday      // set on someone's birthday: the site wears their look for the day
+  art?: string             // the painted art's file key, when it isn't the month's own
 }
 
 type ThemeDef = Omit<Theme, 'month' | 'mark'>
@@ -236,12 +239,39 @@ export function seasonMonth(d = new Date()) {
 export const currentMonth = () => pinned() ?? seasonMonth()
 export const pinnedMonth = pinned
 
-let active: Theme = THEMES[currentMonth() - 1]
+const HEX = /^#[0-9a-f]{3,8}$/i
+
+/** The month's theme dressed up for a birthday: that person's colors, drifting bits and words. */
+function birthdayTheme(base: Theme, b: Birthday): Theme {
+  const t = b.theme && Object.values(b.theme.colors ?? {}).length === 7 && Object.values(b.theme.colors).every((c) => HEX.test(c)) ? b.theme : PARTY
+  const stripe = t.stripe?.every((c) => HEX.test(c)) ? t.stripe : [t.colors.aged, t.colors.rush, t.colors.gold]
+  return {
+    ...base, mark: BIRTHDAY_MARK, name: t.name, tagline: `Happy birthday, ${b.name}!`,
+    greeting: t.greeting ?? PARTY.greeting!, colors: t.colors, stripe,
+    particle: t.particle && t.particle in PARTICLES ? t.particle : 'confetti', motion: t.motion ?? 'fall',
+    prompts: [
+      `It's ${b.name}'s birthday! Say happy birthday here.`,
+      `What's your favorite memory with ${b.name}?`,
+      `Drop your best photo of ${b.name}.`,
+    ],
+    birthday: b, art: t.art && /^[a-z0-9-]+$/.test(t.art) ? `bday-${t.art}` : undefined,
+  }
+}
+
+/** Today's look: a birthday if it's somebody's day (a pinned month wins over that), else the month. */
+function pick(): Theme {
+  const base = THEMES[currentMonth() - 1]
+  const b = previewBirthday() ?? (pinned() ? null : birthdaysOn()[0])
+  return b ? birthdayTheme(base, b) : base
+}
+const sig = (t: Theme) => `${t.month}:${t.birthday ? JSON.stringify(t.birthday) : ''}`
+
+let active: Theme = pick()
 const listeners = new Set<() => void>()
 
 /** Puts the theme's colors on the page. Called once before the first render, so there's no flash. */
 export function applyTheme() {
-  active = THEMES[currentMonth() - 1]
+  active = pick()
   const root = document.documentElement
   const c = active.colors
   const set = (k: string, v: string) => root.style.setProperty(k, v)
@@ -249,8 +279,11 @@ export function applyTheme() {
   set('--rush', c.rush); set('--aged', c.aged); set('--dust', c.dust)
   set('--stripe', `linear-gradient(90deg, ${active.stripe.map((s, i) => `${s} ${(i / active.stripe.length) * 100}% ${((i + 1) / active.stripe.length) * 100}%`).join(', ')})`)
   root.dataset.month = active.key
-  // This month's painted art (public/art, made with Codex: scripts/make-art.mjs). Only this month's two files load.
-  const art = (name: string) => `url("${new URL(`art/${name}-${active.key}.webp`, document.baseURI).href}")`
+  if (active.birthday) root.dataset.birthday = 'true'; else delete root.dataset.birthday
+  // The painted art (public/art, made with Codex: scripts/make-art.mjs): this month's, or the birthday's own.
+  // A birthday look with no painting of its own yet goes without, so Christmas trees don't crash a July party.
+  const art = (name: string) => active.birthday && !active.art ? 'none'
+    : `url("${new URL(`art/${name}-${active.art ?? active.key}.webp`, document.baseURI).href}")`
   set('--art-bg', art('bg')); set('--art-hero', art('hero'))
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', c.bg)
   listeners.forEach((l) => l())
@@ -265,8 +298,8 @@ export function pinMonth(month: number | null) {
   applyTheme()
 }
 
-// A page left open over midnight on the last of the month picks up the new theme within the hour.
-setInterval(() => { if (THEMES[currentMonth() - 1] !== active) applyTheme() }, 3600_000)
+// A page left open over midnight picks up the new month, or a birthday, within the hour.
+setInterval(() => { if (sig(pick()) !== sig(active)) applyTheme() }, 3600_000)
 
 const subscribe = (l: () => void) => { listeners.add(l); return () => { listeners.delete(l) } }
 export const useTheme = () => useSyncExternalStore(subscribe, () => active)

@@ -8,7 +8,8 @@ import AvatarPicker from './AvatarPicker'
 import ActivityBell from './ActivityBell'
 import PullToRefresh from './PullToRefresh'
 import { scroller } from '../lib/scroller'
-import { useTheme } from '../lib/theme'
+import { applyTheme, useTheme } from '../lib/theme'
+import { loadBirthdays } from '../lib/birthdays'
 import SeasonSky from './SeasonSky'
 
 const NAV = [
@@ -26,6 +27,9 @@ export default function Layout({ children }: { children: ReactNode }) {
   // A new page starts at the top, like an app, instead of keeping the last page's scroll.
   const { pathname } = useLocation()
   useEffect(() => { scroller().scrollTo(0, 0) }, [pathname])
+  // Whose birthday is when: fetched once signed in, so the site can dress up on the day.
+  const myId = me?.id
+  useEffect(() => { if (myId) loadBirthdays().then((changed) => { if (changed) applyTheme() }) }, [myId])
   // iOS pans the whole document up to show the keyboard and can leave it there once the keyboard closes.
   useEffect(() => {
     const settle = () => setTimeout(() => { if (window.scrollY) window.scrollTo(0, 0) }, 100)

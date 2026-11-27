@@ -262,3 +262,13 @@ where not exists (select 1 from list_items where gathering_id = 'christmas-2026'
 
 -- FIRST RUN: add yourself so you can sign in, then add everyone else from the Family page:
 --   npx wrangler d1 execute thxgiving --remote --command "insert into members (phone, name, created_at) values ('13175550123', 'Your Name', datetime('now'))"
+
+-- Birthdays: who a birthday on the calendar belongs to, and the look the site wears on their day. The rows are
+-- personal, so they are written straight to the live database and never listed here. `theme` is JSON
+-- (see BirthdayTheme in src/lib/birthdays.ts); null means the party look.
+create table if not exists birthday_people (
+  event_id text primary key references events(id) on delete cascade,
+  user_id  text,          -- their account, once they have one (so the site can say "happy birthday" to them)
+  name     text not null, -- what the family calls them
+  theme    text
+);
