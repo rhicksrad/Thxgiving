@@ -166,8 +166,7 @@ export const DAY_LOOKS: DayLook[] = [
 const BY_KEY = Object.fromEntries(DAY_LOOKS.map((l) => [l.key, l]))
 
 /** Looks whose painted art (public/art/bg-day-<key>.webp, hero-day-<key>.webp) exists; any other uses the month's. */
-const UNPAINTED = ['sadeh', 'sepandarmazgan', 'chaharshanbe-suri', 'nowruz', 'sizdah-bedar', 'tirgan', 'mehregan', 'yalda']
-export const DAY_ART = new Set<string>(DAY_LOOKS.map((l) => l.key).filter((k) => !UNPAINTED.includes(k)))
+export const DAY_ART = new Set<string>(DAY_LOOKS.map((l) => l.key))
 
 const pad = (n: number) => String(n).padStart(2, '0')
 export const dayKey = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
