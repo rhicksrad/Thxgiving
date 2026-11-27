@@ -1066,3 +1066,28 @@ body::before {
 .cal-chip.game { background: color-mix(in srgb, #cfb991 20%, transparent); color: #e3d2ae; border-left-color: #cfb991; }
 .cal-dots i.game, .cal-legend i.game { background: #cfb991; }
 .cal-item.game svg { color: #cfb991; }
+
+/* ---------- On this day (Home): old pictures taking turns ---------- */
+.otd { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
+.otd-head, .otd-empty { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.otd-empty { flex-direction: row; }
+.otd-head h2, .otd-empty h2 { font-size: 20px; margin: 0; }
+.otd-empty p { margin: 4px 0 0; max-width: 46ch; }
+.otd-stage { position: relative; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; background: color-mix(in srgb, var(--text) 6%, transparent); }
+.otd-pic { position: absolute; inset: 0; opacity: 0; transition: opacity 0.9s ease; pointer-events: none; }
+.otd-pic.on { opacity: 1; pointer-events: auto; }
+.otd-pic img { width: 100%; height: 100%; object-fit: contain; display: block; background: #0008; }
+.otd-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 0;
+  background: #000a; color: #fff; display: grid; place-items: center; cursor: pointer; opacity: 0.75; }
+.otd-nav:hover { opacity: 1; } .otd-nav.prev { left: 8px; } .otd-nav.next { right: 8px; }
+.otd-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 14.5px; }
+.otd-dots { display: flex; gap: 5px; flex: none; }
+.otd-dots i { width: 6px; height: 6px; border-radius: 50%; background: color-mix(in srgb, var(--text) 25%, transparent); }
+.otd-dots i.on { background: var(--gold); }
+.uploader-date { display: flex; flex-direction: column; gap: 4px; }
+@media (max-width: 760px) {
+  .otd-stage { aspect-ratio: 4 / 3; }
+  .otd-empty { flex-direction: column; align-items: flex-start; }
+  .otd-foot { flex-direction: column; align-items: flex-start; gap: 6px; }
+}
+@media (prefers-reduced-motion: reduce) { .otd-pic { transition: none; } }
