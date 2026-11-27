@@ -410,12 +410,15 @@ export function Lightbox({ photos, index, gatherings, onClose, onIndex, onDelete
 }
 
 /** Pick files, tag a gathering, upload originals plus a small preview for the grid. */
-export function Uploader({ gatherings, defaultGatheringId, onUploaded, compact, children }: {
+export function Uploader({ gatherings, defaultGatheringId, onUploaded, compact, old, children }: {
   gatherings: Gathering[]; defaultGatheringId: string | null; onUploaded: (p: Photo) => void
   compact?: boolean // the Gallery: one big Add button, with where-it-goes and the caption tucked behind a line of text
+  old?: boolean // arriving to add an old picture: the options start open, on the date
   children?: React.ReactNode // extra buttons that sit beside Add (compact only)
 }) {
-  const [opts, setOpts] = useState(false)
+  const [opts, setOpts] = useState(Boolean(old))
+  const [takenOn, setTakenOn] = useState('') // for old pictures: the day it was taken, when the file can't say
+  useEffect(() => { if (old) setOpts(true) }, [old])
   const { me } = useAuth()
   const [gatheringId, setGatheringId] = useState<string>(defaultGatheringId ?? '')
   const [caption, setCaption] = useState('')
@@ -442,8 +445,8 @@ export function Uploader({ gatherings, defaultGatheringId, onUploaded, compact, 
           try { await uploadFile(thumb_path, thumb, 'image/jpeg') } catch { thumb_path = null }
         }
         const row: Record<string, unknown> = {
-          gathering_id: gatheringId || null, path, thumb_path, mime: file.type || 'image/jpeg', caption: caption.trim() || null,
-          taken_at: (await takenAt(fileReader(file), file.type)) ?? fromLastModified(file), content_hash,
+          gathering_id: takenOn ? null : gatheringId || null, path, thumb_path, mime: file.type || 'image/jpeg', caption: caption.trim() || null,
+          taken_at: takenOn ? new Date(`${takenOn}T12:00:00`).toISOString() : (await takenAt(fileReader(file), file.type)) ?? fromLastModified(file), content_hash,
         }
         const { data, error: dbErr } = await api.post<Photo>('/photos', row)
         if (dbErr || !data) throw new Error(dbErr?.message ?? 'Could not save it')
@@ -455,7 +458,7 @@ export function Uploader({ gatherings, defaultGatheringId, onUploaded, compact, 
       setProgress((pr) => pr && { ...pr, done: pr.done + 1 })
     }
     setProgress(null)
-    if (!failed) setCaption('')
+    if (!failed) { setCaption(''); setTakenOn('') }
     if (input.current) input.current.value = ''
   }
 
@@ -475,16 +478,24 @@ export function Uploader({ gatherings, defaultGatheringId, onUploaded, compact, 
   )
   const words = <input className="input" placeholder="Caption (optional)" maxLength={300} value={caption} onChange={(e) => setCaption(e.target.value)} />
 
+  const today = new Date().toISOString().slice(0, 10)
+  const date = (
+    <label className="uploader-date small muted">Old picture? When was it taken (a guess is fine)
+      <input className="input" type="date" max={today} value={takenOn} autoFocus={old} onChange={(e) => setTakenOn(e.target.value)} />
+    </label>
+  )
+  const dated = takenOn ? new Date(`${takenOn}T12:00:00`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : null
+
   if (compact) {
     const to = gatherings.find((g) => g.id === gatheringId)?.title
     return (
       <div className="uploader compact">
         <div className="uploader-main">{add}{children}</div>
         <button type="button" className="uploader-to" aria-expanded={opts} onClick={() => setOpts((o) => !o)}>
-          <span>New pics go to <b>{to ?? 'no get-together'}</b>{caption ? ', with a caption' : ''}</span>
+          <span>{dated ? <>New pics are dated <b>{dated}</b></> : <>New pics go to <b>{to ?? 'no get-together'}</b></>}{caption ? ', with a caption' : ''}</span>
           <ChevronDown size={14} aria-hidden="true" className={opts ? 'flip' : ''} />
         </button>
-        {opts && <div className="uploader-opts">{where}{words}</div>}
+        {opts && <div className="uploader-opts">{!takenOn && where}{words}{date}</div>}
         {err && <p className="error">{err}</p>}
       </div>
     )

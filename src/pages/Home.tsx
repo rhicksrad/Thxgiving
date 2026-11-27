@@ -12,6 +12,7 @@ import { InstallBanner } from '../components/Install'
 import Logo from '../components/Logo'
 import Countdown from '../components/Countdown'
 import Spot from '../components/Spot'
+import OnThisDay from '../components/OnThisDay'
 
 const byDate = (a: Gathering, b: Gathering) => a.starts_at.localeCompare(b.starts_at)
 
@@ -86,6 +87,8 @@ export default function Home() {
           </div>
         )}
       </section>
+
+      <OnThisDay />
 
       <nav className="quick-links">
         <Link to="/calendar" className="card quick"><Spot name="calendar" size={72} /><span><b>Calendar</b><span className="muted small">Birthdays, plans and holidays</span></span></Link>

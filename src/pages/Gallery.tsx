@@ -135,7 +135,7 @@ export default function Gallery() {
       </header>
 
       <div className="gal-top">
-        <Uploader compact gatherings={uploadable.length ? uploadable : gatherings} defaultGatheringId={defaultGathering}
+        <Uploader compact old={params.get('old') === '1'} gatherings={uploadable.length ? uploadable : gatherings} defaultGatheringId={defaultGathering}
           onUploaded={(p) => setPhotos((cur) => cur && (cur.some((x) => x.id === p.id) ? cur : [p, ...cur]))}>
           <button className={`btn ghost ${picked ? 'on' : ''}`} disabled={!shown.length} aria-pressed={Boolean(picked)}
             onClick={() => (picked ? stopPicking() : setPicked(new Set()))}>
