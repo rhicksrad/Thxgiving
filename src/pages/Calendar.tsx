@@ -61,7 +61,7 @@ export default function Calendar() {
       const start = parse(ev.day)
       const end = ev.end_day ?? ev.day
       const hit = (k >= ev.day && k <= end) || (ev.yearly && y > start.y && k.slice(5) >= ev.day.slice(5) && k.slice(5) <= end.slice(5))
-      if (hit) out.push({ kind: 'event', key: `e:${ev.id}:${k}`, title: ev.title, time: ev.time, ev, age: ev.yearly && y > start.y ? y - start.y : undefined })
+      if (hit) out.push({ kind: 'event', key: `e:${ev.id}:${k}`, title: ev.title, time: ev.time, ev, age: ev.yearly && y > start.y && start.y > 1900 ? y - start.y : undefined /* year 1900 = birth year not known */ })
     }
     const t = (i: Item) => (i.kind === 'holiday' ? '' : i.kind === 'event' ? i.time ?? '' : '')
     return out.sort((a, b) => t(a).localeCompare(t(b)))
